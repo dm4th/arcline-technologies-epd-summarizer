@@ -1,5 +1,12 @@
 # PRD-11 — `/interview-prep` Claude Skill
 
+<!-- status:
+state: waiting
+owner: —
+updated: 2026-05-28T19:52:00Z
+notes: moved to post-Wave E; blocked until PRD-09 (submission HTML) is completed so the full live build is available for the interviewer to interrogate
+-->
+
 ## Goal
 Produce a Claude skill at `.claude/skills/interview-prep/` that role-plays a Notion-SE-interviewer, drilling Dan on the architecture, trade-offs, and risks of the workspace he just built.
 
@@ -7,7 +14,7 @@ Produce a Claude skill at `.claude/skills/interview-prep/` that role-plays a Not
 Dan explicitly asked for this in `solution-intro.md`. The assignment will be the basis of most of his remaining interview rounds; the skill is his rehearsal partner. Independent of the build, can be written immediately.
 
 ## Dependencies
-- None for the skill scaffold. Higher-quality questions get authored after PRD-05/08 land, but the skill itself can ship Wave A.
+- `09-submission-html.md` — the submission represents the completed system; the interview skill's question bank and live-workspace references only make full sense once the whole build is real and submittable.
 
 ## Inputs
 - This repo's PRDs (as the interviewer's ground truth).

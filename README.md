@@ -34,7 +34,11 @@ If you have all day: the Notion workspace itself (link will live in `submission.
 | `prds/SOP.md` | PRD lifecycle (waiting → ready → in-progress → in-review → completed). State machine and wave-checkpoint procedure. |
 | `prds/README.md` | Canonical build status table. Source of truth for "what's left." |
 | `.env.local.example` | Template for `NOTION_API_KEY` and `BASE_NOTION_PAGE`. |
-| *(future)* `src/`, `workers/`, `fixtures/`, `evals/`, `assets/`, `submission.html` | Created as PRDs land. |
+| `src/lib/` | Shared library code — Notion SDK client factory (`notion.ts`), env validation (`env.ts`). |
+| `src/types/core.ts` | Canonical TypeScript types: `SourceRecord`, `SquadSummary`, `MasterSummary`, `AgentRun`, `ApprovalState`. |
+| `scripts/` | One-shot Node scripts. `probe-workspace.ts` verifies API access and prints the page tree. |
+| `workers/` | Notion Worker sub-projects. `hello/` is the proof-of-concept; data-source workers land in Wave B. |
+| *(future)* `fixtures/`, `evals/`, `assets/`, `submission.html` | Created as PRDs land. |
 
 ---
 
@@ -46,7 +50,7 @@ The actual canonical status table — per-PRD state, owner, notes — lives in *
 
 | Tier | PRDs | Status |
 |---|---|---|
-| **Tier 0** — Foundations | 00 | ⏳ Ready, not started |
+| **Tier 0** — Foundations | 00 | 🔨 In-progress (Wave A) |
 | **Tier 1** — Independent foundations | 01, 02, 11 | ⏳ 11 ready; 01, 02 waiting on 00 |
 | **Tier 2** — Data plane (workers) | 03a, 03b, 03c, 03d | ⏸ Waiting on Tier 1 |
 | **Tier 3** — Reasoning plane | 04a, 04b, 06 | ⏸ Waiting on Tier 2 |
@@ -90,14 +94,67 @@ The repo's git log mirrors this split: scaffolding (commit 1) → PRDs (commit 2
 
 ---
 
-## Setup
+## Quickstart
+
+> **New contributor? Follow these 5 steps — you'll be running in under 5 minutes.**
+
+**1. Clone and install**
+
+```bash
+git clone <this-repo>
+cd notion-solutions-eng-submission
+pnpm install          # installs root + all workers/* workspace packages
+```
+
+**2. Create your `.env.local`**
 
 ```bash
 cp .env.local.example .env.local
-# fill in NOTION_API_KEY and BASE_NOTION_PAGE
 ```
 
-Beyond that: nothing to run yet. PRD-00 will introduce `package.json`, the Notion SDK wiring, and a workspace-probe script.
+Open `.env.local` and fill in:
+
+```
+NOTION_API_KEY="ntn_..."       # your Notion integration token
+BASE_NOTION_PAGE="https://www.notion.so/your-workspace/Page-title-abc123"
+```
+
+> Get a token at **notion.so → Settings → Connections → Develop or manage integrations**.
+
+**3. Share the root page with your integration**
+
+Open `BASE_NOTION_PAGE` in Notion → click **Share** → invite your integration by name. Without this step, the API returns `object_not_found`.
+
+**4. Verify API access**
+
+```bash
+pnpm probe
+```
+
+You should see a page title and a child-block tree. If you see `⚠ Integration does not have access`, re-check step 3.
+
+**5. (Optional) Deploy the hello Worker**
+
+```bash
+ntn login                           # one-time: authenticates ntn CLI
+cd workers/hello
+NOTION_API_TOKEN=$NOTION_API_KEY \
+  ntn workers deploy --name hello   # first deploy; omit --name on updates
+```
+
+Confirm with: `ntn workers list`
+
+---
+
+## How to add a Worker
+
+1. `mkdir workers/<name> && cd workers/<name>`
+2. Copy `workers/hello/package.json` and `workers/hello/tsconfig.json`; rename the package.
+3. Create `src/index.ts` — import `Worker` from `@notionhq/workers`, export `default new Worker()`, register your tools.
+4. Run `pnpm install` from the repo root (pnpm workspace picks up new members automatically).
+5. Deploy: `cd workers/<name> && ntn workers deploy --name <name>`
+
+See the data-source worker PRDs (03a–03d) for the full pattern including sync capabilities and squad-scoped filtering.
 
 ---
 

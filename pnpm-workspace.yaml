@@ -1,0 +1,5 @@
+packages:
+  - workers/*
+
+allowBuilds:
+  esbuild: true

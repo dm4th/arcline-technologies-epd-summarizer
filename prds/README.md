@@ -20,24 +20,24 @@ Background context lives in (read these first if you're new):
 
 ```
 00 ─► 01 ─┬─► 03a/b/c/d ─► 04a ─┐
-          │                    ├─► 05 ─► 09
+          │                    ├─► 05 ─► 09 ─► 11
           ├─► 02 ──────────────┘
           ├─► 04b ──────────────┘
           ├─► 06 ───────────────┘
           ├─► 07
           ├─► 08 ───────────────► 09
-          ├─► 10
-          └─► 11 (fully independent)
+          └─► 10
 ```
 
 ## Recommended parallel waves
 | Wave | PRDs in parallel | Unblocks |
 |---|---|---|
-| A | 01, 02, 11 | data plane, interview prep |
+| A | 01, 02 | data plane |
 | B | 03a, 03b, 03c, 03d, 06, 07, 10 | reasoning plane |
 | C | 04a, 04b, 08 | synthesis, eval |
 | D | 05 | submission |
-| E | 09 | done |
+| E | 09 | submission HTML |
+| F | 11 | interview prep (post-submission) |
 
 ## Conventions
 - Every PRD follows `_template.md` exactly, including the `<!-- status: ... -->` block immediately under the title.
@@ -52,7 +52,7 @@ States: `waiting`, `ready`, `in-progress`, `in-review`, `completed`, `blocked`. 
 
 | PRD | State | Owner | Updated | Notes |
 |---|---|---|---|---|
-| 00 | ready | — | — | no deps; blocks everything |
+| 00 | in-review | sonnet-2026-05-28-A1 | 2026-05-28T18:56:00Z | All 6 ACs pass: probe live, tsc clean, hello worker deployed (id: 019e6ff1-ede4-7081-a976-8bfa40c9f50a) |
 | 01 | waiting | — | — | deps: 00 |
 | 02 | waiting | — | — | deps: 00 |
 | 03a | waiting | — | — | deps: 00, 01, 02, 03 |
@@ -67,4 +67,4 @@ States: `waiting`, `ready`, `in-progress`, `in-review`, `completed`, `blocked`. 
 | 08 | waiting | — | — | deps: 02, 04a, 04b, 05 |
 | 09 | waiting | — | — | deps: 05, 08, 10 |
 | 10 | waiting | — | — | deps: 01 |
-| 11 | ready | — | — | no deps |
+| 11 | waiting | — | — | deps: 09 |

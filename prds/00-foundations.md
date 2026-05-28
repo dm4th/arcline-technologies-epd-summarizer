@@ -1,5 +1,12 @@
 # PRD-00 — Foundations
 
+<!-- status:
+state: in-review
+owner: sonnet-2026-05-28-A1
+updated: 2026-05-28T18:56:00Z
+notes: All 6 ACs pass: probe live, tsc clean, hello worker deployed (id: 019e6ff1-ede4-7081-a976-8bfa40c9f50a)
+-->
+
 ## Goal
 Stand up a TypeScript repo wired to the live Notion workspace and to Notion Workers, with shared types and CLI access proven, so every downstream PRD has a stable surface to build on.
 
@@ -58,10 +65,60 @@ None.
 - Test framework setup beyond `tsc --noEmit` (downstream PRDs can add Vitest if they need it).
 
 ## Open Questions
-- Workspace plan tier confirmed at API level? (probe should report it if surfaceable.)
-- Preferred package manager — pnpm vs npm? Default to pnpm; flip if Dan objects.
+- ~~Workspace plan tier confirmed at API level?~~ **Resolved:** `GET /v1/users/me` returns `workspace_limits` but not plan tier directly. Workers enablement is the real signal — if `ntn doctor` shows `Workers enabled: ✔`, the plan tier is sufficient.
+- ~~Preferred package manager — pnpm vs npm?~~ **Resolved:** pnpm confirmed.
 
 ## Verification
-- `pnpm tsx scripts/probe-workspace.ts` returns a JSON tree.
-- `notion worker list` (or CLI equivalent) shows the `hello` worker.
-- `git status` shows `.env.local` is NOT tracked.
+- `pnpm tsx scripts/probe-workspace.ts` returns a JSON tree. ✅ Prints "Arcline Technologies | EPD Readout POC" with 6 child blocks.
+- `ntn workers list` shows the `hello` worker. ✅ id: `019e6ff1-ede4-7081-a976-8bfa40c9f50a`
+- `git status` shows `.env.local` is NOT tracked. ✅ (in `.gitignore`)
+
+## Implementation Notes
+
+> Written post-build. Read this before touching anything Workers-related in downstream PRDs.
+
+### What was actually built
+
+- **Root project** (`package.json` at repo root): `@notionhq/client` + `dotenv` for scripts; `tsx` + `typescript` for dev. Covers `src/` and `scripts/`.
+- **Worker sub-project** (`workers/hello/`): separate `package.json` with `@notionhq/workers`. Declared as a pnpm workspace member via `pnpm-workspace.yaml`. A single `pnpm install` from the repo root installs both.
+- **`src/lib/env.ts`**: loads `.env.local` via `dotenv` on import; throws with a copy-pasteable fix message if vars are missing. All scripts get env loading for free by importing this module.
+- **`src/lib/notion.ts`**: singleton Notion client (avoids re-auth on repeated calls). Also exports `extractPageId()` which parses Notion page URLs into bare 32-char hex IDs — needed because `BASE_NOTION_PAGE` is a full URL, not an ID.
+- **`scripts/probe-workspace.ts`**: fetches the root page title + child block tree (max 3 levels deep, paginated). Detects `object_not_found` from the API and surfaces a "share this page with your integration" message instead of crashing with a raw stack trace.
+- **`workers/hello/src/index.ts`**: minimal `Worker` with a `ping` tool that returns `{ pong: true, worker: "hello", ts: <ISO> }`. Proves the full build→deploy→list pipeline works.
+
+### Gotchas for downstream sessions
+
+**1. The Notion CLI is `ntn`, not `notion`.**
+The binary installed at `/usr/local/bin/ntn`. All worker commands are `ntn workers <subcommand>`. The `solution-intro.md` referred to it loosely as "Notion CLI" — the actual command is always `ntn`.
+
+**2. Workers needs to be explicitly enabled in workspace settings.**
+Even as workspace owner, `ntn workers list` returned `403 WorkersCapabilityMissing` until we enabled it at: **Notion web app → Settings & Members → Settings → [scroll to find Workers toggle]**. After enabling, you must re-login (`ntn logout && ntn login --no-browser` + `ntn login poll`) to get a token that includes the Workers scope. The old token doesn't pick it up automatically.
+
+**3. `ntn workers deploy` uses user-level OAuth, not the integration API key.**
+`NOTION_API_KEY` (the integration token, `ntn_...`) works for the Notion SDK (`@notionhq/client`) but is rejected by `ntn workers`. Workers management requires a user-level OAuth token obtained via `ntn login`. These are two separate auth surfaces: data plane (integration token) vs. infra plane (user OAuth). Store them separately.
+
+**4. pnpm 11 dropped the `"pnpm"` field in `package.json`.**
+The `onlyBuiltDependencies` setting (needed to allow `esbuild`'s post-install script) moved to `pnpm-workspace.yaml`:
+```yaml
+allowBuilds:
+  esbuild: true
+```
+Using the old `"pnpm": { "onlyBuiltDependencies": [...] }` in `package.json` prints a warning and is silently ignored in pnpm 11.
+
+**5. `esbuild` build scripts are blocked by default in pnpm but `tsx` still works.**
+pnpm 11 requires opt-in for post-install scripts. Without the `allowBuilds` config, the install exits with `ERR_PNPM_IGNORED_BUILDS`. However, `tsx` (which depends on `esbuild`) works even with the build script blocked — `esbuild` v0.28+ ships platform-specific optional packages (`@esbuild/darwin-arm64`, etc.) so the binary is present without the post-install step. The `allowBuilds: esbuild: true` config is still correct practice; it just isn't strictly required for local dev.
+
+**6. Workers sub-projects must be workspace members for `pnpm install` to reach them.**
+Running `pnpm install` inside `workers/hello/` while the root `pnpm-workspace.yaml` exists will silently report "Already up to date" without actually installing anything — pnpm defers to the root workspace. The fix is to declare `packages: [workers/*]` in `pnpm-workspace.yaml` and always run `pnpm install` from the repo root.
+
+**7. Notion deploys TypeScript source directly — no local `tsc` step needed for workers.**
+`ntn workers deploy` uploads the source and runs `tsc` in Notion's cloud build environment. You do not need to run `tsc` locally before deploying. The `pnpm check` / `tsc --noEmit` in the worker's `package.json` scripts are for local type validation only.
+
+**8. Workspace ID is derivable from the API.**
+If you need `NOTION_WORKSPACE_ID` for `ntn` commands:
+```bash
+curl -s -H "Authorization: Bearer $NOTION_API_KEY" \
+     -H "Notion-Version: 2022-06-28" \
+     https://api.notion.com/v1/users/me | jq .bot.workspace_id
+```
+For this workspace: `4f2291b0-5ab4-483b-838a-f83d7e8d2754`.
