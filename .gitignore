@@ -1,0 +1,39 @@
+# Secrets — NEVER commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Node / TypeScript build artifacts
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.next/
+.turbo/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local Claude state (project-level settings can be committed; local overrides should not)
+.claude/settings.local.json
+
+# Eval outputs (large, regeneratable)
+evals/reports/*.json
+evals/reports/*.md
+
+# Generated submission artifact (regeneratable from build script)
+submission.html
+assets/screenshots/
