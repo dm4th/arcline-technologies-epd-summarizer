@@ -1,5 +1,12 @@
 # PRD-04b — Product Roadmap Summarizer + PRD Fact Checker
 
+<!-- status:
+state: in-progress
+owner: sonnet-2026-05-29-A1
+updated: 2026-05-29T23:00:00Z
+notes: Claimed — building Product Roadmap Summarizer + PRD Fact Checker (Wave C).
+-->
+
 ## Goal
 For each of 3 squads, produce two additional Squad Weekly Summary rows: (a) progress against the Product Roadmap, (b) PRD drift / scope-of-work fact-check.
 

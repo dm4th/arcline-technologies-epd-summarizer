@@ -3,6 +3,26 @@ import { NOTION_IDS } from "../../lib/notion-ids";
 
 const rt = (s: string) => [{ text: { content: s.substring(0, 1999) } }];
 
+export async function createSummarizerTrigger(opts: {
+  source: string;
+  weekOf: string;
+}): Promise<void> {
+  const notion = getNotionClient();
+  const startedAt = new Date();
+  const runId = `summarizer.${opts.source}-${opts.weekOf}-trigger`;
+
+  await notion.pages.create({
+    parent: { database_id: NOTION_IDS.dbs.agentRunLog },
+    properties: {
+      "Run Id":     { title: rt(runId) },
+      "Agent Name": { select: { name: `summarizer.${opts.source}` } },
+      "Started At": { date: { start: startedAt.toISOString() } },
+      "Outcome":    { select: { name: "pending" } },
+      "Notes":      { rich_text: rt(`week=${opts.weekOf}`) },
+    } as Parameters<typeof notion.pages.create>[0]["properties"],
+  });
+}
+
 export async function writeAgentRunLog(opts: {
   agentName: string;
   startedAt: Date;
