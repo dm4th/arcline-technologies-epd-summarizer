@@ -1,5 +1,12 @@
 # PRD-04a — Per-Source Summarizer Agents
 
+<!-- status:
+state: ready
+owner: —
+updated: 2026-05-29T12:45:00Z
+notes: UNBLOCKED 2026-05-29 — all dependencies (PRD-00, 01, 03a, 03b, 03c, 03d) are completed; the four Mirror DBs are populated and Opus-reviewed. First Wave C PRD available to claim. (Status block added during this transition — the file previously had none; README was authoritative per SOP rule 1.)
+-->
+
 ## Goal
 Produce one **Squad Weekly Summary** row per (squad × source) — 12 total per week — each with a structured summary and verifiable citations back to mirror DB rows.
 

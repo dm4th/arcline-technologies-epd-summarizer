@@ -1,10 +1,10 @@
 # PRD-03a — GitHub Mirror Worker
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-05-28-B1
-updated: 2026-05-28T23:45:00Z
-notes: Mirror — GitHub populated: 27 rows across atlas/lumen/forge (2026-W21). AC1 ✅ 27 rows created. AC2 ✅ re-run 89→skipped. AC3 ✅ atlas-pr-048 body edit → exactly 1 updated. AC4 ✅ Agent Run Log worker.github rows present with non-zero Duration ms. Source ID property added to DB for idempotent upsert keying.
+state: completed
+owner: opus-review-2026-05-29
+updated: 2026-05-29T12:00:00Z
+notes: APPROVED by Opus review — all 4 ACs re-verified live. AC1 ✅ 27 rows in Mirror GitHub (10 atlas + 9 lumen + 8 forge). AC2 ✅ re-run skipped=27 (zero updates). AC3 ✅ body-edit → updated=1, skipped=26. AC4 ✅ 3 worker.github Agent Run Log rows, all non-zero Duration ms, outcome=ok. Idempotent upsert keyed on Source ID property.
 -->
 
 ## Goal

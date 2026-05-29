@@ -1,10 +1,10 @@
 # PRD-06 — Per-Squad HITL Review
 
 <!-- status:
-state: in-review
-owner: opus-2026-05-28-B2
-updated: 2026-05-29T00:30:00Z
-notes: Implementation complete. src/workers/hitl-review.ts + scripts/hitl-review.ts. AC1 ✅ review page with 6 embedded summaries. AC2 ✅ approve flips all 6 atomically + Agent Run Log. AC3 ✅ reject 1 leaves 5 untouched + logs re-run signal. AC4 ✅ refresh-page re-reads DB (AC4 completes when PRD-04 re-runs agent). Idempotent: seed no-ops on re-run; review page refreshes in place.
+state: completed
+owner: opus-review-2026-05-29
+updated: 2026-05-29T12:25:00Z
+notes: APPROVED by Opus review — re-verified live. AC1 ✅ Atlas review page (36ffc8f4-554c-81e7-abf6-c96349ce9fb7) shows 6 source sections. AC2 ✅ approval.squad.atlas run-log "Approved 6 summaries" — one command flips all 6. AC3 ✅ github→rejected, other 5 approved/untouched, re-run signal approval.squad.atlas.github logged with reason. AC4: refresh-page mechanism present and re-reads DB; the full re-run→reappear loop awaits PRD-04's re-run agent (permitted — PRD-06 deps are only 00/01). 18 summary rows live, idempotent seed.
 -->
 
 ## Goal

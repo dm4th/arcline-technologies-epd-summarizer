@@ -1,10 +1,10 @@
 # PRD-07 — Observability (Agent Run Log + dashboards)
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-05-28-B3
-updated: 2026-05-29T05:10:00Z
-notes: Weekly Pipeline Dashboard (36ffc8f4-554c-8104-aea9-c1e79b3b5fc0) live with 5 embedded views. ACs 1–3 ✅. pnpm observe refreshes prose summary.
+state: completed
+owner: opus-review-2026-05-29
+updated: 2026-05-29T12:25:00Z
+notes: APPROVED by Opus review — re-verified live. AC1 ✅ grep confirms all run-log writes route through writeAgentRunLog (source-worker + hitl-review); only DB-id reference is its definition in notion-ids.ts. AC2 ✅ Weekly Pipeline Dashboard (36ffc8f4-554c-8104-aea9-c1e79b3b5fc0) renders 5 embedded views. AC3 ✅ prose matches live rollup exactly: 11 runs / 1.9 min / 0 errors / 2 approvals / $0.00.
 -->
 
 ## Goal

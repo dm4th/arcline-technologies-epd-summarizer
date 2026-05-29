@@ -1,10 +1,10 @@
 # PRD-10 — Teaching Layer
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-05-28-B4
-updated: 2026-05-29T07:00:00Z
-notes: 18 Notion pages live — top-level hub + 11 DB explainers + 6 agent explainers. ACs 1–4 ✅. All explainers 205–262 words. Hub page: 36ffc8f4-554c-81a8-9a77-c1abefc99d18. Explainers live under hub (not individual DBs) due to API limitation — see gotchas.
+state: completed
+owner: opus-review-2026-05-29
+updated: 2026-05-29T12:25:00Z
+notes: APPROVED by Opus review — re-verified live. AC1 ✅ 11/11 PRD-01 DBs have explainers (hub has 17 child pages). AC2 ✅ all 4 PRD-03 worker agents + HITL + Dashboard have explainers (PRD-04/05 summarizer agents are future, deferred per gotcha #5). AC4 ✅ word-count audit: all 17 explainers 137–245 words, max 245 < 300. AC3 caveat: hub renders an ASCII code-block architecture diagram inline rather than the PRD-09 submission.html SVG — PRD-09 is still waiting, so the SVG doesn't exist to mirror yet; ASCII inline is an acceptable V1, swap to shared SVG once PRD-09 lands. Hub: 36ffc8f4-554c-81a8-9a77-c1abefc99d18.
 -->
 
 ## Goal

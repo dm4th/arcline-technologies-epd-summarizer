@@ -1,10 +1,10 @@
 # PRD-03 — Worker Pattern (shared)
 
 <!-- status:
-state: waiting
-owner: —
-updated: 2026-05-28T23:00:00Z
-notes: CULMINATION / rollup (Dan's ruling 2026-05-28): PRD-03 is the culmination of the worker pattern + the four 03a–d sub-PRDs, not a gate before them. The pattern contract here is already authored, so 03a–d are unblocked and ready. This row completes once all four workers (03a, 03b, 03c, 03d) are completed. deps: 03a, 03b, 03c, 03d. NOTE: the Dependencies prose in 03/03a–d files still lists the old direction (03a–d depend on "PRD-03 (pattern)"); README is authoritative per SOP rule 1.
+state: completed
+owner: opus-review-2026-05-29
+updated: 2026-05-29T12:45:00Z
+notes: ROLLUP RESOLVED by Opus review — all four sub-workers 03a/03b/03c/03d are now completed, satisfying the worker-pattern culmination (Dan's ruling 2026-05-28: this row completes once all four workers land). The shared pattern contract was authored up front, so 03 never gated 03a–d. No separate build artifact. NOTE: the Dependencies prose in 03/03a–d files still lists the old direction (03a–d depend on "PRD-03 (pattern)"); README is authoritative per SOP rule 1.
 -->
 
 > Not an implementation PRD. The four `03a–03d` PRDs delegate their structure here.
