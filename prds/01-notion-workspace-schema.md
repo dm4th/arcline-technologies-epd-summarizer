@@ -76,11 +76,12 @@ Schema drift between agents is the most common failure mode for fan-out/fan-in w
 
 > Written post-build. Read this section before building any PRD that depends on this one.
 > Updated after a second schema-revision pass that added Delivery Pipeline, richer seed content, and live workspace patches via `ntn` CLI.
+> Updated again after Opus review cycle — DB_NAMES rename drift fixed, squad page IDs backfilled.
 
 ### What was actually built
 
 - **`src/types/core.ts`**: `SquadId` narrowed from `string` to `"atlas" | "lumen" | "forge"` literal union.
-- **`src/lib/notion-ids.ts`**: Populated with IDs for the **user's preserved workspace** (not the disposable bootstrap runs). Downstream PRDs import `NOTION_IDS` for all DB/page lookups — never hardcode. Includes `deliveryPipeline` added in schema v2.
+- **`src/lib/notion-ids.ts`**: Populated with IDs for the **user's preserved workspace** (not the disposable bootstrap runs). Downstream PRDs import `NOTION_IDS` for all DB/page lookups — never hardcode. Includes `deliveryPipeline` added in schema v2. `pages.squadAtlas/Lumen/Forge` are the **Squads DB row IDs** (not standalone pages — the organizational pages were lost in the teardown; the DB rows serve the same purpose for downstream PRDs).
 - **`scripts/bootstrap-workspace.ts`** (v2): Creates 11 DBs now (added Delivery Pipeline). Schema diverges from the brief in several places — see schema notes below. `pnpm bootstrap` for fresh workspace.
 - **`scripts/teardown-workspace.ts`**: Archives everything; resets notion-ids.ts. `--dry-run` supported. **Do not run without explicit user consent** — it wipes all user changes to the live workspace (see gotcha #6).
 - **`scripts/patch-schema.ts`**: The safe alternative to teardown for schema changes. Uses `databases.update` with `--notion-version 2022-06-28` to add/remove columns on a live workspace without touching rows or page content. `pnpm patch` to run.
@@ -99,7 +100,7 @@ Schema drift between agents is the most common failure mode for fan-out/fan-in w
 - PRD rows: AuthShield `36efc8f4-554c-81d2-87e9-efddab1762c8`, Luminance `36efc8f4-554c-81ce-a20b-d04215e51f12`, FieldKit `36efc8f4-554c-81c5-84cc-ee35b20095d7`
 - All DB IDs in `src/lib/notion-ids.ts` — treat that file as the canonical reference.
 
-**Mirror DB naming:** user renamed the Mirror DBs from `Mirror — GitHub` to `GitHub | Mirror` (and similarly for others) in the Notion UI. `notion-ids.ts` reflects the correct IDs regardless; bootstrap's `DB_NAMES` still uses the original `"Mirror — GitHub"` style. If re-bootstrapping from scratch, update `DB_NAMES` in `bootstrap-workspace.ts` to match current Notion names or the title-scan will create duplicates.
+**Mirror DB naming:** user renamed the Mirror DBs from `Mirror — GitHub` to `GitHub | Mirror` (and similarly for others) in the Notion UI. `notion-ids.ts` reflects the correct IDs regardless. `bootstrap-workspace.ts` `DB_NAMES` has been updated to match the current `"GitHub | Mirror"` style — **this was a review finding; the fix is committed**. Future schema additions should use the `"X | Mirror"` naming convention.
 
 ### Gotchas for downstream sessions
 
