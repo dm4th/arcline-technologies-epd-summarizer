@@ -53,18 +53,19 @@ States: `waiting`, `ready`, `in-progress`, `in-review`, `completed`, `blocked`. 
 | PRD | State | Owner | Updated | Notes |
 |---|---|---|---|---|
 | 00 | completed | opus-review-2026-05-28 | 2026-05-28T19:30:00Z | APPROVED by Opus review — all 6 ACs re-verified live (probe, env-fail, worker id 019e6ff1-ede4-7081-a976-8bfa40c9f50a, tsc, types, Quickstart) |
-| 01 | in-review | sonnet-2026-05-28-A2 | 2026-05-28T22:30:00Z | Changes applied — bootstrap DB_NAMES updated to "GitHub \| Mirror" etc.; notion-ids.ts pages.squad* backfilled with Squads DB row IDs. AC2 idempotency restored. Re-submitted for review. |
+| 01 | in-review | sonnet-2026-05-28-A2 | 2026-05-28T23:15:00Z | Live-safety hardening — teardown requires --yes flag (no pnpm alias); bootstrap loud header; seed-row idempotency verified; pageIds from Squads DB rows; teardown fixed for deliveryPipeline + Mirror labels. |
 | 02 | completed | opus-review-2026-05-28 | 2026-05-28T22:15:00Z | APPROVED by Opus review — AC1 validate-fixtures 12/12 (live), AC2 README lists all 5 tensions w/ record IDs, AC3 ground-truth references all 5 w/ scoring, AC4 word count <30k. Volume within spec. |
-| 03a | waiting | — | — | deps: 00, 01, 02, 03 |
-| 03b | waiting | — | — | deps: 00, 01, 02, 03 |
-| 03c | waiting | — | — | deps: 00, 01, 02, 03 |
-| 03d | waiting | — | — | deps: 00, 01, 02, 03 |
+| 03 | waiting | — | 2026-05-28T23:00:00Z | CULMINATION / rollup (Dan's ruling) — completes when 03a–d all land. Pattern contract already authored, so it does NOT gate the workers. deps: 03a, 03b, 03c, 03d. |
+| 03a | in-progress | opus-2026-05-28-B1 | 2026-05-28T23:15:00Z | Claimed for Wave B build — GitHub Mirror worker. deps 00/01/02 met; PRD-03 pattern contract authored. |
+| 03b | ready | — | 2026-05-28T23:00:00Z | deps 00/01/02 met; PRD-03 pattern contract authored. Ready to claim — Jira Mirror worker. |
+| 03c | ready | — | 2026-05-28T23:00:00Z | deps 00/01/02 met; PRD-03 pattern contract authored. Ready to claim — Slack Mirror worker. |
+| 03d | ready | — | 2026-05-28T23:00:00Z | deps 00/01/02 met; PRD-03 pattern contract authored. Ready to claim — Figma Mirror worker. |
 | 04a | waiting | — | — | deps: 00, 01, 03a, 03b, 03c, 03d |
 | 04b | waiting | — | — | deps: 00, 01, 04a |
 | 05 | waiting | — | — | deps: 00, 01, 04a, 04b, 06 |
-| 06 | waiting | — | — | deps: 00, 01 |
-| 07 | waiting | — | — | deps: 01 |
+| 06 | ready | — | 2026-05-28T22:45:00Z | deps 00/01 met (PRD-01 approved). Ready to claim — HITL squad review. |
+| 07 | ready | — | 2026-05-28T22:45:00Z | dep 01 met (PRD-01 approved). Ready to claim — observability / Agent Run Log. |
 | 08 | waiting | — | — | deps: 02, 04a, 04b, 05 |
 | 09 | waiting | — | — | deps: 05, 08, 10 |
-| 10 | waiting | — | — | deps: 01 |
+| 10 | ready | — | 2026-05-28T22:45:00Z | dep 01 met (PRD-01 approved). Ready to claim — teaching layer. |
 | 11 | waiting | — | — | deps: 09 |

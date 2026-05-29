@@ -6,7 +6,6 @@
     "probe": "tsx --env-file=.env.local scripts/probe-workspace.ts",
     "bootstrap": "tsx scripts/bootstrap-workspace.ts",
     "patch": "tsx scripts/patch-schema.ts",
-    "teardown": "tsx scripts/teardown-workspace.ts",
     "typecheck": "tsc --noEmit",
     "validate-fixtures": "tsx scripts/validate-fixtures.ts"
   },

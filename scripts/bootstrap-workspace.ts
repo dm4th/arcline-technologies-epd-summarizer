@@ -1,19 +1,33 @@
 /**
  * bootstrap-workspace.ts  (v2)
  *
- * Idempotent. Scans BASE_NOTION_PAGE children by title on every run;
- * creates only what is missing and skips the rest.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ⚠️  FIRST-TIME WORKSPACE CREATION ONLY
  *
- * Schema changes from v1:
+ * This script creates the 11 Notion databases and seeds their initial rows.
+ * It is safe to re-run on a populated workspace — it is a no-op (title-scan
+ * detects existing DBs; dbIsEmpty() guards all seed rows).
+ *
+ * For live workspace changes after initial setup, use the ntn CLI instead:
+ *   Add a column:    ntn api v1/databases/{id} -X PATCH --notion-version 2022-06-28 \
+ *                      -d '{"properties":{"New Col":{"rich_text":{}}}}'
+ *   Update content:  ntn pages update {id} --content "..."
+ *   Additive batch:  pnpm patch   (runs scripts/patch-schema.ts)
+ *
+ * See CLAUDE.md § "Notion Workspace Operations" for the full ruleset.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Schema (v2 vs v1 changes):
  *  - Squads:              Members (text), Product URL (url), page body with team roster
  *  - Mirror — Slack:      Thread Timestamp (text) for channel + thread-level tracking
  *  - Squad Weekly Summary: Summary column removed (→ page body); approval section in body
- *  - Master EPD Weekly:   Executive Summary + Body columns removed (→ page body);
- *                         approval section in body
+ *  - Master EPD Weekly:   Executive Summary + Body columns removed (→ page body)
  *  - Product Roadmap:     Related PRDs (relation → PRDs)
  *  - NEW: Delivery Pipeline — step-by-step status tracking per weekly run
  *  - PRDs seed:           Full page bodies for AuthShield, Luminance, FieldKit
  *  - Roadmap seed:        Links to associated PRD pages
+ *  - Squad "pages":       pages.squad* in notion-ids.ts are the Squads DB row IDs,
+ *                         not standalone top-level pages.
  */
 
 import path from "path";
@@ -347,9 +361,11 @@ async function main(): Promise<void> {
   const baseId = extractPageId(env.BASE_NOTION_PAGE);
 
   console.log("─".repeat(60));
-  console.log("Arcline Workspace Bootstrap  (v2)");
+  console.log("Arcline Workspace Bootstrap  (v2)  — FIRST-TIME CREATION ONLY");
   console.log(`Base page: ${env.BASE_NOTION_PAGE}`);
   console.log("─".repeat(60));
+  console.log("\n⚠️  Live workspace changes must use `ntn` CLI or `pnpm patch`.");
+  console.log("   Re-running on a populated workspace is a safe no-op.\n");
 
   const existing = await scanChildTitles(baseId);
   console.log(`Scanned ${existing.size} existing child blocks.\n`);
@@ -508,26 +524,7 @@ async function main(): Promise<void> {
     "Notes":         { rich_text: {} },
   });
 
-  // ── 9. Squad pages ─────────────────────────────────────────────────────────
-  console.log();
-  const pageIds = {} as Record<PageKey, string>;
-  for (const [key, name] of Object.entries(SQUAD_PAGE_NAMES) as Array<[PageKey, string]>) {
-    if (existing.has(name)) {
-      pageIds[key] = existing.get(name)!;
-      console.log(`[found]  ${name} page`);
-      found++;
-    } else {
-      const page = await client.pages.create({
-        parent: { type: "page_id", page_id: baseId },
-        properties: { title: { title: rt(name) } },
-      });
-      pageIds[key] = page.id;
-      created++;
-      console.log(`[create] ${name} page → ${page.id}`);
-    }
-  }
-
-  // ── 10. Seed Squads DB ─────────────────────────────────────────────────────
+  // ── 9. Seed Squads DB ─────────────────────────────────────────────────────
   const squadPageIds = new Map<string, string>();
   console.log();
 
@@ -573,7 +570,16 @@ async function main(): Promise<void> {
     console.log(`  Loaded ${squadPageIds.size} squad IDs.`);
   }
 
-  // ── 11. Seed PRDs DB (full page bodies) ────────────────────────────────────
+  // Squad "pages" in notion-ids.ts are the Squads DB row IDs (not standalone pages).
+  // This ensures a re-run never creates duplicate top-level pages and always reflects
+  // the live row IDs from the Squads DB.
+  const pageIds: Record<PageKey, string> = {
+    squadAtlas: squadPageIds.get("atlas") ?? "",
+    squadLumen: squadPageIds.get("lumen") ?? "",
+    squadForge: squadPageIds.get("forge") ?? "",
+  };
+
+  // ── 10. Seed PRDs DB (full page bodies) ────────────────────────────────────
   const prdPageIds = new Map<string, string>(); // productSlug → notion page id
   const today = new Date().toISOString().slice(0, 10);
 

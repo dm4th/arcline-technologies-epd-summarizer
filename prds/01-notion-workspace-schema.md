@@ -3,8 +3,8 @@
 <!-- status:
 state: in-review
 owner: sonnet-2026-05-28-A2
-updated: 2026-05-28T22:30:00Z
-notes: Changes from opus review applied — (1) bootstrap DB_NAMES updated to "GitHub | Mirror" etc. (matches live workspace); (2) notion-ids.ts pages.squad* backfilled with Squads DB row IDs. AC2 idempotency restored. Re-submitted for review.
+updated: 2026-05-28T23:15:00Z
+notes: Live-safety hardening applied — teardown now requires --yes flag (safety gate + no pnpm alias); bootstrap loud header added; seed-row idempotency verified (dbIsEmpty guards all seeds); pageIds derived from Squads DB rows (no orphaned top-level squad pages); teardown resetNotionIds fixed to include deliveryPipeline + updated Mirror DB labels.
 -->
 
 ## Goal

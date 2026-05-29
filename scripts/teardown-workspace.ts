@@ -1,14 +1,25 @@
 /**
  * teardown-workspace.ts
  *
- * Archives every Notion database and squad page created by bootstrap-workspace.ts,
- * then resets src/lib/notion-ids.ts to empty strings.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ⚠️  DESTRUCTIVE — for development resets only.
  *
- * Archives (moves to Notion trash) rather than hard-deleting so nothing is
- * unrecoverable. Safe to re-run after bootstrap creates the workspace again.
+ * Archives every Notion database and page created by bootstrap, then resets
+ * src/lib/notion-ids.ts to empty strings. Archives move to Notion trash
+ * (not hard-deleted), so content is recoverable via Notion's page history.
  *
- * Usage:  pnpm tsx scripts/teardown-workspace.ts
- *         pnpm tsx scripts/teardown-workspace.ts --dry-run
+ * This is NOT the right tool for:
+ *   - Adding / removing columns   → use ntn CLI or pnpm patch
+ *   - Updating page content       → use ntn pages update {id} --content "..."
+ *   - Any change to a live workspace with user-edited content
+ *
+ * SAFETY GATE: you must pass --yes explicitly. There is intentionally no
+ * `pnpm teardown` shortcut to prevent accidental runs.
+ *
+ * Usage:
+ *   pnpm tsx scripts/teardown-workspace.ts --yes          ← destructive
+ *   pnpm tsx scripts/teardown-workspace.ts --dry-run      ← safe preview
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import path from "path";
@@ -18,6 +29,7 @@ import { loadEnv } from "../src/lib/env";
 import { NOTION_IDS } from "../src/lib/notion-ids";
 
 const DRY_RUN = process.argv.includes("--dry-run");
+const YES     = process.argv.includes("--yes");
 
 async function archivePage(id: string, label: string): Promise<void> {
   if (!id) {
@@ -54,6 +66,7 @@ export interface NotionIds {
     squadWeeklySummary: string;
     masterEpdWeekly: string;
     agentRunLog: string;
+    deliveryPipeline: string;
   };
   pages: {
     squadAtlas: string;
@@ -74,6 +87,7 @@ export const NOTION_IDS: NotionIds = {
     squadWeeklySummary: "",
     masterEpdWeekly: "",
     agentRunLog: "",
+    deliveryPipeline: "",
   },
   pages: {
     squadAtlas: "",
@@ -90,8 +104,22 @@ export const NOTION_IDS: NotionIds = {
 async function main(): Promise<void> {
   loadEnv(); // validate env is present even if we don't use all keys
 
+  // ── Safety gate ──────────────────────────────────────────────────────────
+  if (!DRY_RUN && !YES) {
+    console.error("\n" + "█".repeat(60));
+    console.error("  SAFETY GATE — teardown requires an explicit --yes flag");
+    console.error("█".repeat(60));
+    console.error("\n  This archives your ENTIRE live Notion workspace.");
+    console.error("  All databases, rows, views, and page content move to trash.\n");
+    console.error("  If you really mean to wipe the workspace, run:");
+    console.error("    pnpm tsx scripts/teardown-workspace.ts --yes\n");
+    console.error("  For a safe dry-run preview (no changes):");
+    console.error("    pnpm tsx scripts/teardown-workspace.ts --dry-run\n");
+    process.exit(1);
+  }
+
   console.log("─".repeat(60));
-  console.log(`Arcline Workspace Teardown${DRY_RUN ? " (DRY RUN)" : ""}`);
+  console.log(`Arcline Workspace Teardown${DRY_RUN ? " (DRY RUN)" : " (--yes confirmed)"}`);
   console.log("─".repeat(60));
 
   const allEmpty = Object.values(NOTION_IDS.dbs).every((v) => v === "") &&
@@ -102,15 +130,16 @@ async function main(): Promise<void> {
   }
 
   // Archive databases (order matters: archive dependents before Squads)
+  await archivePage(NOTION_IDS.dbs.deliveryPipeline,   "Delivery Pipeline");
   await archivePage(NOTION_IDS.dbs.agentRunLog,        "Agent Run Log");
   await archivePage(NOTION_IDS.dbs.masterEpdWeekly,    "Master EPD Weekly");
   await archivePage(NOTION_IDS.dbs.squadWeeklySummary, "Squad Weekly Summary");
   await archivePage(NOTION_IDS.dbs.productRoadmap,     "Product Roadmap");
   await archivePage(NOTION_IDS.dbs.prds,               "PRDs");
-  await archivePage(NOTION_IDS.dbs.mirrorFigma,        "Mirror — Figma");
-  await archivePage(NOTION_IDS.dbs.mirrorSlack,        "Mirror — Slack");
-  await archivePage(NOTION_IDS.dbs.mirrorJira,         "Mirror — Jira");
-  await archivePage(NOTION_IDS.dbs.mirrorGithub,       "Mirror — GitHub");
+  await archivePage(NOTION_IDS.dbs.mirrorFigma,        "Figma | Mirror");
+  await archivePage(NOTION_IDS.dbs.mirrorSlack,        "Slack | Mirror");
+  await archivePage(NOTION_IDS.dbs.mirrorJira,         "Jira | Mirror");
+  await archivePage(NOTION_IDS.dbs.mirrorGithub,       "GitHub | Mirror");
   await archivePage(NOTION_IDS.dbs.squads,             "Squads");
 
   // Archive squad pages
