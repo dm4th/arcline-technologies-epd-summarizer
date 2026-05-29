@@ -46,6 +46,10 @@ const config: SourceWorkerConfig = {
   propertyMapper: (rec: SourceRecord): MirrorProperties => {
     const r = rec.raw as SlackRaw;
     const excerpt = buildExcerpt(r.messages ?? []);
+    // Participant Count = unique authors in the thread (PRD-03c design + AC2),
+    // computed from messages rather than trusting the fixture's participant_count
+    // field, which can include lurkers who never posted.
+    const participantCount = new Set((r.messages ?? []).map((m) => m.author)).size;
     return {
       Title:             { title: [{ text: { content: rec.title } }] },
       Channel:           { rich_text: rt(r.channel ?? "") },
@@ -53,7 +57,7 @@ const config: SourceWorkerConfig = {
       Permalink:         { url: rec.url },
       "Last Updated":    { date: { start: rec.lastUpdated } },
       Excerpt:           { rich_text: [{ text: { content: excerpt.substring(0, 1999) } }] },
-      "Participant Count": { number: r.participant_count ?? 0 },
+      "Participant Count": { number: participantCount },
       // Schema v2 additions (from PRD-01 implementation notes)
       "Thread Timestamp": { rich_text: rt(r.thread_ts ?? "") },
       "Thread URL":       { url: rec.url },
