@@ -67,5 +67,5 @@ States: `waiting`, `ready`, `in-progress`, `in-review`, `completed`, `blocked`. 
 | 07 | in-review | sonnet-2026-05-28-B3 | 2026-05-29T05:10:00Z | Weekly Pipeline Dashboard (36ffc8f4-554c-8104-aea9-c1e79b3b5fc0) live with 5 embedded views. ACs 1–3 ✅. pnpm observe refreshes prose summary. |
 | 08 | waiting | — | — | deps: 02, 04a, 04b, 05 |
 | 09 | waiting | — | — | deps: 05, 08, 10 |
-| 10 | ready | — | 2026-05-28T22:45:00Z | dep 01 met (PRD-01 approved). Ready to claim — teaching layer. |
+| 10 | in-review | sonnet-2026-05-28-B4 | 2026-05-29T07:00:00Z | 18 Notion pages live — top-level hub + 11 DB explainers + 6 agent explainers. ACs 1–4 ✅. Hub: 36ffc8f4-554c-81a8-9a77-c1abefc99d18. Explainers under hub (not DBs) — API limitation, see gotchas. |
 | 11 | waiting | — | — | deps: 09 |
