@@ -53,8 +53,8 @@ States: `waiting`, `ready`, `in-progress`, `in-review`, `completed`, `blocked`. 
 | PRD | State | Owner | Updated | Notes |
 |---|---|---|---|---|
 | 00 | completed | opus-review-2026-05-28 | 2026-05-28T19:30:00Z | APPROVED by Opus review — all 6 ACs re-verified live (probe, env-fail, worker id 019e6ff1-ede4-7081-a976-8bfa40c9f50a, tsc, types, Quickstart) |
-| 01 | in-review | sonnet-2026-05-28-A2 | 2026-05-28T21:45:00Z | v2 schema complete — 11 DBs live (incl. Delivery Pipeline), Squads/PRDs/Roadmap seeded with rich content, ntn CLI patches applied, Summary/Body/ExecSummary columns removed, Thread+PRD relations added. notion-ids.ts populated. AC5 (visual) pending human check. |
-| 02 | in-review | sonnet-2026-05-28-A3 | 2026-05-28T20:30:00Z | all 4 ACs passed — 12/12 fixture files valid, 5 tensions planted, ground-truth report written, 26,883 words (<30k) |
+| 01 | in-review | sonnet-2026-05-28-A2 | 2026-05-28T22:30:00Z | Changes applied — bootstrap DB_NAMES updated to "GitHub \| Mirror" etc.; notion-ids.ts pages.squad* backfilled with Squads DB row IDs. AC2 idempotency restored. Re-submitted for review. |
+| 02 | completed | opus-review-2026-05-28 | 2026-05-28T22:15:00Z | APPROVED by Opus review — AC1 validate-fixtures 12/12 (live), AC2 README lists all 5 tensions w/ record IDs, AC3 ground-truth references all 5 w/ scoring, AC4 word count <30k. Volume within spec. |
 | 03a | waiting | — | — | deps: 00, 01, 02, 03 |
 | 03b | waiting | — | — | deps: 00, 01, 02, 03 |
 | 03c | waiting | — | — | deps: 00, 01, 02, 03 |

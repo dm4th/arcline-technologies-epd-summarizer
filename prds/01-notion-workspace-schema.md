@@ -3,8 +3,8 @@
 <!-- status:
 state: in-review
 owner: sonnet-2026-05-28-A2
-updated: 2026-05-28T21:45:00Z
-notes: v2 schema complete — 11 DBs live (incl. Delivery Pipeline), Squads/PRDs/Roadmap seeded with rich content, ntn CLI patches applied, Summary/Body/ExecSummary columns removed, Thread+PRD relations added. notion-ids.ts populated. AC5 (visual) pending human check.
+updated: 2026-05-28T22:30:00Z
+notes: Changes from opus review applied — (1) bootstrap DB_NAMES updated to "GitHub | Mirror" etc. (matches live workspace); (2) notion-ids.ts pages.squad* backfilled with Squads DB row IDs. AC2 idempotency restored. Re-submitted for review.
 -->
 
 ## Goal

@@ -25,10 +25,10 @@ import { loadEnv } from "../src/lib/env";
 
 const DB_NAMES = {
   squads:             "Squads",
-  mirrorGithub:       "Mirror — GitHub",
-  mirrorJira:         "Mirror — Jira",
-  mirrorSlack:        "Mirror — Slack",
-  mirrorFigma:        "Mirror — Figma",
+  mirrorGithub:       "GitHub | Mirror",
+  mirrorJira:         "Jira | Mirror",
+  mirrorSlack:        "Slack | Mirror",
+  mirrorFigma:        "Figma | Mirror",
   prds:               "PRDs",
   productRoadmap:     "Product Roadmap",
   squadWeeklySummary: "Squad Weekly Summary",

@@ -37,8 +37,8 @@ export const NOTION_IDS: NotionIds = {
     deliveryPipeline:   "36efc8f4-554c-813a-8e52-d26b831109fe",
   },
   pages: {
-    squadAtlas: "",
-    squadLumen: "",
-    squadForge: "",
+    squadAtlas: "36efc8f4-554c-81e7-a83b-c976963a5fab",  // Atlas row in Squads DB
+    squadLumen: "36efc8f4-554c-81b6-8583-dd3634f0e7ad",  // Lumen row in Squads DB
+    squadForge: "36efc8f4-554c-8102-b02e-d9def2d4a4da",  // Forge row in Squads DB
   },
 };
