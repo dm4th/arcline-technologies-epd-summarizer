@@ -53,18 +53,18 @@ States: `waiting`, `ready`, `in-progress`, `in-review`, `completed`, `blocked`. 
 | PRD | State | Owner | Updated | Notes |
 |---|---|---|---|---|
 | 00 | completed | opus-review-2026-05-28 | 2026-05-28T19:30:00Z | APPROVED by Opus review — all 6 ACs re-verified live (probe, env-fail, worker id 019e6ff1-ede4-7081-a976-8bfa40c9f50a, tsc, types, Quickstart) |
-| 01 | in-review | sonnet-2026-05-28-A2 | 2026-05-28T23:15:00Z | Live-safety hardening — teardown requires --yes flag (no pnpm alias); bootstrap loud header; seed-row idempotency verified; pageIds from Squads DB rows; teardown fixed for deliveryPipeline + Mirror labels. |
+| 01 | completed | opus-review-2026-05-28 | 2026-05-28T23:30:00Z | APPROVED by Opus review (3rd cycle / hardening). Verified in code: teardown gated behind --yes + exit(1) banner, pnpm alias removed; dbIsEmpty() guards all 5 seed blocks; bootstrap loud "ntn-first" header; resetNotionIds covers deliveryPipeline + renamed Mirror labels. AC5 + optional live no-op rerun = human confidence check. |
 | 02 | completed | opus-review-2026-05-28 | 2026-05-28T22:15:00Z | APPROVED by Opus review — AC1 validate-fixtures 12/12 (live), AC2 README lists all 5 tensions w/ record IDs, AC3 ground-truth references all 5 w/ scoring, AC4 word count <30k. Volume within spec. |
 | 03 | waiting | — | 2026-05-28T23:00:00Z | CULMINATION / rollup (Dan's ruling) — completes when 03a–d all land. Pattern contract already authored, so it does NOT gate the workers. deps: 03a, 03b, 03c, 03d. |
-| 03a | in-progress | opus-2026-05-28-B1 | 2026-05-28T23:15:00Z | Claimed for Wave B build — GitHub Mirror worker. deps 00/01/02 met; PRD-03 pattern contract authored. |
-| 03b | ready | — | 2026-05-28T23:00:00Z | deps 00/01/02 met; PRD-03 pattern contract authored. Ready to claim — Jira Mirror worker. |
-| 03c | ready | — | 2026-05-28T23:00:00Z | deps 00/01/02 met; PRD-03 pattern contract authored. Ready to claim — Slack Mirror worker. |
-| 03d | ready | — | 2026-05-28T23:00:00Z | deps 00/01/02 met; PRD-03 pattern contract authored. Ready to claim — Figma Mirror worker. |
+| 03a | in-review | sonnet-2026-05-28-B1 | 2026-05-28T23:45:00Z | Mirror — GitHub populated: 27 rows (atlas/lumen/forge, 2026-W21). ACs 1–4 ✅. Idempotent upsert via Source ID property. |
+| 03b | in-review | sonnet-2026-05-28-B1 | 2026-05-28T23:45:00Z | Mirror — Jira populated: 34 rows. ACs 1–3 ✅. Status constrained to valid select options. |
+| 03c | in-review | sonnet-2026-05-28-B1 | 2026-05-28T23:45:00Z | Mirror — Slack populated: 18 rows. ACs 1–3 ✅. Excerpt truncated w/ …; Thread Timestamp+URL set. Cross-Refs: no linked_records in fixtures, skipped. |
+| 03d | in-review | sonnet-2026-05-28-B1 | 2026-05-28T23:45:00Z | Mirror — Figma populated: 10 rows. ACs 1–3 ✅. One row per fixture entry; Comment Excerpt ≤1.5k. |
 | 04a | waiting | — | — | deps: 00, 01, 03a, 03b, 03c, 03d |
 | 04b | waiting | — | — | deps: 00, 01, 04a |
 | 05 | waiting | — | — | deps: 00, 01, 04a, 04b, 06 |
-| 06 | ready | — | 2026-05-28T22:45:00Z | deps 00/01 met (PRD-01 approved). Ready to claim — HITL squad review. |
-| 07 | ready | — | 2026-05-28T22:45:00Z | dep 01 met (PRD-01 approved). Ready to claim — observability / Agent Run Log. |
+| 06 | in-review | opus-2026-05-28-B2 | 2026-05-29T00:30:00Z | hitl-review.ts: seed (18 rows, idempotent) + create-page + approve (atomic, 6→approved) + reject (1 of 6, others untouched) + refresh-page. AC1–AC3 live-verified. AC4 pending PRD-04 re-run agent. |
+| 07 | in-review | sonnet-2026-05-28-B3 | 2026-05-29T05:10:00Z | Weekly Pipeline Dashboard (36ffc8f4-554c-8104-aea9-c1e79b3b5fc0) live with 5 embedded views. ACs 1–3 ✅. pnpm observe refreshes prose summary. |
 | 08 | waiting | — | — | deps: 02, 04a, 04b, 05 |
 | 09 | waiting | — | — | deps: 05, 08, 10 |
 | 10 | ready | — | 2026-05-28T22:45:00Z | dep 01 met (PRD-01 approved). Ready to claim — teaching layer. |

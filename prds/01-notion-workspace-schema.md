@@ -1,10 +1,10 @@
 # PRD-01 — Notion Workspace Schema
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-05-28-A2
-updated: 2026-05-28T23:15:00Z
-notes: Live-safety hardening applied — teardown now requires --yes flag (safety gate + no pnpm alias); bootstrap loud header added; seed-row idempotency verified (dbIsEmpty guards all seeds); pageIds derived from Squads DB rows (no orphaned top-level squad pages); teardown resetNotionIds fixed to include deliveryPipeline + updated Mirror DB labels.
+state: completed
+owner: opus-review-2026-05-28
+updated: 2026-05-28T23:30:00Z
+notes: APPROVED by Opus review (3rd cycle / live-safety hardening). All hardening verified in code — teardown gated behind --yes with a process.exit(1) banner and the pnpm alias removed (can no longer fire casually); dbIsEmpty() guards all 5 seed blocks (Squads/PRDs/Roadmap/Master/SquadWeekly) so re-run is a no-op; bootstrap carries a loud "first-time-only, use ntn for live ops" header; resetNotionIds covers deliveryPipeline and archive labels match renamed Mirror titles. Schema ACs 1–4 verified across prior cycles; AC5 (visual) + an optional live no-op rerun remain a human confidence check. Workspace is the stable foundation for Wave B (03a–d all in-progress).
 -->
 
 ## Goal

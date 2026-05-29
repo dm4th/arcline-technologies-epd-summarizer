@@ -1,5 +1,12 @@
 # PRD-03d — Figma Mirror Worker
 
+<!-- status:
+state: in-review
+owner: sonnet-2026-05-28-B1
+updated: 2026-05-28T23:45:00Z
+notes: Mirror — Figma populated: 10 rows across atlas/lumen/forge (2026-W21). AC1 ✅ 10 rows (1 per fixture entry). AC2 ✅ idempotent. AC3 ✅ multiple threads per file share File Key (atlas-figma-BillingV2UI + PremiumTierFlow both present). Comment Excerpt truncated to 1.5k. Agent Run Log worker.figma rows present.
+-->
+
 ## Goal
 Populate **Mirror — Figma** with one row per relevant file/comment thread per squad per week.
 

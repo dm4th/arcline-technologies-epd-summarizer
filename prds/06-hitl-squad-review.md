@@ -1,5 +1,12 @@
 # PRD-06 — Per-Squad HITL Review
 
+<!-- status:
+state: in-review
+owner: opus-2026-05-28-B2
+updated: 2026-05-29T00:30:00Z
+notes: Implementation complete. src/workers/hitl-review.ts + scripts/hitl-review.ts. AC1 ✅ review page with 6 embedded summaries. AC2 ✅ approve flips all 6 atomically + Agent Run Log. AC3 ✅ reject 1 leaves 5 untouched + logs re-run signal. AC4 ✅ refresh-page re-reads DB (AC4 completes when PRD-04 re-runs agent). Idempotent: seed no-ops on re-run; review page refreshes in place.
+-->
+
 ## Goal
 Give each squad's EM a single Notion page that consolidates all 6 of that squad's weekly summaries with one Approve action, replacing the 18-click world from `solution-intro.md`.
 
@@ -37,5 +44,39 @@ HITL only works if the friction is bearable. Per-squad consolidated review is th
 ## Open Questions
 - Notion button → Worker endpoint auth model. Implementing session probes Notion's native automation capabilities and falls back to a server endpoint if needed.
 
+## Implementation Notes
+
+> Written post-build. Read before building PRD-04 or PRD-05.
+
+### What was built
+
+- **`src/workers/hitl-review.ts`** — core module exporting: `seedSquadWeeklySummaries`, `createReviewPage`, `approveSquadWeek`, `rejectSummary`, `weekOfToDate`. Also exports `ALL_SOURCES`, `ALL_SQUADS`, `SummarySource` type.
+- **`scripts/hitl-review.ts`** — CLI entry point. `pnpm hitl-review --action=<action> [--squad=...] [--week=...] [--source=...] [--comment=...]`.
+- **`package.json`** — `"hitl-review"` script added.
+
+### Key decisions
+
+- **No Notion button API** — Notion's public API (v2022-06-28) doesn't support creating button blocks with automation endpoints. "Approve button" is implemented as a Worker CLI command (`--action=approve`). The review page contains callout blocks with the exact command to copy-paste.
+- **Summary in page body** — Per PRD-01 implementation notes, `Summary` column is removed; content lives in page body. The review page links to each summary page via `mention` blocks rather than embedding body content.
+- **Idempotent everywhere** — seed checks by Squad + Week Of + Source before creating. create-page scans squad page children for the exact title and refreshes in place if found.
+- **Re-run signal** — On reject, `approval.squad.<squad>.<source>` is written to Agent Run Log. PRD-04's re-run agent polls this log. After re-run, EM calls `--action=refresh-page` to pull the new status into the review page (AC4).
+- **`weekOfToDate`** — ISO week to Monday date conversion is exported so PRD-04/05 can reuse it.
+
+### Seeded demo data
+
+18 Squad Weekly Summary rows created (6 sources × 3 squads, week 2026-W21), all status `awaiting-review`. IDs are in the live SquadWeeklySummary DB — query by Squad + Week Of to find them.
+
+Atlas 2026-W21 review page: `36ffc8f4-554c-81e7-abf6-c96349ce9fb7`
+
+### Gotchas for downstream sessions
+
+**1. `isFullBlock` required for block child iteration** — `blocks.children.list` returns `BlockObjectResponse | PartialBlockObjectResponse`. Always guard with `isFullBlock(block)` before accessing `block.type`.
+
+**2. Squad page IDs are Squads DB row IDs** — `NOTION_IDS.pages.squadAtlas` etc. are DB rows, not standalone pages. Creating a child page via `parent: { page_id: squadPageId }` works correctly; Notion treats DB rows as pages.
+
+**3. `approved` is the status string** — SquadWeeklySummary `Status` select values are `draft / awaiting-review / approved / rejected`. PRD-05's Master Summarizer should filter for `{ property: "Status", select: { equals: "approved" } }`.
+
 ## Verification
-- Demo: open Atlas → Week of <W> Review. See 6 embedded summaries. Click Approve. Open Squad Weekly Summary DB filtered to Atlas + that week — all 6 say `approved`.
+- Demo: open Atlas squad page → "Week of 2026-05-18 — Review". See 6 source sections with [PENDING]/[APPROVED]/[REJECTED] headings and page mention links.
+- Run `pnpm hitl-review --action=approve --squad=atlas --week=2026-W21`. Open Squad Weekly Summary DB filtered to Atlas + 2026-W21 — all 6 show `approved`.
+- Run `pnpm hitl-review --action=reject --squad=atlas --week=2026-W21 --source=github --comment="test"`. Verify github → `rejected`, other 5 → `approved` (untouched).

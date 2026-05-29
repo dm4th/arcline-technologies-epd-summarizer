@@ -7,7 +7,10 @@
     "bootstrap": "tsx scripts/bootstrap-workspace.ts",
     "patch": "tsx scripts/patch-schema.ts",
     "typecheck": "tsc --noEmit",
-    "validate-fixtures": "tsx scripts/validate-fixtures.ts"
+    "validate-fixtures": "tsx scripts/validate-fixtures.ts",
+    "workers": "tsx scripts/trigger-workers.ts",
+    "hitl-review": "tsx scripts/hitl-review.ts",
+    "observe": "tsx scripts/setup-observability.ts"
   },
   "engines": {
     "node": ">=20.0.0"

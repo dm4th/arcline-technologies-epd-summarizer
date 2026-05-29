@@ -1,5 +1,12 @@
 # PRD-03a — GitHub Mirror Worker
 
+<!-- status:
+state: in-review
+owner: sonnet-2026-05-28-B1
+updated: 2026-05-28T23:45:00Z
+notes: Mirror — GitHub populated: 27 rows across atlas/lumen/forge (2026-W21). AC1 ✅ 27 rows created. AC2 ✅ re-run 89→skipped. AC3 ✅ atlas-pr-048 body edit → exactly 1 updated. AC4 ✅ Agent Run Log worker.github rows present with non-zero Duration ms. Source ID property added to DB for idempotent upsert keying.
+-->
+
 ## Goal
 Populate **Mirror — GitHub** with one row per PR per squad per week, normalized to `SourceRecord`.
 

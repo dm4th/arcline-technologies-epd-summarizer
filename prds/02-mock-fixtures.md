@@ -1,10 +1,10 @@
 # PRD-02 — Mock Fixtures
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-05-28-A3
-updated: 2026-05-28T20:30:00Z
-notes: all 4 ACs passed — 12/12 fixture files valid, 5 tensions planted, ground-truth report written, 26,883 words (<30k)
+state: completed
+owner: opus-review-2026-05-28
+updated: 2026-05-28T22:15:00Z
+notes: APPROVED by Opus review — AC1 validate-fixtures 12/12 (live), AC2 README lists all 5 tensions w/ record IDs, AC3 ground-truth references all 5 w/ scoring, AC4 word count <30k. Volume within spec.
 -->
 
 ## Goal

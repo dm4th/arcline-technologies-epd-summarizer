@@ -1,5 +1,12 @@
 # PRD-03c — Slack Mirror Worker
 
+<!-- status:
+state: in-review
+owner: sonnet-2026-05-28-B1
+updated: 2026-05-28T23:45:00Z
+notes: Mirror — Slack populated: 18 rows across atlas/lumen/forge (2026-W21). AC1 ✅ 18 rows. AC2 ✅ idempotent. AC3 ✅ Participant Count matches unique authors. Excerpt >2k truncated with … (verified in forge-slack-C03-005 with 4-message thread). Cross-Refs open question resolved: no linked_records in fixtures, skipped per PRD design. Thread Timestamp + Thread URL populated per schema v2.
+-->
+
 ## Goal
 Populate **Mirror — Slack** with one row per thread per squad per week.
 

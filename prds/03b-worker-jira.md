@@ -1,5 +1,12 @@
 # PRD-03b — Jira Mirror Worker
 
+<!-- status:
+state: in-review
+owner: sonnet-2026-05-28-B1
+updated: 2026-05-28T23:45:00Z
+notes: Mirror — Jira populated: 34 rows across atlas/lumen/forge (2026-W21). AC1 ✅ 34 rows. AC2 ✅ idempotent re-run. AC3 ✅ Acceptance Criteria preserved verbatim. Agent Run Log worker.jira rows present. Status constrained to Backlog/In Progress/In Review/Done/Blocked.
+-->
+
 ## Goal
 Populate **Mirror — Jira** with one row per ticket per squad per week.
 
