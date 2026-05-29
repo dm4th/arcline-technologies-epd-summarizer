@@ -1,0 +1,230 @@
+[
+  {
+    "sourceId": "LMNE-17",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Fix WCAG AA accessibility violations on form inputs",
+    "url": "https://arcline.atlassian.net/browse/LMNE-17",
+    "lastUpdated": "2026-05-24T09:20:00Z",
+    "raw": {
+      "key": "LMNE-17",
+      "status": "Done",
+      "assignee": "priya-nair",
+      "type": "Bug",
+      "priority": "High",
+      "story_points": 3,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "Zero axe violations on form inputs. aria-label and aria-describedby present on all inputs. Visible focus ring in both themes.",
+      "labels": ["accessibility", "ui", "compliance"]
+    }
+  },
+  {
+    "sourceId": "LMNE-18",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Fix dark mode theme flicker on toggle",
+    "url": "https://arcline.atlassian.net/browse/LMNE-18",
+    "lastUpdated": "2026-05-19T14:25:00Z",
+    "raw": {
+      "key": "LMNE-18",
+      "status": "Done",
+      "assignee": "kai-zhang",
+      "type": "Bug",
+      "priority": "Medium",
+      "story_points": 2,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "No visible flash of wrong theme on toggle. Passes visual regression tests in both Chrome and Firefox.",
+      "labels": ["ui", "theme", "bug"]
+    }
+  },
+  {
+    "sourceId": "LMNE-19",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Upgrade to React 18.3 — enable concurrent rendering",
+    "url": "https://arcline.atlassian.net/browse/LMNE-19",
+    "lastUpdated": "2026-05-22T14:10:00Z",
+    "raw": {
+      "key": "LMNE-19",
+      "status": "Done",
+      "assignee": "kai-zhang",
+      "type": "Task",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "createRoot used. No useLegacyRef calls. All existing tests green.",
+      "labels": ["dependencies", "chore"]
+    }
+  },
+  {
+    "sourceId": "LMNE-20",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Fix performance regression in data grid scroll",
+    "url": "https://arcline.atlassian.net/browse/LMNE-20",
+    "lastUpdated": "2026-05-21T11:50:00Z",
+    "raw": {
+      "key": "LMNE-20",
+      "status": "Done",
+      "assignee": "priya-nair",
+      "type": "Bug",
+      "priority": "High",
+      "story_points": 2,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "P99 scroll jank < 50ms on 500-row dataset. Profiling shows no unnecessary re-renders.",
+      "labels": ["performance", "ui"]
+    }
+  },
+  {
+    "sourceId": "LMNE-21",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Migrate component library to design tokens",
+    "url": "https://arcline.atlassian.net/browse/LMNE-21",
+    "lastUpdated": "2026-05-20T16:20:00Z",
+    "raw": {
+      "key": "LMNE-21",
+      "status": "Done",
+      "assignee": "kai-zhang",
+      "type": "Task",
+      "priority": "High",
+      "story_points": 5,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "Zero hardcoded hex values in component library. All tokens sourced from Figma via token export. Dark and light modes consistent.",
+      "labels": ["design-system", "chore"]
+    }
+  },
+  {
+    "sourceId": "LMNE-22",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Auth tokens v2 endpoint — release with tenantId + scopes",
+    "url": "https://arcline.atlassian.net/browse/LMNE-22",
+    "lastUpdated": "2026-05-19T09:00:00Z",
+    "raw": {
+      "key": "LMNE-22",
+      "status": "Done",
+      "assignee": "priya-nair",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 8,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "/api/auth/tokens/v2 returns JWT with tenantId and scopes. v1 returns Deprecation header. Atlas team migration confirmed.",
+      "labels": ["auth", "api", "cross-team"]
+    }
+  },
+  {
+    "sourceId": "LMNE-24",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Add skeleton loaders to main dashboard",
+    "url": "https://arcline.atlassian.net/browse/LMNE-24",
+    "lastUpdated": "2026-05-22T10:45:00Z",
+    "raw": {
+      "key": "LMNE-24",
+      "status": "In Review",
+      "assignee": "dev-okonkwo",
+      "type": "Story",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "Skeleton shown during all async data fetches on dashboard. Matches Figma spec. No layout shift on data arrival.",
+      "labels": ["ui", "performance", "ux"]
+    }
+  },
+  {
+    "sourceId": "LMNE-25",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Add Playwright e2e tests for auth flow",
+    "url": "https://arcline.atlassian.net/browse/LMNE-25",
+    "lastUpdated": "2026-05-23T09:35:00Z",
+    "raw": {
+      "key": "LMNE-25",
+      "status": "In Progress",
+      "assignee": "dev-okonkwo",
+      "type": "Task",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "Sign-in, token refresh, and sign-out flows covered by Playwright tests. Tests pass in CI on main branch.",
+      "labels": ["test", "auth", "e2e"]
+    }
+  },
+  {
+    "sourceId": "LMNE-26",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Revert gesture navigation experiment",
+    "url": "https://arcline.atlassian.net/browse/LMNE-26",
+    "lastUpdated": "2026-05-23T17:05:00Z",
+    "raw": {
+      "key": "LMNE-26",
+      "status": "In Progress",
+      "assignee": "dev-okonkwo",
+      "type": "Task",
+      "priority": "High",
+      "story_points": 2,
+      "sprint": "Lumen Sprint 12",
+      "acceptance_criteria": "Gesture nav code removed. Tab bar navigation restored. No regressions in routing tests.",
+      "labels": ["navigation", "revert"]
+    }
+  },
+  {
+    "sourceId": "LMNE-27",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Dashboard charts: add weekly trend sparklines",
+    "url": "https://arcline.atlassian.net/browse/LMNE-27",
+    "lastUpdated": "2026-05-24T13:00:00Z",
+    "raw": {
+      "key": "LMNE-27",
+      "status": "To Do",
+      "assignee": null,
+      "type": "Story",
+      "priority": "Medium",
+      "story_points": 5,
+      "sprint": "Lumen Sprint 13",
+      "acceptance_criteria": "Sparklines shown on all KPI cards. Data from last 7 days. Accessible (aria-label on SVG paths).",
+      "labels": ["feature", "ui", "data-viz"]
+    }
+  },
+  {
+    "sourceId": "LMNE-28",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Investigate intermittent auth service 503s in CI",
+    "url": "https://arcline.atlassian.net/browse/LMNE-28",
+    "lastUpdated": "2026-05-22T16:00:00Z",
+    "raw": {
+      "key": "LMNE-28",
+      "status": "To Do",
+      "assignee": null,
+      "type": "Bug",
+      "priority": "Medium",
+      "story_points": 2,
+      "sprint": "Lumen Sprint 13",
+      "acceptance_criteria": "Root cause identified. CI auth service stable. LMNE-25 e2e tests unblocked.",
+      "labels": ["auth", "ci", "infrastructure"]
+    }
+  },
+  {
+    "sourceId": "LMNE-29",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Add table view to dashboard — sortable/filterable",
+    "url": "https://arcline.atlassian.net/browse/LMNE-29",
+    "lastUpdated": "2026-05-23T10:00:00Z",
+    "raw": {
+      "key": "LMNE-29",
+      "status": "To Do",
+      "assignee": null,
+      "type": "Story",
+      "priority": "Low",
+      "story_points": 5,
+      "sprint": "Lumen Sprint 13",
+      "acceptance_criteria": "Table component with client-side sort and filter. Reuses data grid from LMNE-20 fix.",
+      "labels": ["feature", "ui"]
+    }
+  }
+]

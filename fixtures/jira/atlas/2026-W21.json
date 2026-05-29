@@ -1,0 +1,211 @@
+[
+  {
+    "sourceId": "ATLS-38",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Add rate limiting to billing API endpoints",
+    "url": "https://arcline.atlassian.net/browse/ATLS-38",
+    "lastUpdated": "2026-05-19T10:15:00Z",
+    "raw": {
+      "key": "ATLS-38",
+      "status": "Done",
+      "assignee": "sarah-chen",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 3,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Rate limiting enforced at 1000 req/min per tenant. Returns 429 with Retry-After header.",
+      "labels": ["billing", "security"]
+    }
+  },
+  {
+    "sourceId": "ATLS-41",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Fix NPE in payment processor webhook handler",
+    "url": "https://arcline.atlassian.net/browse/ATLS-41",
+    "lastUpdated": "2026-05-20T09:10:00Z",
+    "raw": {
+      "key": "ATLS-41",
+      "status": "Done",
+      "assignee": "alex-kumar",
+      "type": "Bug",
+      "priority": "Critical",
+      "story_points": 1,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "No NPE thrown on Stripe webhook events with missing metadata. Regression test added.",
+      "labels": ["billing", "hotfix"]
+    }
+  },
+  {
+    "sourceId": "ATLS-42",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Billing API refactor — split BillingService into CQRS pattern",
+    "url": "https://arcline.atlassian.net/browse/ATLS-42",
+    "lastUpdated": "2026-05-21T09:00:00Z",
+    "raw": {
+      "key": "ATLS-42",
+      "status": "In Progress",
+      "assignee": "jordan-lee",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 8,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "BillingService split into BillingQueryService and BillingCommandService. All existing tests pass. Load test at 5x peak passes.",
+      "labels": ["billing", "refactor", "architecture"]
+    }
+  },
+  {
+    "sourceId": "ATLS-44",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Increase test coverage for subscription renewal logic to 85%",
+    "url": "https://arcline.atlassian.net/browse/ATLS-44",
+    "lastUpdated": "2026-05-23T11:10:00Z",
+    "raw": {
+      "key": "ATLS-44",
+      "status": "In Progress",
+      "assignee": "morgan-park",
+      "type": "Task",
+      "priority": "Medium",
+      "story_points": 2,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Coverage for SubscriptionRenewalService ≥ 85%. Edge cases: past-due retries, card-expired transitions, proration.",
+      "labels": ["test", "billing"]
+    }
+  },
+  {
+    "sourceId": "ATLS-47",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Fix Stripe webhook HMAC timestamp validation bug",
+    "url": "https://arcline.atlassian.net/browse/ATLS-47",
+    "lastUpdated": "2026-05-23T16:35:00Z",
+    "raw": {
+      "key": "ATLS-47",
+      "status": "In Review",
+      "assignee": "sarah-chen",
+      "type": "Bug",
+      "priority": "High",
+      "story_points": 2,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Valid Stripe events no longer rejected. Monotonic clock used for HMAC window. Regression test added.",
+      "labels": ["billing", "security", "bug"]
+    }
+  },
+  {
+    "sourceId": "ATLS-50",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "MRR breakdown analytics query",
+    "url": "https://arcline.atlassian.net/browse/ATLS-50",
+    "lastUpdated": "2026-05-21T09:05:00Z",
+    "raw": {
+      "key": "ATLS-50",
+      "status": "Backlog",
+      "assignee": null,
+      "type": "Story",
+      "priority": "Low",
+      "story_points": 5,
+      "sprint": null,
+      "acceptance_criteria": "MRR broken down by plan tier, new/expansion/churn components. Exposed via internal analytics endpoint.",
+      "labels": ["analytics", "billing"]
+    }
+  },
+  {
+    "sourceId": "ATLS-55",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Premium tier: migrate to Lumen auth tokens v2",
+    "url": "https://arcline.atlassian.net/browse/ATLS-55",
+    "lastUpdated": "2026-05-20T16:00:00Z",
+    "raw": {
+      "key": "ATLS-55",
+      "status": "Done",
+      "assignee": "sarah-chen",
+      "type": "Task",
+      "priority": "High",
+      "story_points": 2,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Auth token acquisition uses /api/auth/tokens/v2. v1 calls removed from codebase.",
+      "labels": ["auth", "premium", "cross-team"]
+    }
+  },
+  {
+    "sourceId": "ATLS-56",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Premium tier: feature flag gating for entitlements",
+    "url": "https://arcline.atlassian.net/browse/ATLS-56",
+    "lastUpdated": "2026-05-24T14:15:00Z",
+    "raw": {
+      "key": "ATLS-56",
+      "status": "In Progress",
+      "assignee": "jordan-lee",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 5,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "LaunchDarkly flags for premium features. Gradual rollout via percentage cohort. Kill switch working.",
+      "labels": ["premium", "feature-flags"]
+    }
+  },
+  {
+    "sourceId": "ATLS-29",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Remove deprecated /billing/v1 endpoints",
+    "url": "https://arcline.atlassian.net/browse/ATLS-29",
+    "lastUpdated": "2026-05-21T13:25:00Z",
+    "raw": {
+      "key": "ATLS-29",
+      "status": "Done",
+      "assignee": "alex-kumar",
+      "type": "Task",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "All /billing/v1/* routes removed. Zero callers in Datadog trace log for 14 days.",
+      "labels": ["cleanup", "billing"]
+    }
+  },
+  {
+    "sourceId": "ATLS-57",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Billing docs: update REST API reference post-refactor",
+    "url": "https://arcline.atlassian.net/browse/ATLS-57",
+    "lastUpdated": "2026-05-21T08:35:00Z",
+    "raw": {
+      "key": "ATLS-57",
+      "status": "Done",
+      "assignee": "morgan-park",
+      "type": "Task",
+      "priority": "Low",
+      "story_points": 1,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "API docs updated to reflect v2 endpoints. Request/response examples present.",
+      "labels": ["docs", "billing"]
+    }
+  },
+  {
+    "sourceId": "ATLS-58",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Investigate billing latency spike on EU region",
+    "url": "https://arcline.atlassian.net/browse/ATLS-58",
+    "lastUpdated": "2026-05-21T14:00:00Z",
+    "raw": {
+      "key": "ATLS-58",
+      "status": "Done",
+      "assignee": "alex-kumar",
+      "type": "Bug",
+      "priority": "Medium",
+      "story_points": 2,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Root cause identified and documented. Latency back within SLA.",
+      "labels": ["billing", "infra", "performance"]
+    }
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "sourceId": "forge-figma-MobileNavV2",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "Forge Mobile — Navigation Architecture v2",
+    "url": "https://www.figma.com/file/fN1a2v3V4a5r/Forge-Nav-v2",
+    "lastUpdated": "2026-05-21T17:30:00Z",
+    "raw": {
+      "file_key": "fN1a2v3V4a5r",
+      "file_name": "Forge Mobile — Navigation Architecture v2",
+      "last_modified": "2026-05-21T17:30:00Z",
+      "comments": [
+        {
+          "author": "carlos-mendez",
+          "text": "Tab bar navigation (FORGE-30) is merged and in TestFlight. Four tabs: Home, Tasks, Notifications, Profile. Matches the sprint planning spec.",
+          "created_at": "2026-05-21T16:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "yuki-designer",
+          "text": "Following the exec UX review on Monday, we are pivoting away from the tab bar to a gesture-based navigation model — full-screen swipe between sections, with a persistent floating action button for primary actions. This reverses the tab bar decision from sprint planning. The new spec is in frames 'Nav/Gesture-v2/*'. I know FORGE-30 just shipped — flagging this as a priority rework for Sprint 10. The gesture model scored significantly higher in the executive stakeholder session and aligns with the broader product direction. FORGE-38 has been created to track.",
+          "created_at": "2026-05-21T17:30:00Z",
+          "resolved": false
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "This is the first engineering has heard of this decision. We need a sync before any rework starts — FORGE-36 and FORGE-26 are both built on the current nav structure.",
+          "created_at": "2026-05-22T09:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-figma-WidgetDesignKit",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "iOS Widget Design Kit — Small & Medium",
+    "url": "https://www.figma.com/file/wK2i3d4g5e6t/iOS-Widget-Design-Kit",
+    "lastUpdated": "2026-05-19T15:00:00Z",
+    "raw": {
+      "file_key": "wK2i3d4g5e6t",
+      "file_name": "iOS Widget Design Kit — Small & Medium",
+      "last_modified": "2026-05-19T15:00:00Z",
+      "comments": [
+        {
+          "author": "yuki-designer",
+          "text": "Small widget finalized — task count and next due item. Text truncation spec: max 2 lines for task title, ellipsis. Background uses WidgetKit adaptive tinting.",
+          "created_at": "2026-05-18T10:00:00Z",
+          "resolved": true
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "Implemented per spec. One edge case: 47mm Apple Watch face clips the 'next due' label at 20 chars. Created follow-up ticket.",
+          "created_at": "2026-05-19T15:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-figma-TaskCardComponents",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "Task Card Components — Swipe Actions",
+    "url": "https://www.figma.com/file/tC3a4r5d6S7w/Task-Card-Swipe-Actions",
+    "lastUpdated": "2026-05-20T12:00:00Z",
+    "raw": {
+      "file_key": "tC3a4r5d6S7w",
+      "file_name": "Task Card Components — Swipe Actions",
+      "last_modified": "2026-05-20T12:00:00Z",
+      "comments": [
+        {
+          "author": "yuki-designer",
+          "text": "Swipe-right = archive (green), swipe-left = delete (red). Haptic spec: light on reveal, medium on completion. Both actions confirmed in FORGE-33.",
+          "created_at": "2026-05-19T09:00:00Z",
+          "resolved": true
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Implemented. Haptics match spec exactly. One note: on iOS 17, the delete action requires a confirmation tap — added a secondary 'Confirm Delete' reveal per HIG guidelines.",
+          "created_at": "2026-05-20T12:00:00Z",
+          "resolved": true
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-figma-OfflineModeUX",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "Offline Mode — UX States & Sync Indicators",
+    "url": "https://www.figma.com/file/oF5f6l7i8n9e/Offline-Mode-UX",
+    "lastUpdated": "2026-05-23T13:00:00Z",
+    "raw": {
+      "file_key": "oF5f6l7i8n9e",
+      "file_name": "Offline Mode — UX States & Sync Indicators",
+      "last_modified": "2026-05-23T13:00:00Z",
+      "comments": [
+        {
+          "author": "yuki-designer",
+          "text": "Offline banner: amber bar at top of screen with 'Offline — viewing cached data' copy. Sync in-progress state: spinning indicator in nav bar. Sync complete: brief green check animation. All states in frames 'Offline/*'.",
+          "created_at": "2026-05-22T10:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Note: the sync indicator placement in the nav bar conflicts with the tab bar — if we pivot to gesture nav (per the Nav Architecture file comment), this will need to be revisited. Holding implementation until nav decision is locked.",
+          "created_at": "2026-05-23T13:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,95 @@
+[
+  {
+    "sourceId": "lumen-figma-ComponentLibV3",
+    "source": "figma",
+    "squadId": "lumen",
+    "title": "Lumen Component Library v3",
+    "url": "https://www.figma.com/file/lC1o2m3p4v3/Lumen-Component-Library-v3",
+    "lastUpdated": "2026-05-22T17:00:00Z",
+    "raw": {
+      "file_key": "lC1o2m3p4v3",
+      "file_name": "Lumen Component Library v3",
+      "last_modified": "2026-05-22T17:00:00Z",
+      "comments": [
+        {
+          "author": "nina-design",
+          "text": "Skeleton loader animation updated to 1.2s shimmer cycle (was 1.5s). All skeleton components in frame 'Loaders/Skeleton' are final — dev handoff ready.",
+          "created_at": "2026-05-20T11:00:00Z",
+          "resolved": true
+        },
+        {
+          "author": "kai-zhang",
+          "text": "The `color/interactive/focus` token value (#0057FF at 0.6 opacity) isn't passing AA contrast on dark backgrounds. Did this come up in the a11y audit?",
+          "created_at": "2026-05-21T14:30:00Z",
+          "resolved": false
+        },
+        {
+          "author": "nina-design",
+          "text": "@kai-zhang Yes, flagged in Q1 audit. Updated to #2B7FFF at 1.0 opacity — now 4.6:1 on dark-900. Token updated in the file but not yet exported. Will sync today.",
+          "created_at": "2026-05-22T10:00:00Z",
+          "resolved": true
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "Confirmed the `borderRadius/card` token (8px) is now synced into the codebase. Skeleton loader cards match exactly.",
+          "created_at": "2026-05-22T17:00:00Z",
+          "resolved": true
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-figma-DashboardV4",
+    "source": "figma",
+    "squadId": "lumen",
+    "title": "Dashboard Redesign v4 — Sprint 12",
+    "url": "https://www.figma.com/file/dS4h5b6o7a8r/Dashboard-v4",
+    "lastUpdated": "2026-05-23T15:00:00Z",
+    "raw": {
+      "file_key": "dS4h5b6o7a8r",
+      "file_name": "Dashboard Redesign v4 — Sprint 12",
+      "last_modified": "2026-05-23T15:00:00Z",
+      "comments": [
+        {
+          "author": "nina-design",
+          "text": "KPI cards: added sparkline spec (frame 'Cards/KPI-with-sparkline'). 7-day trend. SVG paths with aria-label required per accessibility guidelines.",
+          "created_at": "2026-05-22T09:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "priya-nair",
+          "text": "The empty state illustration for 'no data yet' — is that final or placeholder? We need it for the skeleton fallback path.",
+          "created_at": "2026-05-23T11:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "nina-design",
+          "text": "@priya-nair It's final. SVG export is in the Assets panel — 'Illustrations/EmptyState/NoData'. Use the 'compact' variant for the card context.",
+          "created_at": "2026-05-23T15:00:00Z",
+          "resolved": true
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-figma-AuthFlowV2",
+    "source": "figma",
+    "squadId": "lumen",
+    "title": "Auth Flow — v2 Token UX",
+    "url": "https://www.figma.com/file/aF2l3o4w5v2/Auth-Flow-v2",
+    "lastUpdated": "2026-05-19T10:00:00Z",
+    "raw": {
+      "file_key": "aF2l3o4w5v2",
+      "file_name": "Auth Flow — v2 Token UX",
+      "last_modified": "2026-05-19T10:00:00Z",
+      "comments": [
+        {
+          "author": "nina-design",
+          "text": "Session expiry warning modal finalized — shows 5-minute countdown. Matches the token lifetime from v2 endpoint. Ready for dev handoff.",
+          "created_at": "2026-05-19T10:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  }
+]

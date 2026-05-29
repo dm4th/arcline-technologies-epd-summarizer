@@ -1,0 +1,197 @@
+[
+  {
+    "sourceId": "lumen-slack-C02-001",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Auth tokens v2 shipped — Atlas heads up",
+    "url": "https://arcline.slack.com/archives/C02LUMEN/p1716105600000000",
+    "lastUpdated": "2026-05-19T09:30:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1716105600.000000",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "priya-nair",
+          "text": "Auth tokens v2 is live in prod as of this morning (LMNE-22). Atlas team has been notified via #cross-team. v1 deprecated but staying up until June 15. Monitoring looks clean.",
+          "ts": "1716105600.000000"
+        },
+        {
+          "author": "kai-zhang",
+          "text": "Nice ship. Any breaking changes we need to call out in the changelog?",
+          "ts": "1716106200.000000"
+        },
+        {
+          "author": "priya-nair",
+          "text": "Yes — token payload now includes `tenantId` and `scopes` fields. Consumers need to check they're not doing strict JSON equality on the token shape.",
+          "ts": "1716106800.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-C02-002",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Auth service flaky — blocking e2e tests and staging deploys",
+    "url": "https://arcline.slack.com/archives/C02LUMEN/p1716278400000000",
+    "lastUpdated": "2026-05-21T13:45:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1716278400.000000",
+      "participant_count": 4,
+      "messages": [
+        {
+          "author": "dev-okonkwo",
+          "text": "Heads up — the auth service has been throwing intermittent 503s since yesterday afternoon. My Playwright e2e tests (LMNE-25) are failing in CI because of it, and I can't get a clean staging deploy either. Anyone else seeing this?",
+          "ts": "1716278400.000000"
+        },
+        {
+          "author": "kai-zhang",
+          "text": "Yes, I noticed it too when testing the design token work. Thought it was just me. How long has it been going on?",
+          "ts": "1716279000.000000"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "Since Tuesday around 4pm. It's not constant — maybe 1 in 8 requests fails. Enough to break any test that hits auth.",
+          "ts": "1716279600.000000"
+        },
+        {
+          "author": "priya-nair",
+          "text": "I didn't write a ticket for this yet — assumed it would resolve itself but it clearly hasn't. Let me look at the auth service logs now.",
+          "ts": "1716280200.000000"
+        },
+        {
+          "author": "priya-nair",
+          "text": "Found something — the auth service pod is hitting OOM on the k8s node it was rescheduled to after Tuesday's infra maintenance. I'm bumping the memory limit and restarting. Should be fixed in ~10 mins.",
+          "ts": "1716284400.000000"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "That fixed it on my end, thanks! Still going to be blocked on LMNE-25 until CI gets a clean run though. Can you write a ticket so this doesn't fall through the cracks?",
+          "ts": "1716285000.000000"
+        },
+        {
+          "author": "priya-nair",
+          "text": "Will do after standup.",
+          "ts": "1716285300.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-C02-003",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Design token migration — Figma sync question",
+    "url": "https://arcline.slack.com/archives/C02LUMEN/p1716192000000000",
+    "lastUpdated": "2026-05-20T15:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1716192000.000000",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "kai-zhang",
+          "text": "PR #34 (design token migration) is up. One question: the Figma tokens export has a `borderRadius/card` value that doesn't exist in our current CSS. Should I add it or skip it for now?",
+          "ts": "1716192000.000000"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "Add it — we'll need it for the skeleton loader cards anyway.",
+          "ts": "1716192600.000000"
+        },
+        {
+          "author": "priya-nair",
+          "text": "Agreed. Also double-check the `color/interactive/focus` token — I think Figma has a slightly wrong value for dark mode. The contrast ratio was flagged in our a11y audit.",
+          "ts": "1716193200.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-C02-004",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Gesture nav revert decision",
+    "url": "https://arcline.slack.com/archives/C02LUMEN/p1716364800000000",
+    "lastUpdated": "2026-05-22T09:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1716364800.000000",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "priya-nair",
+          "text": "Quick decision thread: the gesture nav experiment from last sprint got negative feedback in user testing (67% preferred tab bar). I'm going to create LMNE-26 to revert it. Any objections?",
+          "ts": "1716364800.000000"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "No objection. Worth noting: Forge's Figma file apparently has a new design spec pushing gesture nav for mobile. Might want to flag that to them — we don't want to build conflicting patterns.",
+          "ts": "1716365400.000000"
+        },
+        {
+          "author": "kai-zhang",
+          "text": "Their PR #39 actually has a comment about it too. I'd loop in their design lead before either team finalizes.",
+          "ts": "1716366000.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-C02-005",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Skeleton loader design review",
+    "url": "https://arcline.slack.com/archives/C02LUMEN/p1716451200000000",
+    "lastUpdated": "2026-05-23T10:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1716451200.000000",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "dev-okonkwo",
+          "text": "PR #33 (skeleton loaders) is ready for review. Figma spec is in the Lumen v3 component file. I matched it pixel-for-pixel. @kai-zhang can you take a look?",
+          "ts": "1716451200.000000"
+        },
+        {
+          "author": "kai-zhang",
+          "text": "On it. One thing I noticed: the animation uses a 1.5s shimmer cycle — the Figma spec says 1.2s. Minor but let's match it exactly for consistency.",
+          "ts": "1716451800.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-C02-006",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Sprint 12 week summary",
+    "url": "https://arcline.slack.com/archives/C02LUMEN/p1716537600000000",
+    "lastUpdated": "2026-05-24T17:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1716537600.000000",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "priya-nair",
+          "text": "Sprint 12 week summary: LMNE-17 ✅, LMNE-18 ✅, LMNE-19 ✅, LMNE-20 ✅, LMNE-21 ✅, LMNE-22 ✅. In flight: LMNE-24, LMNE-25, LMNE-26. LMNE-25 was blocked by auth service OOM (Slack thread from Wednesday) — no Jira ticket was filed for that incident despite the ask. Adding to next sprint.",
+          "ts": "1716537600.000000"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "The auth blocker cost me ~1 day. Would have been faster to diagnose with a Jira ticket and a runbook entry.",
+          "ts": "1716538200.000000"
+        },
+        {
+          "author": "kai-zhang",
+          "text": "Agree. Let's make it a team norm: if a blocker persists more than 2 hours, it gets a ticket.",
+          "ts": "1716538800.000000"
+        }
+      ]
+    }
+  }
+]

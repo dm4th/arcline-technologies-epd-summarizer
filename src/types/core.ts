@@ -1,9 +1,9 @@
 /**
- * SquadId is the canonical identifier for one of the 3 simulated engineering squads.
- * PRD-01 replaces this placeholder with a string-literal union once squad IDs are
- * minted in the Notion workspace schema.
+ * Canonical identifiers for the 3 simulated engineering squads.
+ * Atlas = platform, Lumen = frontend, Forge = mobile.
+ * Must match the SquadId values seeded into the Squads DB by bootstrap-workspace.ts.
  */
-export type SquadId = string;
+export type SquadId = "atlas" | "lumen" | "forge";
 
 /**
  * SourceRecord is the normalised shape every mirror DB writes to Notion.

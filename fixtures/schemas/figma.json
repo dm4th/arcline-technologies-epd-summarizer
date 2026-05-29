@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://arcline.internal/fixtures/schemas/figma",
+  "title": "Figma fixture file",
+  "description": "Array of SourceRecord entries for source=figma. Each entry represents one Figma file with its comments.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": ["sourceId", "source", "squadId", "title", "url", "lastUpdated", "raw"],
+    "additionalProperties": false,
+    "properties": {
+      "sourceId": {
+        "type": "string",
+        "description": "Stable identifier for the file, e.g. 'forge-figma-MobileNavV2'"
+      },
+      "source": {
+        "type": "string",
+        "const": "figma"
+      },
+      "squadId": {
+        "type": "string",
+        "enum": ["atlas", "lumen", "forge"]
+      },
+      "title": {
+        "type": "string",
+        "minLength": 1
+      },
+      "url": {
+        "type": "string",
+        "format": "uri"
+      },
+      "lastUpdated": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "raw": {
+        "type": "object",
+        "required": ["file_key", "file_name", "last_modified", "comments"],
+        "properties": {
+          "file_key": { "type": "string" },
+          "file_name": { "type": "string" },
+          "last_modified": { "type": "string", "format": "date-time" },
+          "comments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["author", "text", "created_at", "resolved"],
+              "properties": {
+                "author": { "type": "string" },
+                "text": { "type": "string" },
+                "created_at": { "type": "string", "format": "date-time" },
+                "resolved": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

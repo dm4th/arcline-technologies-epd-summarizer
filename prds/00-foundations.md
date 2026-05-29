@@ -1,10 +1,10 @@
 # PRD-00 — Foundations
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-05-28-A1
-updated: 2026-05-28T18:56:00Z
-notes: All 6 ACs pass: probe live, tsc clean, hello worker deployed (id: 019e6ff1-ede4-7081-a976-8bfa40c9f50a)
+state: completed
+owner: opus-review-2026-05-28
+updated: 2026-05-28T19:30:00Z
+notes: APPROVED. All 6 ACs re-verified live by Opus review: probe returns 6-block tree, missing-env fails loudly, hello worker live (id 019e6ff1-ede4-7081-a976-8bfa40c9f50a), tsc exit 0, SourceRecord imported in probe, README Quickstart present.
 -->
 
 ## Goal

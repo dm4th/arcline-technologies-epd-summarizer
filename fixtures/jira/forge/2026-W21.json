@@ -1,0 +1,211 @@
+[
+  {
+    "sourceId": "FORGE-28",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Fix iOS 16 crash on task view rotation",
+    "url": "https://arcline.atlassian.net/browse/FORGE-28",
+    "lastUpdated": "2026-05-21T07:35:00Z",
+    "raw": {
+      "key": "FORGE-28",
+      "status": "Done",
+      "assignee": "mei-tanaka",
+      "type": "Bug",
+      "priority": "Critical",
+      "story_points": 1,
+      "sprint": "Forge Sprint 9",
+      "acceptance_criteria": "App does not crash on rotation in task view on iOS 16. Verified on device.",
+      "labels": ["bug", "ios", "crash"]
+    }
+  },
+  {
+    "sourceId": "FORGE-29",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Fix memory leak in camera permission module",
+    "url": "https://arcline.atlassian.net/browse/FORGE-29",
+    "lastUpdated": "2026-05-21T08:05:00Z",
+    "raw": {
+      "key": "FORGE-29",
+      "status": "Done",
+      "assignee": "mei-tanaka",
+      "type": "Bug",
+      "priority": "High",
+      "story_points": 2,
+      "sprint": "Forge Sprint 9",
+      "acceptance_criteria": "Instruments shows 0 memory leak in camera permission flow. Weak delegate pattern applied.",
+      "labels": ["bug", "memory", "ios"]
+    }
+  },
+  {
+    "sourceId": "FORGE-30",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Implement tab bar navigation structure",
+    "url": "https://arcline.atlassian.net/browse/FORGE-30",
+    "lastUpdated": "2026-05-21T15:50:00Z",
+    "raw": {
+      "key": "FORGE-30",
+      "status": "Done",
+      "assignee": "carlos-mendez",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 5,
+      "sprint": "Forge Sprint 9",
+      "acceptance_criteria": "UITabBarController with 4 tabs: Home, Tasks, Notifications, Profile. Deep linking to each tab working.",
+      "labels": ["feature", "navigation", "ios"]
+    }
+  },
+  {
+    "sourceId": "FORGE-31",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "iOS home screen widget — small variant",
+    "url": "https://arcline.atlassian.net/browse/FORGE-31",
+    "lastUpdated": "2026-05-19T12:35:00Z",
+    "raw": {
+      "key": "FORGE-31",
+      "status": "Done",
+      "assignee": "mei-tanaka",
+      "type": "Story",
+      "priority": "Medium",
+      "story_points": 5,
+      "sprint": "Forge Sprint 9",
+      "acceptance_criteria": "Small widget shows today's task count and next due item. Refreshes on background app refresh. App Group container sharing working.",
+      "labels": ["feature", "ios", "widget", "widgetkit"]
+    }
+  },
+  {
+    "sourceId": "FORGE-32",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Offline mode: local task cache with SQLite",
+    "url": "https://arcline.atlassian.net/browse/FORGE-32",
+    "lastUpdated": "2026-05-23T14:25:00Z",
+    "raw": {
+      "key": "FORGE-32",
+      "status": "In Progress",
+      "assignee": "carlos-mendez",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 8,
+      "sprint": "Forge Sprint 9",
+      "acceptance_criteria": "App shows stale task list when offline. Background sync on foreground. Conflict resolution: server wins.",
+      "labels": ["feature", "offline", "storage", "ios"]
+    }
+  },
+  {
+    "sourceId": "FORGE-33",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Haptic feedback on card swipe gestures",
+    "url": "https://arcline.atlassian.net/browse/FORGE-33",
+    "lastUpdated": "2026-05-20T11:15:00Z",
+    "raw": {
+      "key": "FORGE-33",
+      "status": "Done",
+      "assignee": "carlos-mendez",
+      "type": "Task",
+      "priority": "Low",
+      "story_points": 1,
+      "sprint": "Forge Sprint 9",
+      "acceptance_criteria": "Light haptic on swipe start, medium on completion. Respects system haptic settings.",
+      "labels": ["ux", "haptics", "ios"]
+    }
+  },
+  {
+    "sourceId": "FORGE-34",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Investigate gesture-based navigation — UX spike",
+    "url": "https://arcline.atlassian.net/browse/FORGE-34",
+    "lastUpdated": "2026-05-20T09:00:00Z",
+    "raw": {
+      "key": "FORGE-34",
+      "status": "Done",
+      "assignee": "mei-tanaka",
+      "type": "Spike",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Forge Sprint 8",
+      "acceptance_criteria": "Prototype built. UX findings documented. Go/no-go decision made.",
+      "labels": ["spike", "navigation", "ux"]
+    }
+  },
+  {
+    "sourceId": "FORGE-35",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Update Figma token sync script for v2 component library",
+    "url": "https://arcline.atlassian.net/browse/FORGE-35",
+    "lastUpdated": "2026-05-22T09:58:00Z",
+    "raw": {
+      "key": "FORGE-35",
+      "status": "In Progress",
+      "assignee": "mei-tanaka",
+      "type": "Task",
+      "priority": "Medium",
+      "story_points": 2,
+      "sprint": "Forge Sprint 9",
+      "acceptance_criteria": "Token sync pulls from Forge v2 Figma library. Colors, typography, spacing all synced.",
+      "labels": ["chore", "design-system"]
+    }
+  },
+  {
+    "sourceId": "FORGE-36",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Add deep link routing for push notification tap targets",
+    "url": "https://arcline.atlassian.net/browse/FORGE-36",
+    "lastUpdated": "2026-05-24T11:35:00Z",
+    "raw": {
+      "key": "FORGE-36",
+      "status": "In Progress",
+      "assignee": "carlos-mendez",
+      "type": "Story",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Forge Sprint 9",
+      "acceptance_criteria": "arcline:// deep links open correct view. task:// and notification:// routes implemented. Tested end-to-end from push payload.",
+      "labels": ["feature", "navigation", "push-notifications"]
+    }
+  },
+  {
+    "sourceId": "FORGE-37",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Android port: assess Kotlin Multiplatform viability",
+    "url": "https://arcline.atlassian.net/browse/FORGE-37",
+    "lastUpdated": "2026-05-24T09:00:00Z",
+    "raw": {
+      "key": "FORGE-37",
+      "status": "To Do",
+      "assignee": null,
+      "type": "Spike",
+      "priority": "Low",
+      "story_points": 5,
+      "sprint": "Forge Sprint 10",
+      "acceptance_criteria": "KMP viability report. Decision on shared business logic layer.",
+      "labels": ["android", "spike", "platform"]
+    }
+  },
+  {
+    "sourceId": "FORGE-38",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Redesign navigation architecture per design review",
+    "url": "https://arcline.atlassian.net/browse/FORGE-38",
+    "lastUpdated": "2026-05-24T15:00:00Z",
+    "raw": {
+      "key": "FORGE-38",
+      "status": "To Do",
+      "assignee": null,
+      "type": "Story",
+      "priority": "High",
+      "story_points": 8,
+      "sprint": "Forge Sprint 10",
+      "acceptance_criteria": "Navigation architecture updated to match latest Figma spec. Tab bar or gesture nav — TBD pending design sign-off.",
+      "labels": ["navigation", "ios", "design"]
+    }
+  }
+]

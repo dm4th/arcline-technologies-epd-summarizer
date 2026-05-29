@@ -52,9 +52,9 @@ States: `waiting`, `ready`, `in-progress`, `in-review`, `completed`, `blocked`. 
 
 | PRD | State | Owner | Updated | Notes |
 |---|---|---|---|---|
-| 00 | in-review | sonnet-2026-05-28-A1 | 2026-05-28T18:56:00Z | All 6 ACs pass: probe live, tsc clean, hello worker deployed (id: 019e6ff1-ede4-7081-a976-8bfa40c9f50a) |
-| 01 | waiting | — | — | deps: 00 |
-| 02 | waiting | — | — | deps: 00 |
+| 00 | completed | opus-review-2026-05-28 | 2026-05-28T19:30:00Z | APPROVED by Opus review — all 6 ACs re-verified live (probe, env-fail, worker id 019e6ff1-ede4-7081-a976-8bfa40c9f50a, tsc, types, Quickstart) |
+| 01 | in-review | sonnet-2026-05-28-A2 | 2026-05-28T21:45:00Z | v2 schema complete — 11 DBs live (incl. Delivery Pipeline), Squads/PRDs/Roadmap seeded with rich content, ntn CLI patches applied, Summary/Body/ExecSummary columns removed, Thread+PRD relations added. notion-ids.ts populated. AC5 (visual) pending human check. |
+| 02 | in-review | sonnet-2026-05-28-A3 | 2026-05-28T20:30:00Z | all 4 ACs passed — 12/12 fixture files valid, 5 tensions planted, ground-truth report written, 26,883 words (<30k) |
 | 03a | waiting | — | — | deps: 00, 01, 02, 03 |
 | 03b | waiting | — | — | deps: 00, 01, 02, 03 |
 | 03c | waiting | — | — | deps: 00, 01, 02, 03 |

@@ -4,7 +4,11 @@
   "private": true,
   "scripts": {
     "probe": "tsx --env-file=.env.local scripts/probe-workspace.ts",
-    "typecheck": "tsc --noEmit"
+    "bootstrap": "tsx scripts/bootstrap-workspace.ts",
+    "patch": "tsx scripts/patch-schema.ts",
+    "teardown": "tsx scripts/teardown-workspace.ts",
+    "typecheck": "tsc --noEmit",
+    "validate-fixtures": "tsx scripts/validate-fixtures.ts"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -15,6 +19,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "tsx": "^4.20.0",
     "typescript": "^5.8.0"
   }

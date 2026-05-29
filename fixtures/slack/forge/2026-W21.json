@@ -1,0 +1,167 @@
+[
+  {
+    "sourceId": "forge-slack-C03-001",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-mobile: iOS widget shipped",
+    "url": "https://arcline.slack.com/archives/C03FORGE/p1716105600000000",
+    "lastUpdated": "2026-05-19T13:00:00Z",
+    "raw": {
+      "channel": "forge-mobile",
+      "thread_ts": "1716105600.000000",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "Widget is live in TestFlight (FORGE-31). Small variant shows today's task count and next due. Using App Group container — no extra API calls. Reviews welcome.",
+          "ts": "1716105600.000000"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Tested it. Looks great. One feedback: the 'next due' item truncates at 20 chars on the 47mm watch face — worth a follow-up ticket?",
+          "ts": "1716106200.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-C03-002",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-mobile: Navigation architecture — design review incoming",
+    "url": "https://arcline.slack.com/archives/C03FORGE/p1716278400000000",
+    "lastUpdated": "2026-05-21T16:30:00Z",
+    "raw": {
+      "channel": "forge-mobile",
+      "thread_ts": "1716278400.000000",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "Heads up: I just saw a comment from @yuki-designer in the Figma file that we need to discuss. She's proposing a switch from tab bar to gesture-based navigation. We literally just shipped the tab bar (FORGE-30) last week.",
+          "ts": "1716278400.000000"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Wait, really? The tab bar was agreed in sprint planning AND is in the squad PRD. This is the first I'm hearing about it.",
+          "ts": "1716279000.000000"
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "She says it came out of an exec UX review session on Monday. I don't have the notes. I've got FORGE-26 (deep links) and FORGE-36 (routing) both depending on the current nav structure. This could be a significant rework.",
+          "ts": "1716279600.000000"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "I'm going to put FORGE-36 on hold until this is resolved. FORGE-38 might be the right ticket to track a potential rework. Let's get @yuki-designer in a sync this week.",
+          "ts": "1716280200.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-C03-003",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-mobile: Memory leak fix — hotfix deploy",
+    "url": "https://arcline.slack.com/archives/C03FORGE/p1716192000000000",
+    "lastUpdated": "2026-05-20T14:00:00Z",
+    "raw": {
+      "channel": "forge-mobile",
+      "thread_ts": "1716192000.000000",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "Camera memory leak (FORGE-29) patched and in TestFlight. The AVCaptureSession delegate wasn't being released — classic weak reference miss. Instruments now shows zero.",
+          "ts": "1716192000.000000"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Good catch. Was this contributing to the OOM reports from last week?",
+          "ts": "1716192600.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-C03-004",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-mobile: Offline mode architecture review",
+    "url": "https://arcline.slack.com/archives/C03FORGE/p1716364800000000",
+    "lastUpdated": "2026-05-22T11:00:00Z",
+    "raw": {
+      "channel": "forge-mobile",
+      "thread_ts": "1716364800.000000",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "carlos-mendez",
+          "text": "PR #24 (offline mode / SQLite cache) is up for review. Using GRDB — felt like the right tradeoff between raw SQLite and Core Data complexity. Architecture doc in the PR description.",
+          "ts": "1716364800.000000"
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "GRDB is a solid choice. My only concern is the conflict resolution strategy — 'server wins' is fine for MVP but we should document that assumption prominently so we don't paint ourselves into a corner.",
+          "ts": "1716365400.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-C03-005",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-mobile: Figma token sync — v2 library changes",
+    "url": "https://arcline.slack.com/archives/C03FORGE/p1716451200000000",
+    "lastUpdated": "2026-05-23T10:30:00Z",
+    "raw": {
+      "channel": "forge-mobile",
+      "thread_ts": "1716451200.000000",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "PR #23 is up — updates our Figma token sync to pull from the v2 component library. One flag: the new navigation tokens in the Figma file include gesture-specific values (swipe threshold, transition duration). Given the nav architecture uncertainty, I'm going to keep those out of the sync for now.",
+          "ts": "1716451200.000000"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Smart call. Let's revisit after we have the design decision locked down.",
+          "ts": "1716451800.000000"
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "Also: @yuki-designer added a comment in the Figma file specifically about FORGE-30 (the tab bar we just shipped). She's tagging it for rework. Worth reviewing her comment before the sync call.",
+          "ts": "1716452400.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-C03-006",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-mobile: Sprint 9 end-of-week wrap",
+    "url": "https://arcline.slack.com/archives/C03FORGE/p1716537600000000",
+    "lastUpdated": "2026-05-24T18:00:00Z",
+    "raw": {
+      "channel": "forge-mobile",
+      "thread_ts": "1716537600.000000",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "Sprint 9 wrap: FORGE-28 ✅, FORGE-29 ✅, FORGE-30 ✅, FORGE-31 ✅, FORGE-33 ✅. In flight: FORGE-32, FORGE-35. FORGE-36 on hold pending nav decision. Big open item: the Figma gesture nav proposal (FORGE-38 created to track). Need design sign-off before Sprint 10 kicks off.",
+          "ts": "1716537600.000000"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "The nav uncertainty is our biggest risk. If gesture nav is confirmed, FORGE-30 (tab bar) is essentially wasted work. I've flagged it for the retro.",
+          "ts": "1716538200.000000"
+        }
+      ]
+    }
+  }
+]

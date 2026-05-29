@@ -1,0 +1,187 @@
+[
+  {
+    "sourceId": "atlas-slack-C01-001",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: Billing API refactor status check",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1716105600000000",
+    "lastUpdated": "2026-05-19T12:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1716105600.000000",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "Quick check-in: billing API refactor (ATLS-42) is blocked on the CQRS split review. Jordan, when are you targeting merge?",
+          "ts": "1716105600.000000"
+        },
+        {
+          "author": "jordan-lee",
+          "text": "Today or tomorrow — load tests are running now. Will post results here.",
+          "ts": "1716106200.000000"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "Heads up: I already removed the v1 endpoints in PR #52. Let's make sure ATLS-42 lands before we tag next release.",
+          "ts": "1716107100.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-C01-002",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: Lumen auth v2 migration confirmed",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1716192000000000",
+    "lastUpdated": "2026-05-20T12:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1716192000.000000",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "FYI: PR #49 (Lumen auth tokens v2 migration) is merged. Atlas is now on /api/auth/tokens/v2. The v1 endpoint will sunset June 15 — this was blocking ATLS-56 (premium flag gating). Jordan, you should be unblocked now.",
+          "ts": "1716192000.000000"
+        },
+        {
+          "author": "jordan-lee",
+          "text": "Great, picking up ATLS-56 this week. Thanks for the heads up on the dependency.",
+          "ts": "1716192600.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-C01-003",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-billing-alerts: EU billing latency spike",
+    "url": "https://arcline.slack.com/archives/C01BILLINGALERTS/p1716278400000000",
+    "lastUpdated": "2026-05-21T12:00:00Z",
+    "raw": {
+      "channel": "atlas-billing-alerts",
+      "thread_ts": "1716278400.000000",
+      "participant_count": 4,
+      "messages": [
+        {
+          "author": "datadog-bot",
+          "text": "ALERT: billing-api P99 latency in eu-west-1 exceeded 2000ms threshold. Duration: 18 minutes.",
+          "ts": "1716278400.000000"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "On it. Pulling traces.",
+          "ts": "1716278700.000000"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "Found it — it was the EU replica lagging behind after the v1 endpoint removal migration. Replica caught up; latency back to normal. Created ATLS-58 to track post-mortem.",
+          "ts": "1716280200.000000"
+        },
+        {
+          "author": "sarah-chen",
+          "text": "Good catch. Let's add a canary check for replica lag to the deploy runbook.",
+          "ts": "1716281000.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-C01-004",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: Webhook HMAC fix needs second review",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1716364800000000",
+    "lastUpdated": "2026-05-22T12:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1716364800.000000",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "PR #54 (webhook HMAC timing fix) is up. Small change but it's in a security path — would appreciate a second set of eyes before merging.",
+          "ts": "1716364800.000000"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "On it. LGTM — the monotonic clock approach is the right fix. Approving.",
+          "ts": "1716365400.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-C01-005",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#cross-team: Atlas dependency on Lumen auth v2 coordination",
+    "url": "https://arcline.slack.com/archives/C0CROSSTEAM/p1716451200000000",
+    "lastUpdated": "2026-05-23T12:00:00Z",
+    "raw": {
+      "channel": "cross-team",
+      "thread_ts": "1716451200.000000",
+      "participant_count": 4,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "Flagging this for visibility: Atlas merged our auth token v2 migration this week. This unblocks our premium tier work (ATLS-56) and means we're now dependent on Lumen's /api/auth/tokens/v2 in production. @priya-nair — any concerns about rollback plans for v2?",
+          "ts": "1716451200.000000"
+        },
+        {
+          "author": "priya-nair",
+          "text": "v2 is solid — been running in prod since Monday with zero incidents. v1 stays up until June 15 so you have a rollback path. But let's not plan to use it :)",
+          "ts": "1716452100.000000"
+        },
+        {
+          "author": "jordan-lee",
+          "text": "Good to know. ATLS-56 is in progress. Premium tier launch targeting end of sprint.",
+          "ts": "1716452700.000000"
+        },
+        {
+          "author": "priya-nair",
+          "text": "One thing worth noting: the v2 token now includes `scopes`. If Atlas is checking scopes client-side for entitlement gating, make sure you're looking at the right field. Happy to pair on it.",
+          "ts": "1716453000.000000"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-C01-006",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: Sprint 14 week-end standup summary",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1716537600000000",
+    "lastUpdated": "2026-05-24T12:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1716537600.000000",
+      "participant_count": 4,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "Sprint 14 week summary: ATLS-38 ✅, ATLS-41 ✅, ATLS-42 🔄 (PR merged, Jira not yet closed), ATLS-29 ✅, ATLS-55 ✅. In flight: ATLS-44, ATLS-47, ATLS-56.",
+          "ts": "1716537600.000000"
+        },
+        {
+          "author": "morgan-park",
+          "text": "ATLS-44 at 70% coverage. Should close by Monday.",
+          "ts": "1716538200.000000"
+        },
+        {
+          "author": "jordan-lee",
+          "text": "ATLS-56 feature flags are coded; waiting on LaunchDarkly config from DevOps.",
+          "ts": "1716538800.000000"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "Note on ATLS-42: Jordan merged the PR Friday (PR #51 says 'Closes ATLS-42') but I see the Jira ticket is still showing In Progress. Someone should update it before retro.",
+          "ts": "1716539400.000000"
+        }
+      ]
+    }
+  }
+]
