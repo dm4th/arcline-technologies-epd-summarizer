@@ -23,6 +23,53 @@ export async function createSummarizerTrigger(opts: {
   });
 }
 
+// Creates trigger rows for both product summarizer agents (roadmap + prd-fact-check).
+// Call this after per-source summaries are ready (all 4 sources for all 3 squads).
+export async function createProductSummarizerTriggers(opts: {
+  weekOf: string;
+}): Promise<void> {
+  const notion = getNotionClient();
+  const startedAt = new Date();
+
+  for (const agentType of ["roadmap", "prdcheck"] as const) {
+    const agentName = `summarizer.${agentType}`;
+    const runId = `${agentName}-${opts.weekOf}-trigger`;
+    await notion.pages.create({
+      parent: { database_id: NOTION_IDS.dbs.agentRunLog },
+      properties: {
+        "Run Id":     { title: rt(runId) },
+        "Agent Name": { select: { name: agentName } },
+        "Started At": { date: { start: startedAt.toISOString() } },
+        "Outcome":    { select: { name: "pending" } },
+        "Notes":      { rich_text: rt(`week=${opts.weekOf}`) },
+      } as Parameters<typeof notion.pages.create>[0]["properties"],
+    });
+    console.log(`  Created trigger: ${agentName} for ${opts.weekOf}`);
+  }
+}
+
+// Creates the trigger row for the master summarizer agent.
+// Call after HITL approval once ≥2 squads are fully approved for the week.
+export async function createMasterSummarizerTrigger(opts: {
+  weekOf: string;
+  approvedSquads: string[];
+}): Promise<void> {
+  const notion = getNotionClient();
+  const startedAt = new Date();
+  const runId = `summarizer.master-${opts.weekOf}-trigger`;
+
+  await notion.pages.create({
+    parent: { database_id: NOTION_IDS.dbs.agentRunLog },
+    properties: {
+      "Run Id":     { title: rt(runId) },
+      "Agent Name": { select: { name: "summarizer.master" } },
+      "Started At": { date: { start: startedAt.toISOString() } },
+      "Outcome":    { select: { name: "pending" } },
+      "Notes":      { rich_text: rt(`week=${opts.weekOf} approved=${opts.approvedSquads.join(",")}`) },
+    } as Parameters<typeof notion.pages.create>[0]["properties"],
+  });
+}
+
 export async function writeAgentRunLog(opts: {
   agentName: string;
   startedAt: Date;

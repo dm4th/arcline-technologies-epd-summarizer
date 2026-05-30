@@ -1,5 +1,12 @@
 # PRD-05 — Master Summarizer Agent
 
+<!-- status:
+state: in-progress
+owner: sonnet-2026-05-29-A1
+updated: 2026-05-29T23:59:00Z
+notes: Claimed for Wave D Master Summarizer build. All deps completed (00, 01, 04a, 04b, 06).
+-->
+
 ## Goal
 Generate the single weekly **Master EPD Weekly** report from approved Squad Weekly Summaries, with explicit cross-source/cross-squad synthesis and an honest report of citation coverage.
 

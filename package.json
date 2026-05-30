@@ -11,7 +11,11 @@
     "workers": "tsx scripts/trigger-workers.ts",
     "hitl-review": "tsx scripts/hitl-review.ts",
     "observe": "tsx scripts/setup-observability.ts",
-    "summarizer:deploy": "pnpm --filter arcline-worker-summarizer deploy"
+    "summarizer:deploy": "pnpm --filter arcline-worker-summarizer deploy",
+    "summarizer-product:deploy": "pnpm --filter arcline-worker-summarizer-product deploy",
+    "summarizer-master:deploy": "pnpm --filter arcline-worker-summarizer-master deploy",
+    "product-summarizers": "tsx scripts/trigger-product-summarizers.ts",
+    "master-summarizer": "tsx scripts/trigger-master-summarizer.ts"
   },
   "engines": {
     "node": ">=20.0.0"

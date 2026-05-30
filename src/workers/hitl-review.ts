@@ -1,7 +1,7 @@
 import { isFullBlock, isFullPage } from "@notionhq/client";
 import { getNotionClient } from "../lib/notion";
 import { NOTION_IDS, getSquadPageId } from "../lib/notion-ids";
-import { writeAgentRunLog } from "./lib/agent-run-log";
+import { writeAgentRunLog, createMasterSummarizerTrigger } from "./lib/agent-run-log";
 import type { SquadId } from "../types/core";
 
 export type SummarySource =
@@ -24,6 +24,16 @@ export const ALL_SOURCES: SummarySource[] = [
 export const ALL_SQUADS: SquadId[] = ["atlas", "lumen", "forge"];
 
 const rtProp = (s: string) => [{ text: { content: s.substring(0, 1999) } }];
+
+function richText(prop: unknown): string {
+  if (!prop || typeof prop !== "object") return "";
+  const p = prop as Record<string, unknown>;
+  if ("rich_text" in p && Array.isArray(p.rich_text))
+    return (p.rich_text as Array<{ plain_text: string }>).map((t) => t.plain_text).join("");
+  if ("title" in p && Array.isArray(p.title))
+    return (p.title as Array<{ plain_text: string }>).map((t) => t.plain_text).join("");
+  return "";
+}
 
 /** Parse "2026-W21" → "2026-05-18" (ISO Monday of that week). */
 export function weekOfToDate(weekOf: string): string {
@@ -349,6 +359,61 @@ export async function approveSquadWeek(
 
   // Refresh review page so statuses are reflected immediately
   const reviewPageId = await createReviewPage(squadId, weekOf);
+
+  // ── Fan-in: trigger master summarizer when ≥2 squads are fully approved ────
+  //
+  // "Fully approved" = every source row for that squad has Status=approved.
+  // We check all 3 squads so the trigger fires on the 2nd OR 3rd approval,
+  // whichever comes first (dedup guard prevents double-fire).
+  const weekDate = weekOfToDate(weekOf);
+  const approvedSquads: SquadId[] = [];
+
+  for (const sq of ALL_SQUADS) {
+    const sqPageId = getSquadPageId(sq);
+    const sqRows = await notion.databases.query({
+      database_id: NOTION_IDS.dbs.squadWeeklySummary,
+      filter: {
+        and: [
+          { property: "Squad",   relation: { contains: sqPageId } },
+          { property: "Week Of", date:     { equals: weekDate } },
+        ],
+      },
+      page_size: 20,
+    });
+
+    const pages = sqRows.results.filter(isFullPage);
+    if (
+      pages.length >= ALL_SOURCES.length &&
+      pages.every((p) => {
+        const s = p.properties["Status"];
+        return s?.type === "select" && s.select?.name === "approved";
+      })
+    ) {
+      approvedSquads.push(sq);
+    }
+  }
+
+  if (approvedSquads.length >= 2) {
+    // Dedup: only create the trigger once per week
+    const existingTrigger = await notion.databases.query({
+      database_id: NOTION_IDS.dbs.agentRunLog,
+      filter: { property: "Agent Name", select: { equals: "summarizer.master" } },
+      page_size: 10,
+    });
+
+    const alreadyFired = existingTrigger.results.filter(isFullPage).some((p) => {
+      const notes = richText(p.properties["Notes"]);
+      return notes.includes(`week=${weekOf}`);
+    });
+
+    if (!alreadyFired) {
+      await createMasterSummarizerTrigger({ weekOf, approvedSquads });
+      console.log(
+        `[hitl-review] Master summarizer trigger created for ${weekOf} ` +
+        `(${approvedSquads.length}/3 squads approved: ${approvedSquads.join(", ")})`,
+      );
+    }
+  }
 
   return { approved: summaryPages.length, reviewPageId };
 }

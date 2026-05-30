@@ -22,10 +22,15 @@ const SQUAD_PAGE_ID: Record<Squad, string> = {
 };
 
 const SQUAD_WEEKLY_SUMMARY_DB = "36efc8f4-554c-819e-b339-ec0bb2c97a76";
-const AGENT_RUN_LOG_DB         = "36efc8f4-554c-814e-8c51-ea51792f5344";
+const AGENT_RUN_LOG_DB        = "36efc8f4-554c-814e-8c51-ea51792f5344";
+const SQUADS_DB               = "36efc8f4-554c-81f7-b7c9-ccf08de3d6a1";
 
 type Source = "github" | "jira" | "slack" | "figma";
 type Squad  = "atlas"  | "lumen" | "forge";
+
+// Single source of truth for per-source types. Adding a new data source requires
+// updating this array + the Source type above — the fan-in threshold auto-adjusts.
+const PER_SOURCES: Source[] = ["github", "jira", "slack", "figma"];
 
 // ── Property maps (verified against live workspace) ───────────────────────────
 
@@ -314,6 +319,78 @@ worker.tool("write_squad_summary", {
       } as Parameters<typeof notion.pages.create>[0]["properties"],
     });
 
-    return { pageId, action, citationCount: citations.length, status };
+    // ── Fan-in gate: trigger product summarizers once all per-source rows land ──
+    //
+    // After every write, count completed per-source rows for the week, then compare
+    // against (live squad count × PER_SOURCES.length). Both dimensions are dynamic:
+    // adding a squad updates the Squads DB; adding a source updates PER_SOURCES above.
+    const [countResponse, squadsResponse] = await Promise.all([
+      notion.databases.query({
+        database_id: SQUAD_WEEKLY_SUMMARY_DB,
+        filter: {
+          and: [
+            { property: "Week Of", date: { equals: weekDate } },
+            {
+              or: [
+                { property: "Status", select: { equals: "awaiting-review" } },
+                { property: "Status", select: { equals: "approved" } },
+              ],
+            },
+            { or: PER_SOURCES.map((s) => ({ property: "Source", select: { equals: s } })) },
+          ],
+        },
+        page_size: 100,
+      }),
+      notion.databases.query({
+        database_id: SQUADS_DB,
+        page_size: 100,
+      }),
+    ]);
+
+    const completedCount = countResponse.results.length;
+    const squadCount     = squadsResponse.results.length;
+    const threshold      = squadCount * PER_SOURCES.length;
+    let productTriggered = false;
+
+    if (threshold > 0 && completedCount >= threshold) {
+      // Guard: skip if product triggers already exist for this week
+      const existingTriggers = await notion.databases.query({
+        database_id: AGENT_RUN_LOG_DB,
+        filter: {
+          or: [
+            { property: "Agent Name", select: { equals: "summarizer.roadmap" } },
+            { property: "Agent Name", select: { equals: "summarizer.prdcheck" } },
+          ],
+        },
+        page_size: 10,
+      });
+
+      const alreadyFired = existingTriggers.results.filter(isFullPage).some((p) => {
+        const notes = (
+          (p.properties["Notes"] as Record<string, unknown>)?.rich_text as Array<{ plain_text: string }>
+        )?.map((t) => t.plain_text).join("") ?? "";
+        return notes.includes(`week=${weekOf}`);
+      });
+
+      if (!alreadyFired) {
+        const triggerTime = new Date();
+        for (const agentType of ["roadmap", "prdcheck"] as const) {
+          const agentName = `summarizer.${agentType}`;
+          await notion.pages.create({
+            parent: { database_id: AGENT_RUN_LOG_DB },
+            properties: {
+              "Run Id":     { title: rt(`${agentName}-${weekOf}-trigger`) },
+              "Agent Name": { select: { name: agentName } },
+              "Started At": { date: { start: triggerTime.toISOString() } },
+              "Outcome":    { select: { name: "pending" } },
+              "Notes":      { rich_text: rt(`week=${weekOf}`) },
+            } as Parameters<typeof notion.pages.create>[0]["properties"],
+          });
+        }
+        productTriggered = true;
+      }
+    }
+
+    return { pageId, action, citationCount: citations.length, status, completedCount, threshold, productTriggered };
   },
 });

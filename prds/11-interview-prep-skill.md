@@ -45,6 +45,7 @@ Examples to seed the question bank:
 - "Why 6 agents per squad? Why not one big agent that takes the whole week of data?"
 - "Where does Notion stop and where does the customer's existing stack pick up?"
 - "Cost: at Arcline's 8 squads, what's the weekly LLM bill, and how does it scale?"
+- "What happens to your system when Arcline adds a 4th squad? Walk me through every file that needs to change." (Honest answer: `SQUAD_PAGE_ID` map in both workers requires a deploy — note this as known tech debt and describe the dynamic-lookup fix.)
 - "An EM rejects a sub-summary 3 weeks in a row. What does the system do?"
 - "Hallucination story: your eval is LLM-as-judge. Why isn't that circular?"
 
@@ -60,6 +61,8 @@ Examples to seed the question bank:
 
 ## Open Questions
 - Should the skill have access to the live Notion workspace via MCP? Recommend: yes, read-only, so it can ask "open this page — what's wrong with how I designed it?" Implementing session decides whether to wire MCP access or use static repo state.
+
+- **Squad/source hardcoding — fix before building the question bank.** Both workers (`workers/summarizer/src/index.ts` and `workers/summarizer-product/src/index.ts`) have two places that require a code change when squads are added or removed: (1) the `SQUAD_PAGE_ID` static map (slug → Notion page ID), and (2) the `Squad` type union + `squad` enum on each tool schema. The fan-in threshold is already dynamic (queries Squads DB at runtime); the slug→ID map is not. Fix: replace the static map with a live lookup against the Squads DB at tool call time, keyed on the `SquadId` property. Same principle applies to adding/removing a source — `PER_SOURCES`, the `Source` type, and the `EXCERPT_PROP`/`URL_PROP` maps all need updating, but those are intentional code-level decisions. The squad map is the part that should not require a deploy. Add "What breaks when Arcline adds their 4th squad?" to the question bank — this is the honest answer.
 
 ## Verification
 - Run `/interview-prep` locally. Get asked a question. Answer. Observe follow-up. End session and see debrief.

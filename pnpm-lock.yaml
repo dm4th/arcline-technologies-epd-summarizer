@@ -63,6 +63,38 @@ importers:
         specifier: ^5.8.0
         version: 5.9.3
 
+  workers/summarizer-master:
+    dependencies:
+      '@notionhq/client':
+        specifier: 2.3.0
+        version: 2.3.0
+      '@notionhq/workers':
+        specifier: ^0.4.0
+        version: 0.4.0(@notionhq/client@2.3.0)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.19.19
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
+  workers/summarizer-product:
+    dependencies:
+      '@notionhq/client':
+        specifier: 2.3.0
+        version: 2.3.0
+      '@notionhq/workers':
+        specifier: ^0.4.0
+        version: 0.4.0(@notionhq/client@2.3.0)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.19.19
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
 packages:
 
   '@anthropic-ai/sdk@0.99.0':
