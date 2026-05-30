@@ -35,6 +35,61 @@ function richText(prop: unknown): string {
   return "";
 }
 
+/**
+ * Create or update a HITL Review Sessions row for a squad+week.
+ * Idempotent: finds by (Squad, Week Of) and updates if found; creates otherwise.
+ */
+async function upsertReviewSession(opts: {
+  squadId: SquadId;
+  weekOf: string;
+  status: "pending" | "in-review" | "approved" | "changes-requested";
+  reviewedBy?: string;
+  approvedAt?: string;
+  notes?: string;
+  summaryPageIds?: string[];
+}): Promise<void> {
+  const notion     = getNotionClient();
+  const squadPageId = getSquadPageId(opts.squadId);
+  const weekDate   = weekOfToDate(opts.weekOf);
+  const squadName  = opts.squadId.charAt(0).toUpperCase() + opts.squadId.slice(1);
+
+  const existing = await notion.databases.query({
+    database_id: NOTION_IDS.dbs.hitlReviewSessions,
+    filter: {
+      and: [
+        { property: "Squad",   relation: { contains: squadPageId } },
+        { property: "Week Of", date:     { equals: weekDate } },
+      ],
+    },
+    page_size: 5,
+  });
+
+  const props: Record<string, unknown> = {
+    "Status": { select: { name: opts.status } },
+  };
+  if (opts.reviewedBy     !== undefined) props["Reviewed By"]            = { rich_text: rtProp(opts.reviewedBy) };
+  if (opts.approvedAt     !== undefined) props["Approved At"]            = { date: { start: opts.approvedAt } };
+  if (opts.notes          !== undefined) props["Notes"]                  = { rich_text: rtProp(opts.notes) };
+  if (opts.summaryPageIds !== undefined) props["Squad Weekly Summaries"] = { relation: opts.summaryPageIds.map((id) => ({ id })) };
+
+  if (existing.results.length > 0) {
+    await notion.pages.update({
+      page_id: existing.results[0].id,
+      properties: props as Parameters<typeof notion.pages.update>[0]["properties"],
+    });
+  } else {
+    await notion.pages.create({
+      parent: { database_id: NOTION_IDS.dbs.hitlReviewSessions },
+      properties: {
+        "Title":   { title: rtProp(`${squadName} — ${opts.weekOf}`) },
+        "Squad":   { relation: [{ id: squadPageId }] },
+        "Week Of": { date: { start: weekDate } },
+        ...props,
+      } as Parameters<typeof notion.pages.create>[0]["properties"],
+    });
+  }
+}
+
 /** Parse "2026-W21" → "2026-05-18" (ISO Monday of that week). */
 export function weekOfToDate(weekOf: string): string {
   const [yearStr, weekStr] = weekOf.split("-W");
@@ -83,6 +138,7 @@ export async function seedSquadWeeklySummaries(
   const weekDate = weekOfToDate(weekOf);
   let created = 0;
   let skipped = 0;
+  const summaryPageIds: string[] = [];
 
   for (const source of ALL_SOURCES) {
     const existing = await notion.databases.query({
@@ -97,6 +153,7 @@ export async function seedSquadWeeklySummaries(
     });
 
     if (existing.results.length > 0) {
+      summaryPageIds.push(existing.results[0].id);
       skipped++;
       continue;
     }
@@ -152,9 +209,18 @@ export async function seedSquadWeeklySummaries(
       ] as Parameters<typeof notion.blocks.children.append>[0]["children"],
     });
 
+    summaryPageIds.push(page.id);
     console.log(`  [hitl-review/seed] created ${squadId}/${source}: ${page.id}`);
     created++;
   }
+
+  // Create or reset the review session row with links to all 6 summary pages
+  await upsertReviewSession({
+    squadId,
+    weekOf,
+    status: "pending",
+    summaryPageIds,
+  });
 
   return { created, skipped };
 }
@@ -318,7 +384,63 @@ export async function createReviewPage(squadId: SquadId, weekOf: string): Promis
 
   await notion.blocks.children.append({ block_id: newPage.id, children: blocks });
   console.log(`[hitl-review] Created review page: ${newPage.id}`);
+
+  // Mark the squad as in-review once the EM opens the review page
+  await upsertReviewSession({ squadId, weekOf, status: "in-review" });
+
   return newPage.id;
+}
+
+/**
+ * Create or update the Master EPD Weekly row for a week, linking ALL HITL
+ * Review Sessions rows via Squad Consolidations. This pre-populates the
+ * Squad Approval Rate rollup denominator so the master agent can gate on
+ * 100% without hardcoding the squad count — add or remove a squad and the
+ * rollup adjusts automatically.
+ * Idempotent: finds by Week Of and updates if found; creates otherwise.
+ */
+export async function upsertMasterEpdWeekly(
+  weekOf: string,
+): Promise<{ pageId: string; action: "created" | "updated" }> {
+  const notion = getNotionClient();
+  const weekDate = weekOfToDate(weekOf);
+
+  const sessions = await notion.databases.query({
+    database_id: NOTION_IDS.dbs.hitlReviewSessions,
+    filter: { property: "Week Of", date: { equals: weekDate } },
+    page_size: 20,
+  });
+  const sessionRelation = sessions.results.map((p) => ({ id: p.id }));
+
+  const existing = await notion.databases.query({
+    database_id: NOTION_IDS.dbs.masterEpdWeekly,
+    filter: { property: "Week Of", date: { equals: weekDate } },
+    page_size: 5,
+  });
+
+  if (existing.results.length > 0) {
+    const pageId = existing.results[0].id;
+    await notion.pages.update({
+      page_id: pageId,
+      properties: {
+        "Squad Consolidations": { relation: sessionRelation },
+      } as Parameters<typeof notion.pages.update>[0]["properties"],
+    });
+    console.log(`[hitl-review] Updated Master EPD Weekly for ${weekOf}: ${pageId}`);
+    return { pageId, action: "updated" };
+  }
+
+  const page = await notion.pages.create({
+    parent: { database_id: NOTION_IDS.dbs.masterEpdWeekly },
+    properties: {
+      "Title":                { title: rtProp(`EPD Weekly — ${weekOf}`) },
+      "Week Of":              { date: { start: weekDate } },
+      "Squad Consolidations": { relation: sessionRelation },
+      "Status":               { select: { name: "pending" } },
+    } as Parameters<typeof notion.pages.create>[0]["properties"],
+  });
+  console.log(`[hitl-review] Created Master EPD Weekly for ${weekOf}: ${page.id}`);
+  return { pageId: page.id, action: "created" };
 }
 
 /**
@@ -393,11 +515,17 @@ export async function approveSquadWeek(
     }
   }
 
-  if (approvedSquads.length >= 2) {
-    // Dedup: only create the trigger once per week
+  if (approvedSquads.length >= 1) {
+    // Dedup: only block if a PENDING trigger exists — a completed/skipped run should
+    // allow re-firing when more squads approve (e.g. 1/3 skipped → 2/3 should publish).
     const existingTrigger = await notion.databases.query({
       database_id: NOTION_IDS.dbs.agentRunLog,
-      filter: { property: "Agent Name", select: { equals: "summarizer.master" } },
+      filter: {
+        and: [
+          { property: "Agent Name", select: { equals: "summarizer.master" } },
+          { property: "Outcome",    select: { equals: "pending" } },
+        ],
+      },
       page_size: 10,
     });
 
@@ -414,6 +542,14 @@ export async function approveSquadWeek(
       );
     }
   }
+
+  // Update review session: approved, with source count and timestamp
+  await upsertReviewSession({
+    squadId,
+    weekOf,
+    status: "approved",
+    approvedAt: new Date().toISOString(),
+  });
 
   return { approved: summaryPages.length, reviewPageId };
 }
@@ -464,6 +600,13 @@ export async function rejectSummary(
     completedAt,
     outcome: "ok",
     notes: `Rejected ${source} for ${squadId} week ${weekOf}. Reason: ${comment}`,
+  });
+
+  await upsertReviewSession({
+    squadId,
+    weekOf,
+    status: "changes-requested",
+    notes: `${source} rejected: ${comment}`,
   });
 
   console.log(`[hitl-review] Rejected ${source} for ${squadId}/${weekOf}`);

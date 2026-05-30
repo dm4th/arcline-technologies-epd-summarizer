@@ -13,6 +13,7 @@
     "observe": "tsx scripts/setup-observability.ts",
     "summarizer:deploy": "pnpm --filter arcline-worker-summarizer deploy",
     "summarizer-product:deploy": "pnpm --filter arcline-worker-summarizer-product deploy",
+    "summarizer-squad:deploy": "pnpm --filter arcline-worker-summarizer-squad deploy",
     "summarizer-master:deploy": "pnpm --filter arcline-worker-summarizer-master deploy",
     "product-summarizers": "tsx scripts/trigger-product-summarizers.ts",
     "master-summarizer": "tsx scripts/trigger-master-summarizer.ts"

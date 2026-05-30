@@ -13,7 +13,7 @@ const SQUAD_PAGE_ID: Record<Squad, string> = {
   forge: "36efc8f4-554c-8102-b02e-d9def2d4a4da",
 };
 
-const SQUAD_WEEKLY_SUMMARY_DB = "36efc8f4-554c-819e-b339-ec0bb2c97a76";
+const HITL_REVIEW_SESSIONS_DB = "370fc8f4-554c-8113-a6dd-f893a84555ff";
 const MASTER_EPD_WEEKLY_DB    = "36efc8f4-554c-8158-808b-d084ce4c4a16";
 const AGENT_RUN_LOG_DB        = "36efc8f4-554c-814e-8c51-ea51792f5344";
 
@@ -47,6 +47,18 @@ function selectName(prop: unknown): string {
   return "";
 }
 
+// Reads a rollup "percent checked" value from a Notion property.
+// Notion API returns 0–100 for percent rollups; gate at >= 99.9 to absorb FP drift.
+function rollupPercent(prop: unknown): number | null {
+  if (!prop || typeof prop !== "object") return null;
+  const p = prop as Record<string, unknown>;
+  if (p.type !== "rollup") return null;
+  const r = p.rollup as Record<string, unknown> | undefined;
+  if (!r || r.type !== "number" || typeof r.number !== "number") return null;
+  // Normalize: if value is <= 1 Notion may have returned a 0–1 fraction
+  return r.number > 1 ? r.number : r.number * 100;
+}
+
 function blockText(richTextArr: unknown): string {
   if (!Array.isArray(richTextArr)) return "";
   return (richTextArr as Array<{ plain_text?: string }>).map((t) => t.plain_text ?? "").join("");
@@ -74,10 +86,11 @@ function weekOfToDate(weekOf: string): string {
 worker.tool("read_approved_summaries", {
   title: "Read Approved Summaries",
   description:
-    "Return all Squad Weekly Summary rows for a given week, grouped by squad. " +
-    "Each squad entry lists its source summaries with page content and upstream citations. " +
-    "The 'approvedSquadSlugs' field indicates which squads have all 6 source rows approved — " +
-    "use this to determine quorum (≥2 required to publish) before calling write_master_summary.",
+    "Return all HITL Review Sessions rows for a given week. " +
+    "Each row contains the squad's consolidated narrative (written by the squad consolidation agent) " +
+    "in the page body, plus citations stored in the Citations property. " +
+    "A squad is 'approved' when its HITL Review Sessions Status = 'approved'. " +
+    "The 'approvedSquadSlugs' field drives quorum — all 3 squads required to publish the master (100%).",
   hints: { readOnlyHint: true },
   schema: j.object({
     weekOf: j.string().describe("Week identifier, e.g. 2026-W21"),
@@ -86,83 +99,88 @@ worker.tool("read_approved_summaries", {
     const weekDate = weekOfToDate(weekOf);
 
     const response = await notion.databases.query({
-      database_id: SQUAD_WEEKLY_SUMMARY_DB,
-      filter: {
-        property: "Week Of",
-        date: { equals: weekDate },
-      },
-      page_size: 100,
+      database_id: HITL_REVIEW_SESSIONS_DB,
+      filter: { property: "Week Of", date: { equals: weekDate } },
+      page_size: 20,
     });
 
-    const EXPECTED_SOURCES = new Set(["github", "jira", "slack", "figma", "roadmap", "prd-fact-check"]);
-
-    type SummaryEntry = {
+    type ConsolidatedEntry = {
       notionPageId: string;
-      source: string;
       status: string;
       content: string;
       citations: Array<{ recordId: string; sourceUrl: string; claim: string }>;
     };
 
-    const bySquad: Record<Squad, SummaryEntry[]> = {
-      atlas: [], lumen: [], forge: [],
+    const bySquad: Record<Squad, ConsolidatedEntry | null> = {
+      atlas: null, lumen: null, forge: null,
     };
 
     for (const page of response.results.filter(isFullPage)) {
       const p = page.properties as Record<string, unknown>;
-      const source = selectName(p["Source"]);
-      if (!EXPECTED_SOURCES.has(source)) continue;
 
-      // Determine which squad this belongs to by checking the relation
+      // Identify squad via relation
       const squadRel = p["Squad"] as { relation?: Array<{ id: string }> } | undefined;
       const squadIds = squadRel?.relation?.map((r) => r.id) ?? [];
       const matchedSquad = ALL_SQUADS.find((sq) => squadIds.includes(SQUAD_PAGE_ID[sq]));
       if (!matchedSquad) continue;
 
-      // Reconstruct page body
+      const status = selectName(p["Status"]);
+
+      // Reconstruct consolidated body (written by squad consolidation agent)
       const blocklist = await notion.blocks.children.list({ block_id: page.id });
       const sections: Record<string, string> = {};
       let currentHeading = "";
-
       for (const block of blocklist.results) {
         if (!("type" in block)) continue;
         const b = block as { type: string } & Record<string, unknown>;
-        if (b.type === "heading_2") {
+        if (b.type === "heading_2")
           currentHeading = blockText((b.heading_2 as Record<string, unknown>)?.rich_text);
-        } else if (b.type === "paragraph" && currentHeading) {
+        else if (b.type === "paragraph" && currentHeading) {
           const text = blockText((b.paragraph as Record<string, unknown>)?.rich_text);
           if (text) sections[currentHeading] = text;
         }
       }
-
       const content = Object.entries(sections).map(([h, t]) => `## ${h}\n${t}`).join("\n\n");
 
       const citationsJson = richText(p["Citations"]);
       let citations: Array<{ recordId: string; sourceUrl: string; claim: string }> = [];
       try { citations = JSON.parse(citationsJson || "[]"); } catch { citations = []; }
 
-      bySquad[matchedSquad].push({
-        notionPageId: page.id,
-        source,
-        status: selectName(p["Status"]),
-        content,
-        citations,
-      });
+      bySquad[matchedSquad] = { notionPageId: page.id, status, content, citations };
     }
 
-    // A squad is fully approved when all expected sources are present AND all are approved.
-    const approvedSquadSlugs = ALL_SQUADS.filter((sq) => {
-      const rows = bySquad[sq];
-      const sources = new Set(rows.map((r) => r.source));
-      const allPresent = [...EXPECTED_SOURCES].every((s) => sources.has(s));
-      const allApproved = rows.every((r) => r.status === "approved");
-      return allPresent && allApproved;
+    // A squad is approved when its session Status = "approved"
+    const approvedSquadSlugs = ALL_SQUADS.filter(
+      (sq) => bySquad[sq]?.status === "approved",
+    );
+
+    // Session page IDs for approved squads — passed to write_master_summary
+    // to populate the Squad Consolidations relation on the master row
+    const approvedSessionIds = approvedSquadSlugs
+      .map((sq) => bySquad[sq]?.notionPageId)
+      .filter((id): id is string => id !== undefined);
+
+    // Read Squad Approval Rate rollup from the Master EPD Weekly row.
+    // This rollup counts how many linked HITL Review Sessions rows are approved,
+    // so quorum stays correct regardless of how many squads exist.
+    const masterRow = await notion.databases.query({
+      database_id: MASTER_EPD_WEEKLY_DB,
+      filter: { property: "Week Of", date: { equals: weekDate } },
+      page_size: 5,
     });
+
+    let squadApprovalRate: number | null = null;
+    if (masterRow.results.length > 0 && isFullPage(masterRow.results[0])) {
+      const mp = masterRow.results[0].properties as Record<string, unknown>;
+      squadApprovalRate = rollupPercent(mp["Squad Approval Rate"]);
+    }
 
     return {
       squads: bySquad,
       approvedSquadSlugs,
-      quorumMet: approvedSquadSlugs.length >= 2,
+      approvedSessionIds,
+      squadApprovalRate,
+      quorumMet: squadApprovalRate !== null && squadApprovalRate >= 99.9,
       weekOf,
     };
   },
@@ -189,14 +207,17 @@ worker.tool("write_master_summary", {
   title: "Write Master Summary",
   description:
     "Create or update the Master EPD Weekly row for the given week. " +
-    "Enforces quorum: ≤1 approved squad → writes outcome=skipped log and returns without publishing. " +
-    "≥2 approved → publishes with provisional markers for unapproved squads. " +
+    "Enforces quorum: fewer than 3 approved squads → writes outcome=skipped log and returns without publishing. " +
+    "All 3 approved → publishes the full master digest. " +
     "Upserts are idempotent — re-running overwrites the existing row body.",
   schema: j.object({
     weekOf:            j.string().describe("Week identifier, e.g. 2026-W21"),
     approvedSquads:    j
       .array(j.enum("atlas", "lumen", "forge"))
-      .describe("Squads whose summaries are fully approved this week"),
+      .describe("Squads whose HITL Review Sessions row has Status = 'approved' this week"),
+    approvedSessionIds: j
+      .array(j.string())
+      .describe("notionPageId of each approved HITL Review Sessions row — used to populate the Squad Consolidations relation on the master row"),
     executiveSummary:  j.string().describe("≤200 words — one-paragraph VP-level summary of the week"),
     highlights:        j.string().describe("Markdown — shipped work across all squads worth calling out"),
     risksBlockers:     j.string().describe("Markdown — cross-squad risks, hard blockers, open items"),
@@ -231,7 +252,7 @@ worker.tool("write_master_summary", {
   }),
   execute: async (
     {
-      weekOf, approvedSquads, executiveSummary, highlights,
+      weekOf, approvedSquads, approvedSessionIds, executiveSummary, highlights,
       risksBlockers, crossSquadDeps, roadmapMovement,
       openDiscrepancies, conflictPolicy, citationCoveragePct, citations,
     },
@@ -239,11 +260,22 @@ worker.tool("write_master_summary", {
   ) => {
     const startedAt  = new Date();
     const weekDate   = weekOfToDate(weekOf);
-    const allSquads: Squad[] = ["atlas", "lumen", "forge"];
-    const unapprovedSquads   = allSquads.filter((s) => !(approvedSquads as string[]).includes(s));
 
-    // ── Quorum check: ≤1 approved → skip ─────────────────────────────────────
-    if (approvedSquads.length <= 1) {
+    // ── Re-read Squad Approval Rate rollup as the authoritative quorum gate ──
+    // This decouples quorum from a hardcoded squad count — the rollup denominator
+    // adjusts automatically when squads are added or removed.
+    const masterCheck = await notion.databases.query({
+      database_id: MASTER_EPD_WEEKLY_DB,
+      filter: { property: "Week Of", date: { equals: weekDate } },
+      page_size: 5,
+    });
+    const squadApprovalRate =
+      masterCheck.results.length > 0 && isFullPage(masterCheck.results[0])
+        ? rollupPercent((masterCheck.results[0].properties as Record<string, unknown>)["Squad Approval Rate"])
+        : null;
+
+    // ── Quorum check: < 100% approved → skip ─────────────────────────────────
+    if (squadApprovalRate === null || squadApprovalRate < 99.9) {
       const completedAt = new Date();
       await notion.pages.create({
         parent: { database_id: AGENT_RUN_LOG_DB },
@@ -256,7 +288,7 @@ worker.tool("write_master_summary", {
           "Outcome":      { select: { name: "skipped" } },
           "Notes": {
             rich_text: rt(
-              `week=${weekOf} approved=${approvedSquads.join(",")} reason=below-quorum(need>=2,got=${approvedSquads.length})`,
+              `week=${weekOf} approved=${approvedSquads.join(",")} reason=below-quorum(squadApprovalRate=${squadApprovalRate ?? "null"},need=100)`,
             ),
           },
         } as Parameters<typeof notion.pages.create>[0]["properties"],
@@ -265,22 +297,15 @@ worker.tool("write_master_summary", {
         skipped: true,
         reason: "below-quorum",
         approvedCount: approvedSquads.length,
-        quorumRequired: 2,
+        squadApprovalRate,
         pageId: null,
         action: null,
         unapprovedSquads: null,
-        quorumFull: null,
+        quorumFull: false,
         citationCoveragePct: null,
         citationCount: null,
       };
     }
-
-    // ── Build provisional header if any squad is unapproved ───────────────────
-    const provisionalNote = unapprovedSquads.length > 0
-      ? `\n\n⚠ Provisional — the following squad(s) had not completed HITL review at publish time: **${unapprovedSquads.map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(", ")}**. Their data is absent from this digest. Full report will be re-issued once approved.`
-      : "";
-
-    const approvedSquadIds = (approvedSquads as Squad[]).map((sq) => ({ id: SQUAD_PAGE_ID[sq] }));
 
     // ── Find or create the Master EPD Weekly row ──────────────────────────────
     const existing = await notion.databases.query({
@@ -289,16 +314,41 @@ worker.tool("write_master_summary", {
       page_size: 5,
     });
 
+    // ── Idempotency gate: first writer wins ───────────────────────────────────
+    // Multiple HITL approval events can all pass the rollup gate before any
+    // write lands. We gate on the "Citation Coverage %" number property — it
+    // is only set by this function, so its presence means a master write has
+    // already run. We intentionally do NOT gate on Status: a VP publish button
+    // can set Status without a write having happened.
+    if (existing.results.length > 0 && isFullPage(existing.results[0])) {
+      const citationCov = (
+        existing.results[0].properties as Record<string, unknown>
+      )["Citation Coverage %"] as { number?: number | null } | undefined;
+      if (citationCov?.number !== null && citationCov?.number !== undefined) {
+        return {
+          skipped: true, reason: "already-published",
+          approvedCount: approvedSquads.length,
+          squadApprovalRate,
+          pageId: existing.results[0].id,
+          action: null,
+          unapprovedSquads: null,
+          quorumFull: true,
+          citationCoveragePct: null,
+          citationCount: null,
+        };
+      }
+    }
+
     let pageId: string;
     let action: "created" | "updated";
 
     const props = {
-      "Title":                { title: rt(`EPD Weekly — ${weekOf}`) },
-      "Week Of":              { date: { start: weekDate } },
-      "Quorum Met":           { checkbox: approvedSquads.length === 3 },
-      "Citation Coverage %":  { number: Math.round(citationCoveragePct * 10) / 10 },
-      "Squads Approved":      { relation: approvedSquadIds },
-      "Status":               { select: { name: "awaiting-VP" } },
+      "Title":                 { title: rt(`EPD Weekly — ${weekOf}`) },
+      "Week Of":               { date: { start: weekDate } },
+      "Quorum Met":            { checkbox: (squadApprovalRate ?? 0) >= 99.9 },
+      "Citation Coverage %":   { number: Math.round(citationCoveragePct * 10) / 10 },
+      "Squad Consolidations":  { relation: (approvedSessionIds as string[]).map((id) => ({ id })) },
+      "Status":                { select: { name: "awaiting-VP" } },
     } as Parameters<typeof notion.pages.create>[0]["properties"];
 
     if (existing.results.length === 0) {
@@ -334,7 +384,7 @@ worker.tool("write_master_summary", {
       {
         type: "callout",
         callout: {
-          rich_text: rt(executiveSummary + provisionalNote),
+          rich_text: rt(executiveSummary),
           color: "blue_background",
         },
       },
@@ -413,11 +463,11 @@ worker.tool("write_master_summary", {
       skipped: false,
       reason: null,
       approvedCount: approvedSquads.length,
-      quorumRequired: 2,
+      squadApprovalRate,
       pageId,
       action,
-      unapprovedSquads,
-      quorumFull: approvedSquads.length === 3,
+      unapprovedSquads: null,
+      quorumFull: (squadApprovalRate ?? 0) >= 99.9,
       citationCoveragePct: Math.round(citationCoveragePct * 10) / 10,
       citationCount: citations.length,
     };

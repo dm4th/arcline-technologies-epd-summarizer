@@ -12,6 +12,7 @@
 import type { SquadId } from "../src/types/core";
 import {
   seedSquadWeeklySummaries,
+  upsertMasterEpdWeekly,
   createReviewPage,
   approveSquadWeek,
   rejectSummary,
@@ -99,6 +100,11 @@ function requireSource(source: SummarySource | undefined): SummarySource {
       totalCreated += created;
       totalSkipped += skipped;
     }
+
+    // Seed the Master EPD Weekly row, linking all squad sessions so the
+    // Squad Approval Rate rollup has a denominator before any agent runs.
+    const { pageId: masterPageId, action: masterAction } = await upsertMasterEpdWeekly(weekOf);
+    console.log(`  master-epd-weekly: ${masterAction} (${masterPageId})`);
 
     console.log(`\nSeed complete — ${totalCreated} created, ${totalSkipped} skipped.`);
     return;

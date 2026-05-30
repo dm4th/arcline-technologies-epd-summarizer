@@ -1,10 +1,10 @@
 # PRD-05 — Master Summarizer Agent
 
 <!-- status:
-state: in-progress
-owner: sonnet-2026-05-29-A1
-updated: 2026-05-29T23:59:00Z
-notes: Claimed for Wave D Master Summarizer build. All deps completed (00, 01, 04a, 04b, 06).
+state: in-review
+owner: sonnet-2026-05-30-A1
+updated: 2026-05-30T05:00:00Z
+notes: Full pipeline deployed and live-tested: squad consolidation worker (019e7988), master worker (019e765a), HITL Sessions seeding w/ upsertMasterEpdWeekly, rollup-based quorum gates at both tiers (Sub-Summary Approval Rate on HITL Sessions, Squad Approval Rate on Master EPD Weekly), Consolidated At idempotency key (squad) + Citation Coverage % idempotency key (master), agent prompts updated for tool-first quorum check (rollup omitted on direct page reads). Live test: 18 Squad Weekly Summary approvals → 3 squad consolidations → EPD Weekly 2026-W21 written with 24 citations at 100% coverage, Status=awaiting-VP.
 -->
 
 ## Goal

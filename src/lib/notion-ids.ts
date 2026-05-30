@@ -16,6 +16,7 @@ export interface NotionIds {
     masterEpdWeekly: string;
     agentRunLog: string;
     deliveryPipeline: string;
+    hitlReviewSessions: string;
   };
   pages: {
     squadAtlas: string;
@@ -37,6 +38,7 @@ export const NOTION_IDS: NotionIds = {
     masterEpdWeekly:    "36efc8f4-554c-8158-808b-d084ce4c4a16",
     agentRunLog:        "36efc8f4-554c-814e-8c51-ea51792f5344",
     deliveryPipeline:   "36efc8f4-554c-813a-8e52-d26b831109fe",
+    hitlReviewSessions: "370fc8f4-554c-8113-a6dd-f893a84555ff",
   },
   pages: {
     squadAtlas: "36efc8f4-554c-81e7-a83b-c976963a5fab",  // Atlas row in Squads DB
