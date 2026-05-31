@@ -1,0 +1,68 @@
+[
+  {
+    "sourceId": "lumen-figma-AuthV2TokenDesign",
+    "source": "figma",
+    "squadId": "lumen",
+    "title": "Auth Tokens v2 — API Payload Design",
+    "url": "https://www.figma.com/file/lN1a2u3t4h5v/Auth-Tokens-v2",
+    "lastUpdated": "2026-05-06T15:00:00Z",
+    "raw": {
+      "file_key": "lN1a2u3t4h5v",
+      "file_name": "Auth Tokens v2 — API Payload Design",
+      "last_modified": "2026-05-06T15:00:00Z",
+      "comments": [
+        {
+          "author": "priya-nair",
+          "text": "Proposed v2 token payload posted. Changes from v1: adds `tenantId` (string) and `scopes` (string array). The scopes list is what Atlas needs for premium tier gating. Waiting on PM sign-off for field names before implementing. Comments welcome.",
+          "created_at": "2026-05-05T16:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "kai-zhang",
+          "text": "Scope naming convention: should these be `billing:read` style (resource:action) or flat strings like `premium_access`? Resource:action is more flexible and OAuth-aligned.",
+          "created_at": "2026-05-06T10:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "priya-nair",
+          "text": "Agreed on resource:action — including that recommendation in the PM doc. `billing:read`, `billing:write`, `analytics:read`, `premium:access` as the initial scope set.",
+          "created_at": "2026-05-06T15:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-figma-ComponentLibraryTokens",
+    "source": "figma",
+    "squadId": "lumen",
+    "title": "Lumen Component Library — Design Token Spec",
+    "url": "https://www.figma.com/file/lC0m1p2t3k4l/Component-Library-Tokens",
+    "lastUpdated": "2026-05-08T11:00:00Z",
+    "raw": {
+      "file_key": "lC0m1p2t3k4l",
+      "file_name": "Lumen Component Library — Design Token Spec",
+      "last_modified": "2026-05-08T11:00:00Z",
+      "comments": [
+        {
+          "author": "alice-design",
+          "text": "Token spec published for the component library migration. All colors, typography, spacing, and shadow values are now in the Figma token plugin. Kai — these are the values to pull into the codebase for LMNE-21.",
+          "created_at": "2026-05-07T14:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "kai-zhang",
+          "text": "Perfect timing. Starting the migration PR this sprint. Will use Style Dictionary to export from Figma tokens to CSS custom properties and TypeScript constants.",
+          "created_at": "2026-05-08T10:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "alice-design",
+          "text": "One thing to note: the dark mode token overrides are in a separate 'Dark' collection in the token plugin. Make sure the export handles both light and dark sets.",
+          "created_at": "2026-05-08T11:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  }
+]

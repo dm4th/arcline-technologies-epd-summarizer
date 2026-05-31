@@ -1,0 +1,122 @@
+[
+  {
+    "sourceId": "atlas-slack-W19-001",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: Sprint 14 kickoff — goals and assignments",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1746403200000001",
+    "lastUpdated": "2026-05-04T09:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1746403200.000001",
+      "participant_count": 4,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "Sprint 14 kickoff. Main goals: (1) billing API refactor (ATLS-42) — sarah-chen taking point, (2) rate limiting (ATLS-38), (3) unblock premium tier once Lumen ships v2. Assigning ATLS-42 to myself since I have the most context on the CQRS design.",
+          "ts": "1746403200.000001"
+        },
+        {
+          "author": "jordan-lee",
+          "text": "Sounds good. I'll pick up the billing refactor implementation once you finalize the design. Also I can pair on the CQRS split.",
+          "ts": "1746403800.000001"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "On it for the v1 cleanup (ATLS-29) and the NPE bug (ATLS-41). Both should be quick wins early sprint.",
+          "ts": "1746404400.000001"
+        },
+        {
+          "author": "morgan-park",
+          "text": "I'll start on test coverage (ATLS-44). Currently at 28% on renewal logic — targeting 85% this sprint.",
+          "ts": "1746405000.000001"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-W19-002",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-lumen-sync: Auth v2 dependency — when does it land?",
+    "url": "https://arcline.slack.com/archives/C01XTEAM/p1746490000000001",
+    "lastUpdated": "2026-05-05T10:00:00Z",
+    "raw": {
+      "channel": "atlas-lumen-sync",
+      "thread_ts": "1746490000.000001",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "Hey Lumen team — we have ATLS-55 blocked on /api/auth/tokens/v2 shipping. June 15 is the v1 sunset and we need ~1 week to migrate after your endpoint is stable. What's the ETA?",
+          "ts": "1746490000.000001"
+        },
+        {
+          "author": "priya-nair",
+          "text": "We started LMNE-22 this sprint. The scopes schema is the tricky part — PM still needs to sign off on the field names. Optimistic: end of sprint (May 10). Realistic: first week of next sprint (May 18). Will keep you posted.",
+          "ts": "1746490600.000001"
+        },
+        {
+          "author": "sarah-chen",
+          "text": "May 18 would be really tight for us to migrate and test before June 15. Is there anything we can do to accelerate the PM sign-off?",
+          "ts": "1746491200.000001"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-W19-003",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: ATLS-42 billing refactor — approach discussion",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1746576000000001",
+    "lastUpdated": "2026-05-06T10:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1746576000.000001",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "jordan-lee",
+          "text": "I've been digging into the billing refactor (ATLS-42). I think the CQRS split is more complex than estimated — BillingService has 15+ methods and they're all intertwined. I'm going to need to drive this. Can we have a quick sync?",
+          "ts": "1746576000.000001"
+        },
+        {
+          "author": "sarah-chen",
+          "text": "Let's sync Thursday. I can walk you through the design. It's 8 story points for a reason — the read/write path separation touches the DB layer too.",
+          "ts": "1746576600.000001"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "FYI: Jira still shows sarah-chen as assignee on ATLS-42. Jordan, if you're taking it, we should update the ticket.",
+          "ts": "1746577200.000001"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-W19-004",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: NPE in payment processor — found root cause",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1746662000000001",
+    "lastUpdated": "2026-05-07T10:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1746662000.000001",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "alex-kumar",
+          "text": "Found the NPE. `payment.metadata.customerId` is null on Stripe webhook events that don't originate from checkout sessions — apparently card updates don't include it. Adding a null check and a regression test. Should be merged today.",
+          "ts": "1746662000.000001"
+        },
+        {
+          "author": "sarah-chen",
+          "text": "Good catch. Let's add it to the hotfix backlog too — there might be other metadata fields we're not null-checking.",
+          "ts": "1746662600.000001"
+        }
+      ]
+    }
+  }
+]

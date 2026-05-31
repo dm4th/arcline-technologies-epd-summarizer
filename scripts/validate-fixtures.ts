@@ -1,7 +1,8 @@
 /**
  * validate-fixtures.ts
  *
- * Validates all 12 fixture files against their JSON Schema definitions.
+ * Validates all fixture files against their JSON Schema definitions.
+ * Auto-discovers all available week directories (e.g. 2026-W19, 2026-W21).
  * Exits 0 if all pass, 1 if any fail.
  *
  * Usage:
@@ -26,9 +27,27 @@ const FIXTURES_DIR = path.join(ROOT, "fixtures");
 
 const SOURCES = ["github", "jira", "slack", "figma"] as const;
 const SQUADS = ["atlas", "lumen", "forge"] as const;
-const WEEK = "2026-W21";
 
 type Source = (typeof SOURCES)[number];
+
+// ---------------------------------------------------------------------------
+// Discover all available weeks from the filesystem
+// ---------------------------------------------------------------------------
+
+// A week directory exists if at least one source/squad file is present for it.
+// Pattern: fixtures/<source>/<squad>/2026-W<NN>.json
+const weeksSet = new Set<string>();
+for (const source of SOURCES) {
+  for (const squad of SQUADS) {
+    const dir = path.join(FIXTURES_DIR, source, squad);
+    if (!fs.existsSync(dir)) continue;
+    for (const file of fs.readdirSync(dir)) {
+      const m = file.match(/^(20\d\d-W\d+)\.json$/);
+      if (m) weeksSet.add(m[1]);
+    }
+  }
+}
+const WEEKS = [...weeksSet].sort();
 
 // ---------------------------------------------------------------------------
 // Load and compile schemas
@@ -56,15 +75,26 @@ let failed = 0;
 
 const failures: string[] = [];
 
+console.log(`Weeks found: ${WEEKS.join(", ")}\n`);
+
+for (const week of WEEKS) {
 for (const source of SOURCES) {
   for (const squad of SQUADS) {
-    const fixturePath = path.join(FIXTURES_DIR, source, squad, `${WEEK}.json`);
+    const fixturePath = path.join(FIXTURES_DIR, source, squad, `${week}.json`);
     totalFiles++;
 
     if (!fs.existsSync(fixturePath)) {
-      const rel = path.relative(ROOT, fixturePath);
-      failures.push(`  MISSING  ${rel}`);
-      failed++;
+      // A missing file for a given week/source/squad is only an error if
+      // other files exist for that same week (partial week = bad).
+      const anyExist = SQUADS.some(sq =>
+        fs.existsSync(path.join(FIXTURES_DIR, source, sq, `${week}.json`))
+      );
+      if (anyExist) {
+        const rel = path.relative(ROOT, fixturePath);
+        failures.push(`  MISSING  ${rel}`);
+        failed++;
+        totalFiles++;
+      }
       continue;
     }
 
@@ -96,6 +126,7 @@ for (const source of SOURCES) {
     }
   }
 }
+} // end weeks loop
 
 // ---------------------------------------------------------------------------
 // Summary

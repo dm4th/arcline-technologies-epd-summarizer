@@ -17,6 +17,11 @@
     "summarizer-master:deploy": "pnpm --filter arcline-worker-summarizer-master deploy",
     "product-summarizers": "tsx scripts/trigger-product-summarizers.ts",
     "master-summarizer": "tsx scripts/trigger-master-summarizer.ts",
+    "reset-data":         "tsx --env-file=.env.local scripts/reset-data.ts",
+    "demo-week":          "tsx --env-file=.env.local scripts/demo-week.ts",
+    "generate-summaries": "tsx --env-file=.env.local scripts/generate-summaries.ts",
+    "approve-week":       "tsx --env-file=.env.local scripts/approve-week.ts",
+    "generate-master":    "tsx --env-file=.env.local scripts/generate-master.ts",
     "eval": "tsx --env-file=.env.local evals/run.ts",
     "eval:golden": "tsx --env-file=.env.local evals/golden-replay.ts"
   },

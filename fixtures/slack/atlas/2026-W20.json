@@ -1,0 +1,117 @@
+[
+  {
+    "sourceId": "atlas-slack-W20-001",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: Rate limiting PR in review — load test results",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1747008000000001",
+    "lastUpdated": "2026-05-12T09:30:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1747008000.000001",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "PR #48 (rate limiting) is ready for final review. Load test results: handles 1200 req/min per tenant cleanly. Returns 429 with correct Retry-After header. @alex-kumar @morgan-park can you take a look today?",
+          "ts": "1747008000.000001"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "On it. Quick note: I noticed in staging the 429 response doesn't have a user-visible error state yet. Is Figma updated for this? Might want to make sure design covers the error toast before we ship.",
+          "ts": "1747008600.000001"
+        },
+        {
+          "author": "sarah-chen",
+          "text": "Good point. I'll check with the design team — I don't think the Figma file has a 429 state yet. Will follow up.",
+          "ts": "1747009200.000001"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-W20-002",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: Billing refactor load test — EU replica lag warning",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1747094400000001",
+    "lastUpdated": "2026-05-13T09:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1747094400.000001",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "jordan-lee",
+          "text": "Billing refactor load test running at 5x peak traffic. US region looks great. BUT: EU read replica is showing 800ms lag at peak. Probably fine for now since we're not EU-primary yet, but worth watching. I'll mention it in the weekly sync.",
+          "ts": "1747094400.000001"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "800ms replica lag sounds like a connection pool or query planner issue. Could bite us hard if we expand EU. Should we file a ticket to investigate?",
+          "ts": "1747095000.000001"
+        },
+        {
+          "author": "jordan-lee",
+          "text": "Yeah probably. Low priority for now though — we're not routing EU reads through that replica yet. I'll bring it up in standup and see if anyone wants to own it.",
+          "ts": "1747095600.000001"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-W20-003",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-lumen-sync: Auth v2 still blocked — escalating timeline",
+    "url": "https://arcline.slack.com/archives/C01XTEAM/p1747180800000001",
+    "lastUpdated": "2026-05-14T09:00:00Z",
+    "raw": {
+      "channel": "atlas-lumen-sync",
+      "thread_ts": "1747180800.000001",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "Pinging again on LMNE-22 / auth v2. We're now 5 weeks from the June 15 v1 sunset. Atlas still can't merge PR #49 until Lumen deploys v2. Can we get a firm date?",
+          "ts": "1747180800.000001"
+        },
+        {
+          "author": "priya-nair",
+          "text": "PR #31 is in code review right now. PM signed off on scopes schema Friday. Targeting merge Monday or Tuesday next week (May 18-19). You should be able to pick it up immediately after.",
+          "ts": "1747181400.000001"
+        },
+        {
+          "author": "sarah-chen",
+          "text": "Ok — marking ATLS-55 as 'waiting on Lumen deploy May 18'. Premium feature flags (ATLS-56/PR #57) unblocks immediately after. Fingers crossed.",
+          "ts": "1747182000.000001"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-slack-W20-004",
+    "source": "slack",
+    "squadId": "atlas",
+    "title": "#atlas-eng: HMAC webhook timing bug discovered in load test",
+    "url": "https://arcline.slack.com/archives/C01ATLAS/p1747267200000001",
+    "lastUpdated": "2026-05-15T08:00:00Z",
+    "raw": {
+      "channel": "atlas-eng",
+      "thread_ts": "1747267200.000001",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "sarah-chen",
+          "text": "Caught a bug during load test: Stripe webhooks using Date.now() for HMAC timestamp window, but under load the clock drift causes valid signatures to be rejected. Switching to a monotonic clock. Filed as ATLS-47, PR #54 up.",
+          "ts": "1747267200.000001"
+        },
+        {
+          "author": "alex-kumar",
+          "text": "Good catch. This would have caused silent billing failures in production under traffic spike. Reviewing now.",
+          "ts": "1747267800.000001"
+        }
+      ]
+    }
+  }
+]

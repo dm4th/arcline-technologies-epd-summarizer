@@ -1,0 +1,154 @@
+[
+  {
+    "sourceId": "ATLS-38",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Add rate limiting to billing API endpoints",
+    "url": "https://arcline.atlassian.net/browse/ATLS-38",
+    "lastUpdated": "2026-05-04T09:00:00Z",
+    "raw": {
+      "key": "ATLS-38",
+      "status": "In Progress",
+      "assignee": "sarah-chen",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 3,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Rate limiting enforced at 1000 req/min per tenant. Returns 429 with Retry-After header.",
+      "labels": ["billing", "security"]
+    }
+  },
+  {
+    "sourceId": "ATLS-41",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Fix NPE in payment processor webhook handler",
+    "url": "https://arcline.atlassian.net/browse/ATLS-41",
+    "lastUpdated": "2026-05-06T11:00:00Z",
+    "raw": {
+      "key": "ATLS-41",
+      "status": "In Progress",
+      "assignee": "alex-kumar",
+      "type": "Bug",
+      "priority": "Critical",
+      "story_points": 1,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "No NPE thrown on Stripe webhook events with missing metadata. Regression test added.",
+      "labels": ["billing", "hotfix"]
+    }
+  },
+  {
+    "sourceId": "ATLS-42",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Billing API refactor — split BillingService into CQRS pattern",
+    "url": "https://arcline.atlassian.net/browse/ATLS-42",
+    "lastUpdated": "2026-05-05T09:30:00Z",
+    "raw": {
+      "key": "ATLS-42",
+      "status": "In Progress",
+      "assignee": "jordan-lee",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 8,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "BillingService split into BillingQueryService and BillingCommandService. All existing tests pass. Load test at 5x peak passes.",
+      "labels": ["billing", "refactor", "architecture"]
+    }
+  },
+  {
+    "sourceId": "ATLS-44",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Improve subscription renewal test coverage to 85%",
+    "url": "https://arcline.atlassian.net/browse/ATLS-44",
+    "lastUpdated": "2026-05-05T10:00:00Z",
+    "raw": {
+      "key": "ATLS-44",
+      "status": "To Do",
+      "assignee": "morgan-park",
+      "type": "Story",
+      "priority": "Medium",
+      "story_points": 2,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Subscription renewal logic coverage ≥85% per Istanbul report.",
+      "labels": ["billing", "testing"]
+    }
+  },
+  {
+    "sourceId": "ATLS-47",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Fix Stripe webhook HMAC signature timing issue",
+    "url": "https://arcline.atlassian.net/browse/ATLS-47",
+    "lastUpdated": "2026-05-06T14:00:00Z",
+    "raw": {
+      "key": "ATLS-47",
+      "status": "To Do",
+      "assignee": "sarah-chen",
+      "type": "Bug",
+      "priority": "High",
+      "story_points": 2,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Stripe webhooks no longer rejected due to timestamp skew. Monotonic clock used for HMAC window.",
+      "labels": ["billing", "security"]
+    }
+  },
+  {
+    "sourceId": "ATLS-29",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Remove deprecated /billing/v1 endpoints",
+    "url": "https://arcline.atlassian.net/browse/ATLS-29",
+    "lastUpdated": "2026-05-04T10:00:00Z",
+    "raw": {
+      "key": "ATLS-29",
+      "status": "In Progress",
+      "assignee": "alex-kumar",
+      "type": "Task",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "All /billing/v1/* endpoints removed. No callers remaining per Datadog trace.",
+      "labels": ["billing", "cleanup"]
+    }
+  },
+  {
+    "sourceId": "ATLS-55",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Migrate to Lumen auth tokens v2 (unblocks premium tier)",
+    "url": "https://arcline.atlassian.net/browse/ATLS-55",
+    "lastUpdated": "2026-05-05T11:00:00Z",
+    "raw": {
+      "key": "ATLS-55",
+      "status": "Blocked",
+      "assignee": "sarah-chen",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 3,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "Atlas uses /api/auth/tokens/v2. v1 calls removed before June 15 sunset.",
+      "labels": ["auth", "cross-team"]
+    }
+  },
+  {
+    "sourceId": "ATLS-50",
+    "source": "jira",
+    "squadId": "atlas",
+    "title": "Analytics spike: MRR breakdown by plan tier",
+    "url": "https://arcline.atlassian.net/browse/ATLS-50",
+    "lastUpdated": "2026-05-07T09:00:00Z",
+    "raw": {
+      "key": "ATLS-50",
+      "status": "In Progress",
+      "assignee": "alex-kumar",
+      "type": "Spike",
+      "priority": "Low",
+      "story_points": 2,
+      "sprint": "Atlas Sprint 14",
+      "acceptance_criteria": "POC query for MRR breakdown delivered. Decision on full implementation to follow.",
+      "labels": ["analytics", "billing"]
+    }
+  }
+]

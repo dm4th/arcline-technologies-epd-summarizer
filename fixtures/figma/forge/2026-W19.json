@@ -1,0 +1,68 @@
+[
+  {
+    "sourceId": "forge-figma-WidgetSmallVariant",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "iOS Widget — Small Variant Design",
+    "url": "https://www.figma.com/file/fW1d2g3e4t5s/iOS-Widget-Small",
+    "lastUpdated": "2026-05-06T14:00:00Z",
+    "raw": {
+      "file_key": "fW1d2g3e4t5s",
+      "file_name": "iOS Widget — Small Variant Design",
+      "last_modified": "2026-05-06T14:00:00Z",
+      "comments": [
+        {
+          "author": "design-forge",
+          "text": "Small widget design posted. Shows: task count (large number), next due task (truncated title), and a mini progress ring. Uses WidgetKit size constraints. Ready for dev handoff pending review.",
+          "created_at": "2026-05-05T15:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "Design looks good. One question: the progress ring — is that task completion for today, or overall open tasks? Need to know what data to pull from the App Group container.",
+          "created_at": "2026-05-06T10:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "design-forge",
+          "text": "Today's completion rate — tasks due today that are marked done divided by total due today. Will update the spec to clarify.",
+          "created_at": "2026-05-06T14:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-figma-TabBarNavigation",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "Tab Bar Navigation — Structure & Selected States",
+    "url": "https://www.figma.com/file/fT1a2b3b4a5r/Tab-Bar-Navigation",
+    "lastUpdated": "2026-05-07T11:00:00Z",
+    "raw": {
+      "file_key": "fT1a2b3b4a5r",
+      "file_name": "Tab Bar Navigation — Structure & Selected States",
+      "last_modified": "2026-05-07T11:00:00Z",
+      "comments": [
+        {
+          "author": "design-forge",
+          "text": "Tab bar design finalized per sprint planning agreement. 4 tabs: Home (house icon), Tasks (checklist), Notifications (bell), Profile (person). Selected state uses brand primary color. Unselected: gray 500.",
+          "created_at": "2026-05-06T16:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "This aligns with what I'm implementing in PR #22. The icon assets — are they in the Forge v2 component library already?",
+          "created_at": "2026-05-07T10:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "design-forge",
+          "text": "Icons are in the Forge v2 component file. The Figma token sync script (PR #23) will pull them. Use SF Symbols as the fallback for icons not yet in the custom set.",
+          "created_at": "2026-05-07T11:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,135 @@
+[
+  {
+    "sourceId": "FORGE-28",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Fix crash on iOS 16 during device rotation in task view",
+    "url": "https://arcline.atlassian.net/browse/FORGE-28",
+    "lastUpdated": "2026-05-06T09:00:00Z",
+    "raw": {
+      "key": "FORGE-28",
+      "status": "In Progress",
+      "assignee": "mei-tanaka",
+      "type": "Bug",
+      "priority": "Critical",
+      "story_points": 1,
+      "sprint": "Forge Sprint 14",
+      "acceptance_criteria": "No crash on rotation in task view on iOS 16. Regression test added.",
+      "labels": ["ios", "crash", "ios16"]
+    }
+  },
+  {
+    "sourceId": "FORGE-29",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Fix memory leak in camera permission module",
+    "url": "https://arcline.atlassian.net/browse/FORGE-29",
+    "lastUpdated": "2026-05-07T09:00:00Z",
+    "raw": {
+      "key": "FORGE-29",
+      "status": "In Progress",
+      "assignee": "mei-tanaka",
+      "type": "Bug",
+      "priority": "High",
+      "story_points": 1,
+      "sprint": "Forge Sprint 14",
+      "acceptance_criteria": "Zero memory growth per camera permission session. Verified with Instruments.",
+      "labels": ["ios", "memory"]
+    }
+  },
+  {
+    "sourceId": "FORGE-30",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Implement tab bar navigation structure",
+    "url": "https://arcline.atlassian.net/browse/FORGE-30",
+    "lastUpdated": "2026-05-05T10:00:00Z",
+    "raw": {
+      "key": "FORGE-30",
+      "status": "In Progress",
+      "assignee": "carlos-mendez",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 5,
+      "sprint": "Forge Sprint 14",
+      "acceptance_criteria": "UITabBarController root with 4 tabs: Home, Tasks, Notifications, Profile. Deep links blocked by this.",
+      "labels": ["ios", "navigation"]
+    }
+  },
+  {
+    "sourceId": "FORGE-31",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "iOS home screen widget — small variant",
+    "url": "https://arcline.atlassian.net/browse/FORGE-31",
+    "lastUpdated": "2026-05-05T14:00:00Z",
+    "raw": {
+      "key": "FORGE-31",
+      "status": "In Progress",
+      "assignee": "mei-tanaka",
+      "type": "Story",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Forge Sprint 14",
+      "acceptance_criteria": "WidgetKit small variant shows today's task count and next due item. Reads from App Group container.",
+      "labels": ["ios", "widget"]
+    }
+  },
+  {
+    "sourceId": "FORGE-32",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Offline mode: local SQLite task cache",
+    "url": "https://arcline.atlassian.net/browse/FORGE-32",
+    "lastUpdated": "2026-05-08T10:00:00Z",
+    "raw": {
+      "key": "FORGE-32",
+      "status": "In Progress",
+      "assignee": "carlos-mendez",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 8,
+      "sprint": "Forge Sprint 14",
+      "acceptance_criteria": "Task list readable offline. Syncs with server on foreground resume. GRDB-backed.",
+      "labels": ["ios", "offline", "storage"]
+    }
+  },
+  {
+    "sourceId": "FORGE-33",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Add haptic feedback to card swipe gestures",
+    "url": "https://arcline.atlassian.net/browse/FORGE-33",
+    "lastUpdated": "2026-05-06T11:00:00Z",
+    "raw": {
+      "key": "FORGE-33",
+      "status": "In Review",
+      "assignee": "carlos-mendez",
+      "type": "Story",
+      "priority": "Low",
+      "story_points": 1,
+      "sprint": "Forge Sprint 14",
+      "acceptance_criteria": "Light haptic on swipe initiation, medium on completion. Works on iPhone 7+.",
+      "labels": ["ios", "ux"]
+    }
+  },
+  {
+    "sourceId": "FORGE-36",
+    "source": "jira",
+    "squadId": "forge",
+    "title": "Deep link routing for push notification tap targets",
+    "url": "https://arcline.atlassian.net/browse/FORGE-36",
+    "lastUpdated": "2026-05-08T14:00:00Z",
+    "raw": {
+      "key": "FORGE-36",
+      "status": "Blocked",
+      "assignee": "carlos-mendez",
+      "type": "Story",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Forge Sprint 14",
+      "acceptance_criteria": "arcline:// deep links route to correct view controller. task:// and notification:// paths handled.",
+      "labels": ["ios", "navigation", "push-notifications"]
+    }
+  }
+]

@@ -1,0 +1,87 @@
+[
+  {
+    "sourceId": "lumen-slack-W19-001",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Sprint 14 kickoff — auth v2 and design token sprint",
+    "url": "https://arcline.slack.com/archives/C01LUMEN/p1746403200000002",
+    "lastUpdated": "2026-05-04T09:30:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1746403200.000002",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "priya-nair",
+          "text": "Sprint 14 goals: (1) Auth v2 endpoint (LMNE-22) — this is the big one, Atlas is blocked on us. (2) Design token migration (LMNE-21) — large refactor but needed for dark mode. (3) Clear the bug backlog: dark mode flicker (LMNE-18), data grid perf (LMNE-20), React upgrade (LMNE-19).",
+          "ts": "1746403200.000002"
+        },
+        {
+          "author": "kai-zhang",
+          "text": "Happy to drive design token migration. It's going to be a 300+ file change but the Figma sync tooling should make it systematic. I'll pair with dev on the skeleton loaders once the tokens land.",
+          "ts": "1746403800.000002"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "On the dark mode flicker and data grid — both are isolated fixes, should be done early sprint. Then I'll start skeleton loaders.",
+          "ts": "1746404400.000002"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-W19-002",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Auth v2 scopes design — PM review needed",
+    "url": "https://arcline.slack.com/archives/C01LUMEN/p1746576000000002",
+    "lastUpdated": "2026-05-06T11:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1746576000.000002",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "priya-nair",
+          "text": "Auth v2 scopes design: I'm proposing we include `tenantId` (string) and `scopes` (string array, e.g. ['billing:read', 'billing:write']) in the v2 token payload. This is what Atlas needs for premium tier gating. Sharing Notion doc for PM review.",
+          "ts": "1746576000.000002"
+        },
+        {
+          "author": "kai-zhang",
+          "text": "The `scopes` field naming aligns with OAuth 2.0 convention — good call. What's the PM timeline for sign-off?",
+          "ts": "1746576600.000002"
+        },
+        {
+          "author": "priya-nair",
+          "text": "Sent the doc to Marcus (PM) this morning. He's traveling Thursday/Friday so I don't expect sign-off until next week. I'll start implementation on the undisputed parts (token structure, endpoint scaffolding) in the meantime.",
+          "ts": "1746577200.000002"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-W19-003",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Dark mode flicker — context on root cause",
+    "url": "https://arcline.slack.com/archives/C01LUMEN/p1746662000000002",
+    "lastUpdated": "2026-05-07T10:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1746662000.000002",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "kai-zhang",
+          "text": "Root cause on LMNE-18 (dark mode flicker): ThemeContext is initialized asynchronously after first render. Browser paints with system default (light), then switches — hence the flash. Fix: synchronous initialization using a localStorage read before React hydrates. PR #32 up.",
+          "ts": "1746662000.000002"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "Nice find. The localStorage approach is the standard SSR hydration fix. Should work across all browsers. Reviewing now.",
+          "ts": "1746662600.000002"
+        }
+      ]
+    }
+  }
+]

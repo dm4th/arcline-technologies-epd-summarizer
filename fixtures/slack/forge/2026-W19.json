@@ -1,0 +1,77 @@
+[
+  {
+    "sourceId": "forge-slack-W19-001",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-eng: Sprint 14 kickoff — navigation and offline sprint",
+    "url": "https://arcline.slack.com/archives/C01FORGE/p1746403200000003",
+    "lastUpdated": "2026-05-04T10:00:00Z",
+    "raw": {
+      "channel": "forge-eng",
+      "thread_ts": "1746403200.000003",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "Sprint 14 kickoff. Key goals: (1) Tab bar navigation (FORGE-30) — this is the structural foundation for deep links and must land early. (2) iOS widget (FORGE-31). (3) Offline mode (FORGE-32) — biggest story. Also clearing bug backlog: iOS 16 crash (FORGE-28) and camera memory leak (FORGE-29).",
+          "ts": "1746403200.000003"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "I'll drive tab bar (FORGE-30) and offline mode (FORGE-32). Tab bar needs to finalize first — deep links (FORGE-36) can't start until the navigation structure is locked. I'll also pick up haptics (FORGE-33) as a quick win.",
+          "ts": "1746403800.000003"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-W19-002",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-eng: iOS 16 rotation crash — regression from grid refactor",
+    "url": "https://arcline.slack.com/archives/C01FORGE/p1746576000000003",
+    "lastUpdated": "2026-05-06T14:00:00Z",
+    "raw": {
+      "channel": "forge-eng",
+      "thread_ts": "1746576000.000003",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "Found a regression from last sprint's grid layout refactor: crash on device rotation in task view, iOS 16 only. FORGE-28. Root cause: UICollectionViewLayout invalidation calls reloadData before the layout has committed — iOS 17+ handles this gracefully but 16 doesn't. Working on a fix.",
+          "ts": "1746576000.000003"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Good catch — this would block our iOS 16 users entirely. How long to fix?",
+          "ts": "1746576600.000003"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-W19-003",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-eng: Tab bar vs gesture nav — architecture decision",
+    "url": "https://arcline.slack.com/archives/C01FORGE/p1746662000000003",
+    "lastUpdated": "2026-05-07T15:00:00Z",
+    "raw": {
+      "channel": "forge-eng",
+      "thread_ts": "1746662000.000003",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "carlos-mendez",
+          "text": "Quick architecture note: I'm implementing UITabBarController for FORGE-30 per the sprint planning decision. There was a brief discussion about gesture-based navigation as an alternative but we agreed tab bar is the right default for discoverability. Starting implementation this week.",
+          "ts": "1746662000.000003"
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "Agreed. Tab bar is the right call for our user base. Let's keep gesture nav as a future enhancement if analytics show power users want it. Deep links (FORGE-36) can't start until this is done.",
+          "ts": "1746662600.000003"
+        }
+      ]
+    }
+  }
+]

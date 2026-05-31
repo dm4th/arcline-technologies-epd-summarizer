@@ -34,7 +34,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local"), override: true 
 const JUDGE_MODEL = "claude-haiku-4-5-20251001";
 
 const MASTER_EPD_WEEKLY_DB = "36efc8f4-554c-8158-808b-d084ce4c4a16";
-const GROUND_TRUTH_PATH    = path.resolve(process.cwd(), "fixtures/ground-truth-report.md");
+// GROUND_TRUTH_PATH is resolved inside main() after weekOf is known (week-aware fallback).
 const REPORTS_DIR          = path.resolve(process.cwd(), "evals/reports");
 const GOLDEN_DIR           = path.resolve(process.cwd(), "tests/golden");
 
@@ -656,6 +656,12 @@ async function main() {
     console.error("Usage: pnpm tsx evals/run.ts --week=2026-W21 [--save-golden]");
     process.exit(1);
   }
+
+  // Prefer a week-specific ground truth file; fall back to the W21 golden default.
+  const groundTruthWeekPath = path.resolve(process.cwd(), `fixtures/ground-truth-${weekOf}.md`);
+  const GROUND_TRUTH_PATH = fs.existsSync(groundTruthWeekPath)
+    ? groundTruthWeekPath
+    : path.resolve(process.cwd(), "fixtures/ground-truth-report.md");
 
   if (!process.env.NOTION_API_KEY)    throw new Error("NOTION_API_KEY not set — copy .env.local.example → .env.local");
   if (!process.env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set — add it to .env.local");

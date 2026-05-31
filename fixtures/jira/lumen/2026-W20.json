@@ -1,0 +1,135 @@
+[
+  {
+    "sourceId": "LMNE-22",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Release /api/auth/tokens/v2 endpoint with scopes field",
+    "url": "https://arcline.atlassian.net/browse/LMNE-22",
+    "lastUpdated": "2026-05-14T15:00:00Z",
+    "raw": {
+      "key": "LMNE-22",
+      "status": "In Review",
+      "assignee": "priya-nair",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 5,
+      "sprint": "Lumen Sprint 14",
+      "acceptance_criteria": "/api/auth/tokens/v2 returns token with tenantId and scopes fields. v1 deprecated with June 15 sunset. Atlas migration unblocked.",
+      "labels": ["auth", "api", "cross-team"]
+    }
+  },
+  {
+    "sourceId": "LMNE-17",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Fix WCAG AA violations on form inputs (Q1 audit)",
+    "url": "https://arcline.atlassian.net/browse/LMNE-17",
+    "lastUpdated": "2026-05-14T12:00:00Z",
+    "raw": {
+      "key": "LMNE-17",
+      "status": "In Review",
+      "assignee": "priya-nair",
+      "type": "Bug",
+      "priority": "Medium",
+      "story_points": 2,
+      "sprint": "Lumen Sprint 14",
+      "acceptance_criteria": "Zero axe violations on form inputs in automated accessibility scan.",
+      "labels": ["accessibility", "ui"]
+    }
+  },
+  {
+    "sourceId": "LMNE-18",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Fix dark mode theme flicker on toggle",
+    "url": "https://arcline.atlassian.net/browse/LMNE-18",
+    "lastUpdated": "2026-05-12T11:30:00Z",
+    "raw": {
+      "key": "LMNE-18",
+      "status": "Done",
+      "assignee": "kai-zhang",
+      "type": "Bug",
+      "priority": "High",
+      "story_points": 1,
+      "sprint": "Lumen Sprint 14",
+      "acceptance_criteria": "No visible flash of incorrect theme on dark/light toggle. Verified across Chrome, Firefox, Safari.",
+      "labels": ["ui", "theme"]
+    }
+  },
+  {
+    "sourceId": "LMNE-19",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Upgrade React 18.2 → 18.3, enable concurrent features",
+    "url": "https://arcline.atlassian.net/browse/LMNE-19",
+    "lastUpdated": "2026-05-13T14:10:00Z",
+    "raw": {
+      "key": "LMNE-19",
+      "status": "Done",
+      "assignee": "kai-zhang",
+      "type": "Task",
+      "priority": "Medium",
+      "story_points": 2,
+      "sprint": "Lumen Sprint 14",
+      "acceptance_criteria": "React 18.3 running with createRoot. All useLegacyRef sites migrated. No regressions.",
+      "labels": ["dependencies", "refactor"]
+    }
+  },
+  {
+    "sourceId": "LMNE-20",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Fix data grid virtualization performance regression",
+    "url": "https://arcline.atlassian.net/browse/LMNE-20",
+    "lastUpdated": "2026-05-13T11:50:00Z",
+    "raw": {
+      "key": "LMNE-20",
+      "status": "Done",
+      "assignee": "priya-nair",
+      "type": "Bug",
+      "priority": "High",
+      "story_points": 2,
+      "sprint": "Lumen Sprint 14",
+      "acceptance_criteria": "P99 scroll jank ≤30ms on data grid. Verified with 5000-row dataset.",
+      "labels": ["performance", "ui"]
+    }
+  },
+  {
+    "sourceId": "LMNE-21",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Migrate component library to Figma design tokens",
+    "url": "https://arcline.atlassian.net/browse/LMNE-21",
+    "lastUpdated": "2026-05-15T14:30:00Z",
+    "raw": {
+      "key": "LMNE-21",
+      "status": "In Review",
+      "assignee": "kai-zhang",
+      "type": "Story",
+      "priority": "High",
+      "story_points": 8,
+      "sprint": "Lumen Sprint 14",
+      "acceptance_criteria": "Zero hardcoded hex colors or spacing values in component library. All values reference Figma tokens.",
+      "labels": ["ui", "design-system", "refactor"]
+    }
+  },
+  {
+    "sourceId": "LMNE-24",
+    "source": "jira",
+    "squadId": "lumen",
+    "title": "Add skeleton loaders to dashboard data fetches",
+    "url": "https://arcline.atlassian.net/browse/LMNE-24",
+    "lastUpdated": "2026-05-15T10:00:00Z",
+    "raw": {
+      "key": "LMNE-24",
+      "status": "In Progress",
+      "assignee": "dev-okonkwo",
+      "type": "Story",
+      "priority": "Medium",
+      "story_points": 3,
+      "sprint": "Lumen Sprint 14",
+      "acceptance_criteria": "Skeleton loaders shown during all async data fetches on main dashboard. Design tokens from Figma component library used.",
+      "labels": ["ui", "performance"]
+    }
+  }
+]

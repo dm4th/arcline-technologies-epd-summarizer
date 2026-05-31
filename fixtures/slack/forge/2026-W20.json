@@ -1,0 +1,77 @@
+[
+  {
+    "sourceId": "forge-slack-W20-001",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-eng: Memory leak and rotation crash both fixed",
+    "url": "https://arcline.slack.com/archives/C01FORGE/p1747008000000003",
+    "lastUpdated": "2026-05-12T09:30:00Z",
+    "raw": {
+      "channel": "forge-eng",
+      "thread_ts": "1747008000.000003",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "Two quick wins to start the week: camera memory leak (FORGE-29) and iOS 16 rotation crash (FORGE-28) both merged this morning. Instruments confirms zero memory growth on the camera path. iOS 16 crash is resolved with a layoutIfNeeded() deferral.",
+          "ts": "1747008000.000003"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Haptics (FORGE-33) also merged. Three down early sprint. Now fully focused on tab bar and offline mode.",
+          "ts": "1747008600.000003"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-W20-002",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-eng: Figma token sync — design lead comment on navigation",
+    "url": "https://arcline.slack.com/archives/C01FORGE/p1747094400000003",
+    "lastUpdated": "2026-05-13T14:00:00Z",
+    "raw": {
+      "channel": "forge-eng",
+      "thread_ts": "1747094400.000003",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "mei-tanaka",
+          "text": "Heads up: the Figma token sync update (PR #23) has a comment from the design lead saying they've been experimenting with gesture-based navigation in the Forge v2 component file and it might change the nav architecture. I'm holding PR #23 until we understand whether this affects FORGE-30 (tab bar).",
+          "ts": "1747094400.000003"
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "We decided on tab bar in sprint planning and the implementation is nearly done. A design experiment shouldn't reverse an engineering decision this late. I'll sync with the design lead directly. Tab bar is going in.",
+          "ts": "1747095000.000003"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-slack-W20-003",
+    "source": "slack",
+    "squadId": "forge",
+    "title": "#forge-eng: Offline mode sync strategy finalized",
+    "url": "https://arcline.slack.com/archives/C01FORGE/p1747180800000003",
+    "lastUpdated": "2026-05-14T10:00:00Z",
+    "raw": {
+      "channel": "forge-eng",
+      "thread_ts": "1747180800.000003",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "carlos-mendez",
+          "text": "Offline mode (FORGE-32) sync strategy locked: foreground sync on app resume, with conflict resolution favoring server state. GRDB-backed SQLite cache. Implementation is 70% done — targeting completion this sprint. PR #24 up for early feedback.",
+          "ts": "1747180800.000003"
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "The GRDB approach is solid. One thing to watch: App Group container access on extension targets — make sure the offline cache path works from the widget too (FORGE-31).",
+          "ts": "1747181400.000003"
+        }
+      ]
+    }
+  }
+]

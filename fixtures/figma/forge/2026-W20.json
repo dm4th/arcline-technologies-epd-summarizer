@@ -1,0 +1,83 @@
+[
+  {
+    "sourceId": "forge-figma-WidgetSmallVariant",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "iOS Widget — Small Variant Design",
+    "url": "https://www.figma.com/file/fW1d2g3e4t5s/iOS-Widget-Small",
+    "lastUpdated": "2026-05-14T11:00:00Z",
+    "raw": {
+      "file_key": "fW1d2g3e4t5s",
+      "file_name": "iOS Widget — Small Variant Design",
+      "last_modified": "2026-05-14T11:00:00Z",
+      "comments": [
+        {
+          "author": "design-forge",
+          "text": "Widget design updated with today's completion rate spec clarified. Also added error state for when App Group container is inaccessible (shows '--' instead of count). Dev handoff ready.",
+          "created_at": "2026-05-13T14:00:00Z",
+          "resolved": true
+        },
+        {
+          "author": "mei-tanaka",
+          "text": "Perfect — implementation is in review (PR #19). The error state handling is exactly what I needed for the edge case when the extension can't read the container.",
+          "created_at": "2026-05-14T11:00:00Z",
+          "resolved": true
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-figma-TabBarNavigation",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "Tab Bar Navigation — Structure & Selected States",
+    "url": "https://www.figma.com/file/fT1a2b3b4a5r/Tab-Bar-Navigation",
+    "lastUpdated": "2026-05-16T15:00:00Z",
+    "raw": {
+      "file_key": "fT1a2b3b4a5r",
+      "file_name": "Tab Bar Navigation — Structure & Selected States",
+      "last_modified": "2026-05-16T15:00:00Z",
+      "comments": [
+        {
+          "author": "design-forge",
+          "text": "Late-sprint update: I've been exploring a gesture-based navigation pattern in the Forge v2 component file as an alternative to tab bar. Initial user testing shows experienced users prefer swipe navigation. This is exploratory only — not requesting a change to the current sprint's work.",
+          "created_at": "2026-05-15T16:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "Noted — we'll evaluate for a future sprint. Tab bar (PR #22) is going in as planned. The gesture nav exploration is interesting but it's a post-launch consideration. We'd need fresh user testing with a broader sample before reversing the current architecture.",
+          "created_at": "2026-05-16T15:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "forge-figma-OfflineModeUX",
+    "source": "figma",
+    "squadId": "forge",
+    "title": "Offline Mode — UX States and Sync Indicator",
+    "url": "https://www.figma.com/file/fO1f2f3l4i5n/Offline-Mode-UX",
+    "lastUpdated": "2026-05-16T11:00:00Z",
+    "raw": {
+      "file_key": "fO1f2f3l4i5n",
+      "file_name": "Offline Mode — UX States and Sync Indicator",
+      "last_modified": "2026-05-16T11:00:00Z",
+      "comments": [
+        {
+          "author": "design-forge",
+          "text": "Offline mode UX states designed: (1) Offline banner at top of task list, (2) Sync in progress indicator on app foreground resume, (3) Conflict toast for server-wins resolution. Consistent with the sync strategy Carlos confirmed in Slack.",
+          "created_at": "2026-05-16T11:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "carlos-mendez",
+          "text": "These states match exactly what I'm implementing. The conflict toast language — 'Your local changes were replaced by a newer server version' — is correct. Ready to implement against this spec.",
+          "created_at": "2026-05-16T11:30:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  }
+]

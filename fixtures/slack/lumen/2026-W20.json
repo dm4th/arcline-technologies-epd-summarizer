@@ -1,0 +1,87 @@
+[
+  {
+    "sourceId": "lumen-slack-W20-001",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Auth v2 PM sign-off received — targeting merge this week",
+    "url": "https://arcline.slack.com/archives/C01LUMEN/p1747008000000002",
+    "lastUpdated": "2026-05-12T10:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1747008000.000002",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "priya-nair",
+          "text": "Good news: PM signed off on the scopes schema Friday. Auth v2 implementation is complete — PR #31 is in code review with dev and kai. If review goes smoothly, we're targeting merge by end of week. Atlas has been notified.",
+          "ts": "1747008000.000002"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "Reviewing now. The v1→v2 migration path is clean. One question: are we sending a deprecation header on v1 responses now, or waiting until after Atlas migrates?",
+          "ts": "1747008600.000002"
+        },
+        {
+          "author": "priya-nair",
+          "text": "We'll add the Deprecation header to v1 responses as soon as PR #31 merges. The header text: 'This endpoint is deprecated and will be removed on 2026-06-15. Please migrate to /api/auth/tokens/v2.' Atlas knows, we've been in sync.",
+          "ts": "1747009200.000002"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-W20-002",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: Design token migration nearly done — skeleton loaders unblocked",
+    "url": "https://arcline.slack.com/archives/C01LUMEN/p1747094400000002",
+    "lastUpdated": "2026-05-13T11:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1747094400.000002",
+      "participant_count": 3,
+      "messages": [
+        {
+          "author": "kai-zhang",
+          "text": "Design token migration (PR #34) is 90% done. Final pass on the form components and we're ready. Merging should unblock skeleton loaders — dev, you should be able to start using the tokens by Thursday.",
+          "ts": "1747094400.000002"
+        },
+        {
+          "author": "dev-okonkwo",
+          "text": "Perfect — I've already got the skeleton loader components drafted in a branch. Just need the tokens to land. LMNE-24 should be Done by end of sprint.",
+          "ts": "1747095000.000002"
+        },
+        {
+          "author": "priya-nair",
+          "text": "Quick heads up: React 18.3 upgrade (PR #37) and the data grid fix (PR #35) both merged Monday. Two nice wins to open the week.",
+          "ts": "1747095600.000002"
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "lumen-slack-W20-003",
+    "source": "slack",
+    "squadId": "lumen",
+    "title": "#lumen-eng: e2e test CI flakiness — auth service 503s",
+    "url": "https://arcline.slack.com/archives/C01LUMEN/p1747180800000002",
+    "lastUpdated": "2026-05-14T13:00:00Z",
+    "raw": {
+      "channel": "lumen-eng",
+      "thread_ts": "1747180800.000002",
+      "participant_count": 2,
+      "messages": [
+        {
+          "author": "dev-okonkwo",
+          "text": "Playwright e2e tests (PR #36) are hitting intermittent 503s from the auth service in CI. Not clear if it's the auth service or CI networking. Opened LMNE-25 to track. Blocking the PR from merging until we understand it.",
+          "ts": "1747180800.000002"
+        },
+        {
+          "author": "priya-nair",
+          "text": "The auth service in CI uses a shared staging environment — it's been flaky for weeks. We should probably mock auth in the e2e environment for reliability. Worth filing a separate infrastructure ticket.",
+          "ts": "1747181400.000002"
+        }
+      ]
+    }
+  }
+]

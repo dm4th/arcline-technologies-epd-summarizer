@@ -1,0 +1,62 @@
+[
+  {
+    "sourceId": "atlas-figma-BillingV2UI",
+    "source": "figma",
+    "squadId": "atlas",
+    "title": "Billing Portal UI — v2 Redesign",
+    "url": "https://www.figma.com/file/aT1b2c3d4e5f/Billing-Portal-v2",
+    "lastUpdated": "2026-05-05T14:00:00Z",
+    "raw": {
+      "file_key": "aT1b2c3d4e5f",
+      "file_name": "Billing Portal UI — v2 Redesign",
+      "last_modified": "2026-05-05T14:00:00Z",
+      "comments": [
+        {
+          "author": "alice-design",
+          "text": "Billing portal v2 initial frames posted. Main screens: invoice list, payment method management, usage dashboard. Missing: error states, loading states, and edge cases. Need eng review before final design handoff.",
+          "created_at": "2026-05-04T14:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "sarah-chen",
+          "text": "Looking good overall. One thing I'll need before implementation: the 429 rate limit error state — what does the UI show when a tenant hits the 1000 req/min cap? We need the toast/error design for PR #48.",
+          "created_at": "2026-05-05T10:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "alice-design",
+          "text": "Good point on the 429 state. I'll add error states in the next pass — marking this as open so I don't forget.",
+          "created_at": "2026-05-05T14:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  },
+  {
+    "sourceId": "atlas-figma-PremiumTierFlow",
+    "source": "figma",
+    "squadId": "atlas",
+    "title": "Premium Tier — Upgrade Flow & Entitlement Gates",
+    "url": "https://www.figma.com/file/pR3m1u2m3t4i/Premium-Tier-Flow",
+    "lastUpdated": "2026-05-06T10:00:00Z",
+    "raw": {
+      "file_key": "pR3m1u2m3t4i",
+      "file_name": "Premium Tier — Upgrade Flow & Entitlement Gates",
+      "last_modified": "2026-05-06T10:00:00Z",
+      "comments": [
+        {
+          "author": "alice-design",
+          "text": "Premium tier upgrade flow: initial wireframes posted. Covers upsell modal, plan comparison, and checkout. Not yet wired to auth scopes — waiting on PM to define which features require which scope.",
+          "created_at": "2026-05-05T15:00:00Z",
+          "resolved": false
+        },
+        {
+          "author": "jordan-lee",
+          "text": "The entitlement gates will use the `scopes` field from Lumen auth v2. We need the Figma to show the gated state (feature locked) vs unlocked for each premium feature. Can you add those states?",
+          "created_at": "2026-05-06T10:00:00Z",
+          "resolved": false
+        }
+      ]
+    }
+  }
+]

@@ -15,6 +15,20 @@ Before executing any steps, verify you have access to the following worker tools
 
 > ❌ Worker tools not connected. Please connect the `arcline-worker-summarizer-master` worker (ID: `019e765a-c368-7c64-a21e-3bec52b40b95`) in this agent's tool settings, then re-run.
 
+# 📌 Prior Week VP Feedback
+
+Before executing any steps, retrieve **comments** on the previous week's Master EPD Weekly page.
+
+Use the Notion Comments API (`GET /v1/comments?block_id={prevWeekPageId}`) or the equivalent `read_comments` tool with the prior week's master page ID. To find the prior week's page, query the Master EPD Weekly database filtered to the week before the current triggering week.
+
+**If comments exist:**
+1. Include a **"VP Feedback Follow-up"** section in your report (after the Executive Summary).
+2. Quote the VP's concern verbatim.
+3. State whether this week's data **resolves**, **worsens**, or is **neutral** to that concern.
+4. Cite the specific Mirror DB source records (by `notionPageId`) that support your conclusion.
+
+**If no prior week page exists or no comments are found**, omit this section entirely — do not mention its absence.
+
 # ⚙️ Operational Steps
 
 ## 👉 Step 1 — Read the Triggering Row
