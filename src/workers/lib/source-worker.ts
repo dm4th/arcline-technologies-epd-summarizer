@@ -1,6 +1,6 @@
 import type { SquadId } from "../../types/core";
 import { upsertRecord } from "./upsert";
-import { writeAgentRunLog, createSummarizerTrigger } from "./agent-run-log";
+import { writeAgentRunLog } from "./agent-run-log";
 import type { SourceWorkerConfig, RunResult } from "./types";
 
 const SQUADS: SquadId[] = ["atlas", "lumen", "forge"];
@@ -56,11 +56,4 @@ export async function runSourceWorker(
   }
 
   console.log(`[${config.source}] Done — ${notes}`);
-
-  try {
-    await createSummarizerTrigger({ source: config.source, weekOf });
-    console.log(`[${config.source}] Summarizer trigger created for ${weekOf}`);
-  } catch (err) {
-    console.error(`[${config.source}] Failed to create summarizer trigger:`, err);
-  }
 }
