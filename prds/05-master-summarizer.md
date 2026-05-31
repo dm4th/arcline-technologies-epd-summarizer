@@ -1,10 +1,10 @@
 # PRD-05 — Master Summarizer Agent
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-05-30-A1
-updated: 2026-05-30T05:00:00Z
-notes: Full pipeline deployed and live-tested: squad consolidation worker (019e7988), master worker (019e765a), HITL Sessions seeding w/ upsertMasterEpdWeekly, rollup-based quorum gates at both tiers (Sub-Summary Approval Rate on HITL Sessions, Squad Approval Rate on Master EPD Weekly), Consolidated At idempotency key (squad) + Citation Coverage % idempotency key (master), agent prompts updated for tool-first quorum check (rollup omitted on direct page reads). Live test: 18 Squad Weekly Summary approvals → 3 squad consolidations → EPD Weekly 2026-W21 written with 24 citations at 100% coverage, Status=awaiting-VP.
+state: completed
+owner: opus-review-2026-05-30
+updated: 2026-05-30T23:25:00Z
+notes: APPROVED by Opus review. AC1 ✅ exactly 1 master row for 2026-W21 (live). AC2 ✅ live Quorum Met=true, Citation Coverage %=100 (≥85), 3 squad consolidations linked. AC4 ✅ conflict-resolution callout present; all 4 rules (Jira/GitHub/Figma/Slack) verbatim-match policy. AC5/AC6 ✅ per Dan's 2026-05-30 decision: quorum is full-approval (100%), NOT 2/3 — below 100% writes outcome=skipped, no publish. PRD §Quorum, AC5, Verification, and the worker header doc-comment were updated this review to match the code (execute() + agent prompt already enforced 100%); server-side rollup gate verified. AC3 ⚠ NON-BLOCKING follow-up: Open Discrepancies surfaces T1 (Atlas PR↔Jira) + T3 (Forge Figma reversal); T5 cross-squad dep correctly sits in its own section and T4 staleness is referenced; the Lumen Slack-only blocker (T2) is not surfaced — flagged for a prompt/content tweak, does not block approval. Workers: summarizer-squad + summarizer-master, both idempotent with server-side quorum enforcement.
 -->
 
 ## Goal
@@ -34,10 +34,12 @@ This is the artifact a VP reads. Every other PRD exists to feed this one. If thi
 
 ## Design
 
-### Soft quorum
-- Trigger: all 3 squads approved → fire immediately.
-- Fallback: at Monday 10:00AM, fire with whichever squads are approved provided **≥ 2/3** are in. Unapproved squad's section header gets a visual marker (e.g. "⚠ Unreviewed — provisional"). This is Dan's mitigation for single-point-of-failure approvals.
-- Below quorum (≤ 1 approved): do NOT publish; write an `Agent Run Log` row with `outcome = skipped` and notify eng managers.
+### Quorum (full-approval gate)
+> **Decision (2026-05-30, Dan):** Quorum requires **all 3 squads approved (100%)** — this supersedes the earlier 2/3 "soft quorum" with provisional markers. Rationale: this is the VP-facing artifact, and a provisional/partial digest risks the exact trust failure the POC exists to prevent. Better to publish nothing than to publish an unreviewed squad's section. The 2/3 fallback + provisional-marker idea is deferred to V2 if Arcline wants it.
+
+- Trigger: all 3 squads approved → fire immediately and publish.
+- Below 100% (any squad unapproved): do NOT publish; write an `Agent Run Log` row with `outcome = skipped` (reason `below-quorum`) and notify eng managers.
+- The gate is enforced server-side in `write_master_summary` by re-reading the `Squad Approval Rate` rollup (≥ 99.9 ⇒ all approved), so the agent cannot bypass it.
 
 ### Conflict-resolution policy (mirrors Customer Q #1)
 Default rules baked in, customer-validatable:
@@ -57,7 +59,7 @@ The implementing session must surface this policy at the bottom of the Master ro
 2. With all 3 fixture squads approved, `Quorum Met = true` and `Citation Coverage %` ≥ 85.
 3. *Open Discrepancies* section contains all planted tensions from PRD-02.
 4. Conflict-resolution callout block is present and matches the policy above.
-5. With 2/3 squads approved, the row publishes with the unreviewed squad visibly marked provisional.
+5. With fewer than all 3 squads approved (e.g. 2/3), **no row is published**; an `outcome = skipped` log row exists with reason `below-quorum`. _(Updated 2026-05-30 — was "2/3 publishes provisionally"; see the Quorum decision above.)_
 6. With 1/3 approved, no row is published; an `outcome = skipped` log row exists.
 
 ## Out of Scope
@@ -70,4 +72,4 @@ The implementing session must surface this policy at the bottom of the Master ro
 ## Verification
 - `pnpm tsx scripts/run-week.ts --week=<W>` produces the Master row.
 - Open Master EPD Weekly DB → newest row → all required sections present.
-- Toggle one squad's approval off, re-run, observe provisional marker.
+- Toggle one squad's approval off, re-run, observe **no publish** + an `outcome = skipped` (below-quorum) Agent Run Log row.

@@ -1,5 +1,12 @@
 # PRD-09 — Submission HTML
 
+<!-- status:
+state: in-progress
+owner: sonnet-2026-05-30-E1
+updated: 2026-05-30T15:00:00Z
+notes: Claimed for Wave E submission HTML build.
+-->
+
 ## Goal
 Produce a single self-contained `submission.html` that **stands fully on its own as a submission artifact** — a reviewer who never clicks through to the Notion workspace, the GitHub repo, or the video should still come away with a complete picture of the design, the trade-offs, and the evidence it works. Live links exist for the reader who wants to dig in, not as load-bearing dependencies.
 

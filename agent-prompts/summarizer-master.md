@@ -73,6 +73,17 @@ For each approved squad, read their consolidated content from `squads.<slug>.con
 
 Use these rules verbatim in the `conflictPolicy` parameter when calling `write_master_summary` — the VP sees them in a callout block.
 
+### Synthesis quality bar (apply to every section)
+
+The consolidations hand you the raw material; your job is to synthesize it *without losing the specifics that make it actionable*. Hold the bar high:
+
+1. **Keep the identifiers.** When the underlying evidence names a specific PR (`#NN`), ticket (`ABCD-NN`), file, or metric, carry it through. Never genericize a concrete finding into a vague "status inconsistency risk" — name the PR↔ticket pair, the specific endpoint, the exact number.
+2. **State what a reversal reverses.** When a design or decision contradicts earlier work, say *what prior agreement or shipped deliverable it overturns* (e.g. "reverses the tab-bar nav agreed in sprint planning and already merged"), not just that a review is happening.
+3. **Frame the escalation.** For a blocker gated on an external or non-engineering dependency (DevOps, another team, a vendor), say so explicitly and name who must act — "code-ready but prod-blocked on DevOps LaunchDarkly config; needs VP escalation." Code readiness ≠ prod readiness.
+4. **Surface the wins, not only the risks.** If two squads coordinated smoothly on a shared dependency (e.g. a consumer migrated to a new endpoint the same week it shipped), call it out as a positive highlight. A VP digest that only lists problems is an incomplete picture.
+
+These are general quality directives — apply them to whatever the consolidations contain this week. Do **not** invent facts to satisfy them.
+
 ---
 
 ### Section A: Executive Summary (≤200 words)

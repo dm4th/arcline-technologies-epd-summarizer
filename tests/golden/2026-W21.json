@@ -1,0 +1,972 @@
+{
+  "week": "2026-W21",
+  "frozenAt": "2026-05-31T00:03:37.963Z",
+  "judgeModel": "claude-haiku-4-5-20251001",
+  "inputs": {
+    "masterBody": "Atlas stabilized billing (EU latency incident contained; rate limiting + v2 token migration) while Lumen shipped auth tokens v2 and major UI foundation wins (design tokens, WCAG fixes, virtualization perf). Forge shipped iOS stability + UX features but is now blocked by a high-stakes navigation-direction pivot that is also stalling offline-mode UX/implementation. Immediate leadership action: finalize the navigation decision (tab bar vs gesture) and unblock LaunchDarkly flag configuration so premium-tier gates can ship; both items are gating downstream delivery and creating rework risk.\n\n## Highlights\n\n- **[Atlas]** Investigated the EU billing latency spike; documented root cause and returned latency to within SLA (ATLS-58).\n- **[Atlas]** Added tenant rate limiting to billing API endpoints (1000 req/min) with 429 + Retry-After semantics (ATLS-38).\n- **[Atlas]** Migrated premium-tier token acquisition to `/api/auth/tokens/v2` and removed v1 calls (ATLS-55).\n- **[Lumen]** Improved data grid virtualization performance (P99 scroll jank 180ms → 22ms) (LMNE-20).\n- **[Lumen]** Released `/api/auth/tokens/v2` with `tenantId` + `scopes` and set a June 15 sunset for v1 (LMNE-22).\n- **[Lumen]** Fixed WCAG AA form-input issues (aria labels, focus rings), resolving 9 axe violations (LMNE-17).\n- **[Forge]** Fixed an iOS 16 rotation crash in the task view (GitHub PR #25 / FORGE-28).\n- **[Forge]** Shipped the small iOS home screen widget showing today’s task count + next due item (FORGE-31).\n- **[Forge]** Implemented the 4-tab tab bar navigation structure per sprint planning (GitHub PR #22 / FORGE-30).\n\n## Risks & Blockers\n\n- **[BLOCK] Forge** Navigation architecture pivot risk — exec UX review is pushing tab bar → gesture navigation despite tab-bar work already merged/TestFlight; decision needs to be finalized to avoid rework and unblock offline-mode UX (FORGE).\n- **[BLOCK] Atlas** Premium-tier entitlement gating blocked on LaunchDarkly configuration from DevOps; code readiness may not translate to prod readiness until flags are configured (ATLS).\n- **[BLOCK] Lumen** Intermittent auth-service 503s are breaking CI and blocking Playwright e2e coverage work; needs reliability triage + a runbook before e2e can land (LMNE-25).\n- **[HIGH] Atlas** Status tracking inconsistency risk — CQRS refactor and other items discussed as “merged” while Jira still shows In Progress/stale; requires reconciliation to avoid rollout confusion.\n- **[HIGH] Lumen** Focus token updated in Figma but not yet exported; risk of shipping incorrect focus color and failing AA contrast in dark mode unless token export is completed and re-verified.\n- **[WATCH] Forge** Offline-mode schedule risk remains tied to navigation finalization; timebox decision and confirm offline UX placement to prevent schedule slip.\n\n## Cross-Squad Dependencies\n\n- **[Atlas → Lumen]** `/api/auth/tokens/v2` rollout hardening and rollback planning ahead of the June 15 v1 sunset.\n- **[Atlas → DevOps]** LaunchDarkly configuration for premium-tier flags to unblock entitlement gating in production.\n- **[Lumen ↔ Forge]** Align on navigation direction (gesture vs tab bar) so design specs and implementation converge and offline-mode UX can proceed.\n\n## Roadmap Movement\n\n- **[Atlas — Billing reliability & premium tier enablement]** **On Track (with ops dependency)** — core API hardening landed (rate limiting, v2 token migration), but premium-tier gating is blocked on LaunchDarkly configuration.\n- **[Lumen — Auth tokens v2 + UI foundations]** **On Track (with infra risk)** — tokens v2 shipped with v1 sunset plan and major UI/accessibility/perf wins; auth-service reliability issues are currently blocking e2e coverage work.\n- **[Forge — FieldKit Offline Sync]** **At Risk** — stability/UX shipped, but offline-mode progress is gated by an unresolved navigation-direction decision and related UX placement uncertainty.\n\n## Open Discrepancies\n\n- **[STATUS CONFLICT] Atlas** BillingService CQRS refactor status is being discussed as merged in Slack while Jira appears stale/In Progress; reconcile Jira to avoid release/rollout confusion.\n  Evidence A: \"Slack discussed it as merged\" (Slack signal).\n  Evidence B: \"Jira still showed In Progress/stale\" (Jira signal).\n  Conflict-resolution ruling: **Jira wins** for status; update Jira or provide the definitive ticket/commit mapping.\n- **[DIRECTION CONFLICT] Lumen ↔ Forge** Gesture navigation direction is inconsistent across squads: Lumen indicates a revert based on user testing while Forge is dealing with an exec-driven pivot away from tab bar toward gesture navigation.\n  Evidence A: \"Lumen is reverting based on user testing\".\n  Evidence B: \"Design is pivoting tab bar → gesture navigation after exec UX review\".\n  Conflict-resolution ruling: **Figma wins** for latest design decision once a dated decision record is captured; until then, treat as unresolved and escalate for explicit sign-off.\n\nConflict-Resolution Policy (Editable — see SE for changes)\n\n- Status of work (done vs in-progress): **Jira wins** — it is the PM system of record.\n- What the code actually does: **GitHub wins** — code is authoritative over descriptions.\n- Design decisions: **Figma wins** — latest dated version wins.\n- Slack-only claims: **Flag only** — never treat as authoritative; surface in Open Discrepancies.\n\nGenerated by summarizer.master · Week 2026-W21 · Squads approved: atlas, lumen, forge · Citation coverage: 100% · 24 citations",
+    "groundTruth": "# Ground Truth — EPD Weekly Digest, Week of 2026-W21\n\n> **Purpose:** This document is the hand-authored \"perfect VP report\" for the W21 fixture week.\n> It is the evaluation target for PRD-08. A generated master summary scores well if it surfaces\n> the same key findings, citations, and recommendations. It is NOT a template — it is a benchmark.\n>\n> Scoring guidance for PRD-08:\n> - **Must surface** (blocking for passing): all 5 tensions explicitly called out.\n> - **Should surface** (high-quality signal): the positive coordination story (Tension 5), sprint completion rates.\n> - **May surface** (bonus): team health observations, follow-up recommendations.\n\n---\n\n## EPD Weekly Digest — Week of May 19, 2026\n\n**Prepared for:** VP Engineering  \n**Coverage:** Atlas (platform/billing) · Lumen (frontend) · Forge (mobile)  \n**Data sources:** GitHub PRs, Jira tickets, Slack threads, Figma comments  \n**Week:** 2026-W21 (May 19–24)\n\n---\n\n### Executive Summary\n\nStrong delivery week across all three squads. Atlas shipped its billing API refactor and completed the Lumen auth token v2 migration — a clean cross-team dependency handoff. Lumen closed 6 tickets and shipped auth tokens v2 to production. Forge completed the iOS widget, a memory fix, and a crash fix.\n\n**Three items require VP attention this week:**\n\n1. **[ACTION REQUIRED] Forge navigation architecture conflict** — A Figma comment from the design lead reverses the tab bar navigation decision that was agreed in sprint planning and already shipped. Engineering has paused downstream work (deep links, routing) pending resolution. Recommend a sync between design lead and EM within 48 hours to protect Sprint 10 planning.\n\n2. **[PROCESS GAP] Lumen auth service blocker went untracked** — A 24+ hour auth service outage blocked LMNE-25 delivery and was resolved entirely via Slack, with no Jira ticket filed despite an explicit request. The belated ticket (LMNE-28) remains unscheduled. Recommend formalizing a team norm: incidents blocking delivery for >2 hours require a ticket.\n\n3. **[DATA QUALITY] Atlas billing refactor ticket stale** — GitHub PR #51 (\"Closes ATLS-42\") merged on May 22, but Jira ticket ATLS-42 remains \"In Progress\" as of end of week. Status mismatches reduce trust in the Jira board and will cause the eval harness to flag drift. Recommend updating ATLS-42 to Done.\n\n---\n\n### Atlas — Platform / Billing\n\n**Sprint 14 velocity:** 7 tickets closed (ATLS-38, ATLS-41, ATLS-42-pending, ATLS-29, ATLS-55, ATLS-57, ATLS-58). 3 in flight (ATLS-44, ATLS-47, ATLS-56).\n\n**Highlights:**\n- Billing API refactor (ATLS-42) merged — PR #51 represents a significant architectural change (CQRS split, 634 additions, 418 deletions) that was load-tested at 5x peak in staging. High-quality delivery.\n- Legacy /billing/v1 endpoints removed (ATLS-29) — 287 lines deleted. Zero callers confirmed via Datadog trace analysis before removal. Clean deprecation cycle.\n- Lumen auth token v2 migration completed (ATLS-55, PR #49) — Atlas was a dependent consumer of Lumen's new endpoint and migrated in the same week it shipped. Notably smooth cross-team coordination.\n- EU billing latency spike (ATLS-58) — 18-minute P99 breach in eu-west-1 caused by replica lag after the v1 endpoint removal deploy. Self-diagnosed and resolved same day. Post-mortem recommended.\n\n**⚠️ Flag — Tension 1:** GitHub PR #51 body reads \"Closes ATLS-42\" and was merged on May 22. As of end of week, ATLS-42 in Jira still shows status \"In Progress.\" This is a cross-source inconsistency — either the ticket was not updated post-merge or the closure claim in the PR body is premature. The Friday standup Slack thread (`#atlas-eng`, May 24) confirms the team is aware: alex-kumar flagged it. **Recommend: update ATLS-42 to Done.**\n\n---\n\n### Lumen — Frontend\n\n**Sprint 12 velocity:** 6 tickets closed (LMNE-17, LMNE-18, LMNE-19, LMNE-20, LMNE-21, LMNE-22). 3 in flight (LMNE-24, LMNE-25, LMNE-26).\n\n**Highlights:**\n- Auth tokens v2 shipped to production on Monday (LMNE-22, PR #31) — introducing `tenantId` and `scopes` fields in the token payload. v1 deprecated with a June 15 sunset. Atlas migrated in the same week. Excellent coordination.\n- Design token migration complete (LMNE-21, PR #34) — 38 files changed, zero hardcoded hex values remaining in component library. Enables consistent dark mode and brand refresh.\n- Accessibility fixes shipped (LMNE-17, PR #38) — resolves 9 axe violations from the Q1 audit. WCAG AA compliance on form inputs.\n- React 18.3 upgrade (LMNE-19) — concurrent rendering enabled without incident.\n- Data grid performance fixed (LMNE-20) — P99 scroll jank down from 180ms to 22ms.\n- Gesture nav experiment reverted (LMNE-26 created) — user testing showed 67% preference for tab bar. Good data-driven decision.\n\n**⚠️ Flag — Tension 2:** A multi-day auth service OOM incident (intermittent 503s, starting Tuesday May 20) blocked dev-okonkwo's Playwright e2e test work (LMNE-25) and affected staging deploys. The incident was diagnosed and resolved entirely via a Slack thread (`#lumen-eng`, May 21) — no Jira ticket was filed despite a direct request from dev-okonkwo during the thread. The belated ticket (LMNE-28: \"Investigate intermittent auth service 503s in CI\") was created after the fact and is currently in the backlog, unscheduled, with no blocker link to LMNE-25. **Process gap: blockers affecting delivery should be tracked in Jira, not just Slack.** Recommend: link LMNE-28 as a blocker on LMNE-25; add to Sprint 13.\n\n---\n\n### Forge — Mobile / iOS\n\n**Sprint 9 velocity:** 5 tickets closed (FORGE-28, FORGE-29, FORGE-30, FORGE-31, FORGE-33). 2 in flight (FORGE-32, FORGE-35). 1 paused (FORGE-36).\n\n**Highlights:**\n- iOS widget shipped (FORGE-31, PR #19) — small variant using WidgetKit with App Group container sharing. No additional API calls required. Clean implementation.\n- Memory leak fixed (FORGE-29, PR #21) — AVCaptureSession delegate was not being released. Instruments confirms zero leak post-fix.\n- Tab bar navigation shipped (FORGE-30, PR #22) — Home, Tasks, Notifications, Profile. Deep-linkable.\n- iOS 16 rotation crash fixed (FORGE-28, PR #25) — UICollectionViewLayout invalidation deferred to prevent crash on device rotation.\n\n**🚨 Flag — Tension 3 (PRIORITY):** On May 21, Forge's design lead (`yuki-designer`) added a comment to the Figma file \"Forge Mobile — Navigation Architecture v2\" explicitly reversing the tab bar navigation decision agreed in sprint planning. The comment reads: *\"Following the exec UX review on Monday, we are pivoting away from the tab bar to a gesture-based navigation model … This reverses the tab bar decision from sprint planning.\"* FORGE-30 (tab bar implementation) was marked Done the same day. Engineering became aware via Slack (`#forge-mobile`, May 21) — carlos-mendez has paused FORGE-36 (deep link routing) and FORGE-26 pending resolution. FORGE-38 (\"Redesign navigation architecture\") is in the backlog as To Do. **Blast radius if gesture nav proceeds:** FORGE-30 (5 story points, Done), FORGE-36 (3 SP, in progress), plus deep link routing and offline mode sync indicator (also references nav structure). Estimated rework: ~13 story points. **Recommend: EM escalate to design lead for a decision meeting this week. Do not start Sprint 10 nav-dependent work until the architecture is locked.**\n\n---\n\n### Cross-squad: Atlas ↔ Lumen Auth Migration\n\n**Tension 5 (positive signal):** Lumen shipped a breaking API change (auth tokens v2, new `tenantId` + `scopes` fields in token payload) on May 19. Atlas migrated to the v2 endpoint in the same week (PR #49, merged May 20). The coordination was proactive — PR bodies on both sides reference each other, and a cross-team Slack thread (`#cross-team`, May 23) confirmed the migration and surfaced an important detail: the new `scopes` field in v2 tokens must be consumed correctly in Atlas's premium tier entitlement gating (ATLS-56, currently in progress). This is a best-practice example of cross-squad dependency management. **Recommend: include in engineering all-hands as a coordination win. Confirm ATLS-56 is reading `scopes` from the v2 token before premium tier launch.**\n\n---\n\n### Data Quality Notes\n\n- **Stale record:** ATLS-42 (`lastUpdated: 2026-05-21`) — 3 days without a status update as of end of week. Status remains \"In Progress\" despite the related PR merging May 22. (Compounds Tension 1.)\n- **Stale record:** `forge-pr-025` — PR body notes it fixed \"a 3-day-old regression from the grid layout refactor\" (explicitly annotated as stale by the author).\n\n---\n\n### By-the-numbers\n\n| Squad | PRs merged | Tickets closed | Blockers (Jira) | Blockers (Slack-only) |\n|---|---|---|---|---|\n| Atlas | 6 | 7 | 0 | 0 |\n| Lumen | 5 | 6 | 0 | 1 ⚠️ |\n| Forge | 4 | 5 | 0 | 0 |\n\n---\n\n### Recommended VP Actions\n\n| Priority | Action | Owner |\n|---|---|---|\n| 🚨 HIGH | Resolve Forge nav architecture conflict before Sprint 10 planning | Forge EM + yuki-designer |\n| ⚠️ MEDIUM | Update ATLS-42 to Done in Jira | Atlas EM or jordan-lee |\n| ⚠️ MEDIUM | Link LMNE-28 as blocker on LMNE-25; schedule it in Sprint 13 | Lumen EM or priya-nair |\n| ℹ️ LOW | Confirm ATLS-56 reads `scopes` from Lumen v2 token before premium tier launch | Atlas EM + sarah-chen |\n| ℹ️ LOW | Add replica lag canary check to billing deploy runbook (EU latency incident) | Atlas EM |\n",
+    "citations": [
+      {
+        "recordId": "36ffc8f4-554c-81e3-82ad-e9730c448b21",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/56",
+        "claim": "PR #56 (atlas-pr-056) updated the billing REST API reference docs with request/response examples for the v2 refactor."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8177-9c25-eac072fd2d5b",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/57",
+        "claim": "PR #57 (atlas-pr-057) is adding LaunchDarkly feature flags to gate premium-tier entitlements and is blocked on ATLS-55 (auth token migration) reaching prod."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8165-9f8d-ed17b6708a5d",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/54",
+        "claim": "PR #54 (atlas-pr-054) is fixing webhook HMAC signature validation by switching timestamp checks to a monotonic clock."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81ba-8cb2-fdcbe6fb5256",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/53",
+        "claim": "PR #53 (atlas-pr-053) is adding unit test coverage for subscription renewal edge cases (62% → targeting 85%)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81f5-90b0-d8eb90f588da",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/55",
+        "claim": "PR #55 (atlas-pr-055) was closed without merging because the scope moved to the PRD analytics track (tracked in ATLS-50)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8177-9c25-eac072fd2d5b",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/57",
+        "claim": "PR #57 (atlas-pr-057) is explicitly blocked on ATLS-55 / auth token migration, which may delay premium-tier gating work."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8108-8a82-fbb3cbccacbf",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/51",
+        "claim": "PR #51 (atlas-pr-051) completed the billing API refactor (Closes ATLS-42) by splitting BillingService into BillingQueryService and BillingCommandService and has been deployed to staging with load tests passing at 5× expected peak."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81f7-a6a4-d831207d3411",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/49",
+        "claim": "PR #49 (atlas-pr-049) migrated auth token acquisition to Lumen’s /api/auth/tokens/v2 endpoint ahead of the June 15 v1 sunset, creating a cross-squad dependency on Lumen’s rollout."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812c-91a8-c537452c67ef",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-58",
+        "claim": "ATLS-58: Investigated the EU billing latency spike; root cause was identified/documented and latency returned within SLA."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8123-8e5b-ec06472ca5f0",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-57",
+        "claim": "ATLS-57: Updated the REST API reference to reflect the v2 endpoints, including request/response examples."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81fa-a5c5-d8f95c8655ba",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-29",
+        "claim": "ATLS-29: Removed deprecated /billing/v1 endpoints after confirming zero callers in Datadog traces for 14 days."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8128-bf93-f651b5199465",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-55",
+        "claim": "ATLS-55: Migrated premium-tier token acquisition to Lumen auth tokens v2 and removed v1 calls from the codebase."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812f-91db-e1fe29d22dea",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-41",
+        "claim": "ATLS-41: Fixed a null pointer exception in the payment processor webhook handler for events with missing metadata."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81c7-b880-cb0cdf167faa",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-38",
+        "claim": "ATLS-38: Added tenant rate limiting to billing API endpoints (1000 req/min), returning 429 with Retry-After headers."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8191-a8aa-daaf8982dcfb",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-56",
+        "claim": "ATLS-56: Implementing premium-tier feature-flag gating for entitlements; remaining work is completing rollout controls (percentage cohort) and validating the kill switch during gradual rollout."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81c2-a4be-d9ff1098e698",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-47",
+        "claim": "ATLS-47: Fixing Stripe webhook HMAC timestamp validation; remaining work is to address review feedback and merge after regression tests are finalized."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8149-8d88-d0dc2252c858",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-44",
+        "claim": "ATLS-44: Increasing subscription renewal test coverage to ≥85%; remaining work is finalizing edge-case coverage (past-due retries, card-expired transitions, proration) and landing the tests."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8143-9d51-dbf5c7b85441",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-42",
+        "claim": "ATLS-42: Refactoring BillingService into CQRS (BillingQueryService/BillingCommandService); remaining work is to complete remaining implementation and validation (tests + load test at 5x peak) before completion."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81c2-a4be-d9ff1098e698",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-47",
+        "claim": "ATLS-47: Fixing Stripe webhook HMAC timestamp validation; remaining work is to address review feedback and merge after regression tests are finalized."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8143-9d51-dbf5c7b85441",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-42",
+        "claim": "ATLS-42 appears potentially stale (lastUpdated 2026-05-21 and not Done), so it may need a status check to confirm progress."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8143-9d51-dbf5c7b85441",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-42",
+        "claim": "ATLS-42: Billing API refactor work may be at risk of staleness since last update was 2026-05-21 (more than 3 days ago)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8166-91bd-ff5f4f8f852e",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716537600000000",
+        "claim": "Sarah Chen reported that ATLS-38, ATLS-41, ATLS-29, and ATLS-55 were completed in #atlas-eng."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81f3-8f56-d76b5acb05c5",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716192000000000",
+        "claim": "Sarah Chen said the Atlas auth token v2 migration was merged and Atlas is now on /api/auth/tokens/v2."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d4-8b0e-c4c81e81c8af",
+        "sourceUrl": "https://arcline.slack.com/archives/C01BILLINGALERTS/p1716278400000000",
+        "claim": "Alex Kumar said the EU billing latency spike resolved after the EU replica caught up following the v1 endpoint removal migration."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81e6-a81f-e2fec3222ddd",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716364800000000",
+        "claim": "Alex Kumar said PR #54 (webhook HMAC timing fix) was approved after a second review."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8166-91bd-ff5f4f8f852e",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716537600000000",
+        "claim": "Sarah Chen said ATLS-42’s PR was merged but the Jira ticket still appeared In Progress."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8166-91bd-ff5f4f8f852e",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716537600000000",
+        "claim": "Jordan Lee said ATLS-56 feature flags were coded and they were waiting on LaunchDarkly configuration from DevOps."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8162-86b5-e988e84e6326",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716105600000000",
+        "claim": "Jordan Lee said load tests were running for ATLS-42 and they were targeting merge soon."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816b-adc1-fbdd8b5e472d",
+        "sourceUrl": "https://arcline.slack.com/archives/C0CROSSTEAM/p1716451200000000",
+        "claim": "Sarah Chen asked for coordination with Lumen on rollback planning for /api/auth/tokens/v2 in production."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d4-8b0e-c4c81e81c8af",
+        "sourceUrl": "https://arcline.slack.com/archives/C01BILLINGALERTS/p1716278400000000",
+        "claim": "A Datadog alert reported billing-api P99 latency in eu-west-1 exceeding 2000ms for 18 minutes."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d4-8b0e-c4c81e81c8af",
+        "sourceUrl": "https://arcline.slack.com/archives/C01BILLINGALERTS/p1716278400000000",
+        "claim": "Alex Kumar created ATLS-58 to track a post-mortem for the EU billing latency incident."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8166-91bd-ff5f4f8f852e",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716537600000000",
+        "claim": "Sarah Chen noted a Slack-vs-Jira discrepancy where ATLS-42 was discussed as merged while Jira still showed it In Progress."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8166-91bd-ff5f4f8f852e",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716537600000000",
+        "claim": "Jordan Lee said ATLS-56 was blocked by missing LaunchDarkly configuration from DevOps."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816b-adc1-fbdd8b5e472d",
+        "sourceUrl": "https://arcline.slack.com/archives/C0CROSSTEAM/p1716451200000000",
+        "claim": "Priya Nair told Atlas in #cross-team that auth tokens v2 had been running in production since Monday with v1 staying up until June 15 as a rollback path."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d4-8b0e-c4c81e81c8af",
+        "sourceUrl": "https://arcline.slack.com/archives/C01BILLINGALERTS/p1716278400000000",
+        "claim": "Sarah Chen suggested adding a canary check for replica lag to the deploy runbook after the EU billing latency incident."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8162-86b5-e988e84e6326",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716105600000000",
+        "claim": "Alex Kumar flagged that v1 endpoints were already removed in PR #52 and asked to ensure ATLS-42 lands before the next release tag."
+      },
+      {
+        "recordId": "36ffc8f4-554c-815f-a788-d030c3525cad",
+        "sourceUrl": "https://www.figma.com/file/eM4i1l5t6e7m/Billing-Email-Templates",
+        "claim": "**Billing Transactional Email Templates** — alice-design applied brand refresh tokens to payment failure and renewal reminder templates and marked the file ready for HTML export."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812a-be08-f4b50ea528d3",
+        "sourceUrl": "https://www.figma.com/file/pR3m1u2m3t4i/Premium-Tier-Flow",
+        "claim": "**Premium Tier — Upgrade Flow & Entitlement Gates** — alice-design added a tooltip spec for the plan-gated “lock” icon (copy: “Upgrade to Premium to unlock this feature.”) and resolved the open question from jordan-lee."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81c9-9608-cb4c0111d2eb",
+        "sourceUrl": "https://www.figma.com/file/aT1b2c3d4e5f/Billing-Portal-v2",
+        "claim": "**Billing Portal UI — v2 Redesign** — alice-design resolved updates to the invoice list view (including a new “Plan tier” column) and adjusted the 429 error toast to wrap on small mobile viewports."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81c9-9608-cb4c0111d2eb",
+        "sourceUrl": "https://www.figma.com/file/aT1b2c3d4e5f/Billing-Portal-v2",
+        "claim": "**Billing Portal UI — v2 Redesign** — Follow-up review is pending from sarah-chen to confirm the updated mobile toast no longer clips below 375px."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812a-be08-f4b50ea528d3",
+        "sourceUrl": "https://www.figma.com/file/pR3m1u2m3t4i/Premium-Tier-Flow",
+        "claim": "**Premium Tier — Upgrade Flow & Entitlement Gates** — The Growth-requested social-proof section introduces multiple upgrade-modal variants; engineering should confirm variant “B” is the intended first implementation for the A/B test plan."
+      },
+      {
+        "recordId": "36efc8f4-554c-8119-8b3e-fbcea63a20b2",
+        "sourceUrl": "",
+        "claim": "Unified Auth SSO is on track: Atlas merged and is now using `/api/auth/tokens/v2`, with coordination underway with Lumen on rollback planning before the June 15 v1 sunset."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8183-afa6-c4ec5c99c482",
+        "sourceUrl": "https://arcline.slack.com/archives/C01ATLAS/p1716192000000000",
+        "claim": "Unified Auth SSO is on track: Atlas merged and is now using `/api/auth/tokens/v2`, with coordination underway with Lumen on rollback planning before the June 15 v1 sunset."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8183-afa6-c4ec5c99c482",
+        "sourceUrl": "https://arcline.slack.com/archives/C0CROSSTEAM/p1716451200000000",
+        "claim": "Unified Auth SSO is on track: Atlas merged and is now using `/api/auth/tokens/v2`, with coordination underway with Lumen on rollback planning before the June 15 v1 sunset."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8183-afa6-c4ec5c99c482",
+        "sourceUrl": "https://arcline.slack.com/archives/C0CROSSTEAM/p1716451200000000",
+        "claim": "Unified Auth SSO has rollout risk: Atlas reported needing coordination with Lumen on rollback planning for `/api/auth/tokens/v2`, which suggests cross-squad dependencies that could slow production hardening."
+      },
+      {
+        "recordId": "36efc8f4-554c-8119-8b3e-fbcea63a20b2",
+        "sourceUrl": "",
+        "claim": "Unified Auth SSO has rollout risk: Atlas reported needing coordination with Lumen on rollback planning for `/api/auth/tokens/v2`, which suggests cross-squad dependencies that could slow production hardening."
+      },
+      {
+        "recordId": "36efc8f4-554c-8116-bfa4-c5183cfbee34",
+        "sourceUrl": "",
+        "claim": "API Rate Limiting Overhaul (Q4 2026) shows no clear activity mapped this week."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8161-90ab-f8a3259701e3",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-58",
+        "claim": "Billing API work this week (EU billing latency incident investigation/post-mortem tracking, BillingService CQRS refactor, and tenant rate limiting at 1000 req/min) does not clearly map to the current roadmap initiatives and may represent off-plan scope in the roadmap view."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8161-90ab-f8a3259701e3",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-38",
+        "claim": "Billing API work this week (EU billing latency incident investigation/post-mortem tracking, BillingService CQRS refactor, and tenant rate limiting at 1000 req/min) does not clearly map to the current roadmap initiatives and may represent off-plan scope in the roadmap view."
+      },
+      {
+        "recordId": "36ffc8f4-554c-818b-8c42-d74a82991c6d",
+        "sourceUrl": "https://arcline.slack.com/archives/C01BILLINGALERTS/p1716278400000000",
+        "claim": "Billing API work this week (EU billing latency incident investigation/post-mortem tracking, BillingService CQRS refactor, and tenant rate limiting at 1000 req/min) does not clearly map to the current roadmap initiatives and may represent off-plan scope in the roadmap view."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8161-90ab-f8a3259701e3",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-29",
+        "claim": "ATLS-29: Removed deprecated /billing/v1 endpoints after confirming zero callers in Datadog traces for 14 days."
+      },
+      {
+        "recordId": "36ffc8f4-554c-818b-8c42-d74a82991c6d",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/51",
+        "claim": "PR #51 (atlas-pr-051) completed the billing API refactor (Closes ATLS-42) by splitting BillingService into BillingQueryService and BillingCommandService and has been deployed to staging with load tests passing at 5× expected peak."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81e3-82ad-e9730c448b21",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/56",
+        "claim": "PR #56 (atlas-pr-056) updated the billing REST API reference docs with request/response examples for the v2 refactor."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81c9-9608-cb4c0111d2eb",
+        "sourceUrl": "https://www.figma.com/file/aT1b2c3d4e5f/Billing-Portal-v2",
+        "claim": "**Billing Portal UI — v2 Redesign** — alice-design resolved updates to the invoice list view (including a new “Plan tier” column) and adjusted the 429 error toast to wrap on small mobile viewports."
+      },
+      {
+        "recordId": "36efc8f4-554c-81d2-87e9-efddab1762c8",
+        "sourceUrl": "",
+        "claim": "AuthShield SSO Phase 1 PRD acceptance criterion: \"SAML federation end-to-end working for 5 test enterprise tenants (Okta, Azure AD, ADFS, Ping, JumpCloud).\""
+      },
+      {
+        "recordId": "36efc8f4-554c-81d2-87e9-efddab1762c8",
+        "sourceUrl": "",
+        "claim": "AuthShield SSO Phase 1 PRD acceptance criterion: \"Admin portal: tenant can upload IdP metadata XML and certificate; rotation does not break active sessions.\""
+      },
+      {
+        "recordId": "36ffc8f4-554c-8161-90ab-f8a3259701e3",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-29",
+        "claim": "ATLS upstream evidence contains billing endpoint removal work and does not mention SAML/IdP/MFA/admin portal/audit log delivery."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8178-b3af-c227d3ddf0df",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/38",
+        "claim": "PR #38 (lumen-pr-038) fixed WCAG AA accessibility issues on form inputs (aria labels, focus rings) and resolved 9 axe violations (LMNE-17)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8171-b09a-e68b2debd726",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/37",
+        "claim": "PR #37 (lumen-pr-037) upgraded React to 18.3 and enabled concurrent features via createRoot (LMNE-19)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8197-b50b-fdbb57e13492",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/35",
+        "claim": "PR #35 (lumen-pr-035) fixed a data grid virtualization regression, dropping P99 scroll jank from 180ms to 22ms (LMNE-20)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-817d-847d-f76ec34c32f4",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/34",
+        "claim": "PR #34 (lumen-pr-034) refactored the component library to use Figma-synced design tokens to support dark mode and brand refresh (LMNE-21)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8115-9631-cc29722799f1",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/32",
+        "claim": "PR #32 (lumen-pr-032) fixed theme flicker on dark mode toggle by initializing theme context synchronously before first paint (LMNE-18)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cf-9a36-e8121224d142",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/31",
+        "claim": "PR #31 (lumen-pr-031) released /api/auth/tokens/v2 (adds tenantId and scopes) and deprecated v1 with a June 15 sunset (LMNE-22)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8152-a89c-d32f5efb683d",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/39",
+        "claim": "PR #39 (lumen-pr-039) is reverting the gesture navigation experiment back to the tab bar due to negative user-testing feedback (LMNE-26), and notes Forge’s Figma spec may be out of sync."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8114-808e-f26f1d696fc2",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/36",
+        "claim": "PR #36 (lumen-pr-036) is adding Playwright e2e tests for the auth flow but is blocked by intermittent 503s from the auth service in CI (LMNE-25)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816f-9b65-c42b59829395",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/33",
+        "claim": "PR #33 (lumen-pr-033) is adding skeleton loaders to the main dashboard using design tokens from the Figma component library (LMNE-24)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8114-808e-f26f1d696fc2",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/36",
+        "claim": "PR #36 (lumen-pr-036) is blocked by intermittent 503s from the auth service in CI, which may stall e2e test coverage until reliability is addressed."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8152-a89c-d32f5efb683d",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/39",
+        "claim": "PR #39 (lumen-pr-039) highlights a potential cross-team mismatch where Forge’s Figma file still reflects gesture navigation despite Lumen reverting the experiment."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cf-9a36-e8121224d142",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/31",
+        "claim": "PR #31 (lumen-pr-031) introduced a breaking auth tokens v2 payload (tenantId/scopes) and a June 15 v1 sunset, and Atlas is actively migrating."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8109-aff9-fe892458105d",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-22",
+        "claim": "LMNE-22: Shipped the auth tokens v2 endpoint returning a JWT with tenantId + scopes, and added a Deprecation header on v1 (Atlas migration confirmed)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81a4-82b1-ffb6ff62572a",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-21",
+        "claim": "LMNE-21: Migrated the component library to design tokens, removing hardcoded hex values and aligning dark/light modes."
+      },
+      {
+        "recordId": "36ffc8f4-554c-818c-a8c3-ff777f172b10",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-20",
+        "claim": "LMNE-20: Fixed the data grid scroll performance regression (P99 jank < 50ms on 500-row datasets) by eliminating unnecessary re-renders."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8159-851c-fdf86e10f220",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-19",
+        "claim": "LMNE-19: Upgraded to React 18.3 using createRoot and enabling concurrent rendering with all tests green."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8128-9a41-ead31e5b1567",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-18",
+        "claim": "LMNE-18: Fixed dark mode theme flicker on toggle and passed visual regression tests in Chrome and Firefox."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d2-aa85-def6b08b5667",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-17",
+        "claim": "LMNE-17: Fixed WCAG AA accessibility violations on form inputs, reaching zero axe violations with correct aria-label/aria-describedby and visible focus rings."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81ae-9e85-eedca9242ed2",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-26",
+        "claim": "LMNE-26: Reverting the gesture navigation experiment; remaining work is to fully remove gesture nav code and restore tab bar navigation without routing test regressions."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8175-92b0-fba1bd87e5a0",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-25",
+        "claim": "LMNE-25: Adding Playwright e2e tests for the auth flow; remaining work is to expand coverage (sign-in, refresh, sign-out) and keep tests green in CI."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cd-8a34-fed7b21df018",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-24",
+        "claim": "LMNE-24: Adding skeleton loaders to the main dashboard; remaining work is to address review feedback and merge while ensuring no layout shift."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8162-8f41-dea058a3b1a1",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-27",
+        "claim": "LMNE-27: Weekly trend sparklines are still in Backlog; if KPI trend visibility is a near-term requirement, this may be a priority risk."
+      },
+      {
+        "recordId": "36ffc8f4-554c-819e-86a1-f9eedcb12716",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-29",
+        "claim": "LMNE-29: Dashboard table view is still in Backlog; if stakeholders need sortable/filterable data soon, this could become a delivery risk."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812f-8298-f01df9960ca4",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-28",
+        "claim": "LMNE-28: CI auth 503 investigation remains in Backlog; if intermittent failures return, this may re-block e2e work."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8109-aff9-fe892458105d",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-22",
+        "claim": "LMNE-22 enabled downstream migrations by shipping /api/auth/tokens/v2 with tenantId + scopes and confirming Atlas migration."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8180-89b8-fea039093594",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716537600000000",
+        "claim": "Priya Nair reported that LMNE-17, LMNE-18, LMNE-19, LMNE-20, LMNE-21, and LMNE-22 were completed in #lumen-eng."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8156-9830-c3d39ca1db2b",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716105600000000",
+        "claim": "Priya Nair said auth tokens v2 went live in production and monitoring looked clean."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d8-b60b-cff819b910b8",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716364800000000",
+        "claim": "Priya Nair said they planned to create LMNE-26 to revert the gesture navigation experiment after negative user-testing feedback."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8111-bf37-ed40bc23c491",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716451200000000",
+        "claim": "Dev Okonkwo asked for review of PR #33 (skeleton loaders) and Kai Zhang requested matching the 1.2s shimmer cycle in the Figma spec."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81e8-b6b4-c4035e487a10",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716192000000000",
+        "claim": "Kai Zhang asked whether to add the `borderRadius/card` design token from the Figma export, and the team agreed to add it."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81e8-b6b4-c4035e487a10",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716192000000000",
+        "claim": "Priya Nair asked the team to double-check the `color/interactive/focus` token value in dark mode after a contrast issue was flagged in an a11y audit."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811b-b6c8-f98e3f6f548d",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716278400000000",
+        "claim": "Dev Okonkwo reported intermittent auth-service 503s that were causing Playwright e2e tests for LMNE-25 to fail and blocking clean staging deploys."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811b-b6c8-f98e3f6f548d",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716278400000000",
+        "claim": "Dev Okonkwo reported intermittent auth-service 503s ongoing since Tuesday around 4pm that were impacting CI and staging."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8180-89b8-fea039093594",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716537600000000",
+        "claim": "The sprint summary noted LMNE-25 was blocked by an auth-service OOM incident and no Jira ticket was filed for that incident."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8180-89b8-fea039093594",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716537600000000",
+        "claim": "Dev Okonkwo said the auth blocker cost about one day and argued that filing a Jira ticket and adding a runbook entry would have sped diagnosis."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8180-89b8-fea039093594",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716537600000000",
+        "claim": "The team discussed establishing a norm to file a tracking ticket when a blocker persists more than two hours."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d8-b60b-cff819b910b8",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716364800000000",
+        "claim": "Dev Okonkwo noted potential cross-squad design conflict, saying Forge’s Figma spec appeared to push gesture navigation while Lumen planned to revert it."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8156-9830-c3d39ca1db2b",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716105600000000",
+        "claim": "Priya Nair said the auth token v2 payload now includes `tenantId` and `scopes`, and asked consumers not to rely on strict JSON equality for the token shape."
+      },
+      {
+        "recordId": "36ffc8f4-554c-815a-be2d-c7c26763cfe2",
+        "sourceUrl": "https://www.figma.com/file/dS4h5b6o7a8r/Dashboard-v4",
+        "claim": "**Dashboard Redesign v4 — Sprint 12** — nina-design confirmed the “no data yet” empty-state illustration is final and directed engineering to the exported SVG asset (including use of the compact variant for card contexts)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8103-888a-ef34b855ca46",
+        "sourceUrl": "https://www.figma.com/file/lC1o2m3p4v3/Lumen-Component-Library-v3",
+        "claim": "**Lumen Component Library v3** — nina-design updated the `color/interactive/focus` token to #2B7FFF at 1.0 opacity to address AA contrast issues on dark backgrounds and marked skeleton loader components final for dev handoff."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cc-bdc4-ed1f955ab18e",
+        "sourceUrl": "https://www.figma.com/file/aF2l3o4w5v2/Auth-Flow-v2",
+        "claim": "**Auth Flow — v2 Token UX** — nina-design finalized the session-expiry warning modal with a 5-minute countdown and marked it ready for dev handoff."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8103-888a-ef34b855ca46",
+        "sourceUrl": "https://www.figma.com/file/lC1o2m3p4v3/Lumen-Component-Library-v3",
+        "claim": "**Lumen Component Library v3** — The updated focus token is changed in Figma but not yet exported; downstream consumers may still pick up the old value until the token export is completed."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8103-888a-ef34b855ca46",
+        "sourceUrl": "https://www.figma.com/file/lC1o2m3p4v3/Lumen-Component-Library-v3",
+        "claim": "**Lumen Component Library v3** — Accessibility risk: if token export lags, engineering may ship with the prior focus color that fails AA contrast on dark backgrounds."
+      },
+      {
+        "recordId": "36ffc8f4-554c-815a-be2d-c7c26763cfe2",
+        "sourceUrl": "https://www.figma.com/file/dS4h5b6o7a8r/Dashboard-v4",
+        "claim": "**Dashboard Redesign v4 — Sprint 12** — The KPI sparkline guidance includes accessibility requirements (SVG aria-labels) that should be treated as part of the acceptance criteria for implementation."
+      },
+      {
+        "recordId": "36efc8f4-554c-81b8-86a8-e40d918894be",
+        "sourceUrl": "",
+        "claim": "Design System 2.0 is on track: Lumen shipped multiple design-token and accessibility improvements (design tokens migration, dark-mode fixes, and WCAG AA fixes), indicating continued stabilization of the design system foundations."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811e-bfe5-c90d4c601bd0",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/34",
+        "claim": "Design System 2.0 is on track: Lumen shipped multiple design-token and accessibility improvements (design tokens migration, dark-mode fixes, and WCAG AA fixes), indicating continued stabilization of the design system foundations."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811e-bfe5-c90d4c601bd0",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/32",
+        "claim": "Design System 2.0 is on track: Lumen shipped multiple design-token and accessibility improvements (design tokens migration, dark-mode fixes, and WCAG AA fixes), indicating continued stabilization of the design system foundations."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811e-bfe5-c90d4c601bd0",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/38",
+        "claim": "Design System 2.0 is on track: Lumen shipped multiple design-token and accessibility improvements (design tokens migration, dark-mode fixes, and WCAG AA fixes), indicating continued stabilization of the design system foundations."
+      },
+      {
+        "recordId": "36efc8f4-554c-8119-8b3e-fbcea63a20b2",
+        "sourceUrl": "",
+        "claim": "Real-time Notifications V2 (Q3 2026) is at risk due to lack of clear WebSocket/notifications-specific progress this week, while the team’s attention appears focused on auth-token v2 rollout and UI foundation work."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812f-b1af-f524b41d2ae9",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716105600000000",
+        "claim": "Real-time Notifications V2 (Q3 2026) is at risk due to lack of clear WebSocket/notifications-specific progress this week, while the team’s attention appears focused on auth-token v2 rollout and UI foundation work."
+      },
+      {
+        "recordId": "36efc8f4-554c-8119-8b3e-fbcea63a20b2",
+        "sourceUrl": "",
+        "claim": "Real-time Notifications V2 (Q3 2026) shows no clear activity mapped this week."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811e-bfe5-c90d4c601bd0",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/31",
+        "claim": "Auth tokens v2 production rollout work (including payload changes adding `tenantId`/`scopes`) and gesture-navigation revert work do not clearly map to the current roadmap initiatives and may represent off-plan scope in the roadmap view."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811e-bfe5-c90d4c601bd0",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/39",
+        "claim": "Auth tokens v2 production rollout work (including payload changes adding `tenantId`/`scopes`) and gesture-navigation revert work do not clearly map to the current roadmap initiatives and may represent off-plan scope in the roadmap view."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811e-bfe5-c90d4c601bd0",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/34",
+        "claim": "PR #34 (lumen-pr-034) refactored the component library to use Figma-synced design tokens to support dark mode and brand refresh (LMNE-21)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811e-bfe5-c90d4c601bd0",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/38",
+        "claim": "PR #38 (lumen-pr-038) fixed WCAG AA accessibility issues on form inputs (aria labels, focus rings) and resolved 9 axe violations (LMNE-17)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816b-98f3-f8147ca81a34",
+        "sourceUrl": "https://www.figma.com/file/lC1o2m3p4v3/Lumen-Component-Library-v3",
+        "claim": "**Lumen Component Library v3** — nina-design updated the `color/interactive/focus` token to #2B7FFF at 1.0 opacity to address AA contrast issues on dark backgrounds and marked skeleton loader components final for dev handoff."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816b-98f3-f8147ca81a34",
+        "sourceUrl": "https://www.figma.com/file/lC1o2m3p4v3/Lumen-Component-Library-v3",
+        "claim": "**Lumen Component Library v3** — The updated focus token is changed in Figma but not yet exported; downstream consumers may still pick up the old value until the token export is completed."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8164-8924-e16bba285b60",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-22",
+        "claim": "LMNE-22: Shipped the auth tokens v2 endpoint returning a JWT with tenantId + scopes, and added a Deprecation header on v1 (Atlas migration confirmed)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-811e-bfe5-c90d4c601bd0",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/31",
+        "claim": "PR #31 (lumen-pr-031) released /api/auth/tokens/v2 (adds tenantId and scopes) and deprecated v1 with a June 15 sunset (LMNE-22)."
+      },
+      {
+        "recordId": "36efc8f4-554c-81ce-a20b-d04215e51f12",
+        "sourceUrl": "",
+        "claim": "Luminance Design System 2.0 PRD acceptance criterion: \"Package published to internal npm registry at version 2.0.0\""
+      },
+      {
+        "recordId": "36ffc8f4-554c-8112-834f-f4bbab70308a",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/25",
+        "claim": "PR #25 (forge-pr-025) fixed an iOS 16 crash on device rotation in the task view by deferring collection layout invalidation (FORGE-28)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8173-8b8b-e15deb502bb8",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/22",
+        "claim": "PR #22 (forge-pr-022) implemented the tab bar navigation structure (Home, Tasks, Notifications, Profile) per sprint planning (FORGE-30)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-810d-8bcc-d03e1dcb8aef",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/21",
+        "claim": "PR #21 (forge-pr-021) fixed a memory leak in the camera permission module, reducing a 12MB/session Instruments leak to 0 (FORGE-29)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8132-9747-fa04c2f34ef0",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/20",
+        "claim": "PR #20 (forge-pr-020) added haptic feedback to card swipe gestures (FORGE-33)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cc-8a65-f23ee90759be",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/19",
+        "claim": "PR #19 (forge-pr-019) implemented a small iOS home screen widget showing today’s task count and next due item via WidgetKit (FORGE-31)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81da-b81a-c889ebf1d8e9",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/26",
+        "claim": "PR #26 (forge-pr-026) is adding deep link routing for push notification tap targets and is waiting on navigation finalization / FORGE-30 review (FORGE-36)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81f5-a0dd-ee171aafc81f",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/24",
+        "claim": "PR #24 (forge-pr-024) is adding an offline mode with a local SQLite task cache using GRDB (FORGE-32)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816d-8bbb-c472a82b7035",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/23",
+        "claim": "PR #23 (forge-pr-023) is updating the Figma→iOS design token sync script for the Forge v2 component library and notes an open design comment that may affect navigation architecture."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81da-b81a-c889ebf1d8e9",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/26",
+        "claim": "PR #26 (forge-pr-026) is dependent on navigation being finalized, so deep link routing may slip if FORGE-30 decisions change."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816d-8bbb-c472a82b7035",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/23",
+        "claim": "PR #23 (forge-pr-023) flags potential navigation architecture churn from a recent design-lead comment in the Figma file that should be reviewed before merging nav-related work."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816d-8bbb-c472a82b7035",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/23",
+        "claim": "PR #23 (forge-pr-023) is a cross-discipline dependency point because it updates the Figma-driven token pipeline and references design feedback that could impact navigation decisions."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81fe-97dc-f9dd078989b8",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-34",
+        "claim": "FORGE-34: Completed the gesture-based navigation UX spike; a prototype was built, findings documented, and a go/no-go decision made."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8183-855c-ef8fe8c058b9",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-33",
+        "claim": "FORGE-33: Shipped haptic feedback on card swipe gestures (light on start, medium on completion) respecting system haptic settings."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812e-8810-c3d2a68f8354",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-31",
+        "claim": "FORGE-31: Shipped the small iOS home screen widget showing today’s task count and next due item, with App Group sharing working."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8162-ae72-f13811b14bc5",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-30",
+        "claim": "FORGE-30: Implemented a 4-tab tab bar navigation structure with deep linking to each tab."
+      },
+      {
+        "recordId": "36ffc8f4-554c-815a-92c1-c303fdad5fee",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-29",
+        "claim": "FORGE-29: Fixed a memory leak in the camera permission module by applying a weak delegate pattern."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81b7-b106-c87e5d178972",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-28",
+        "claim": "FORGE-28: Fixed the iOS 16 crash on task view rotation and verified on device."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8128-a6e9-c3fced424a8a",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-36",
+        "claim": "FORGE-36: Adding deep link routing for push-notification tap targets; remaining work is to finish implementation/validation for all payload routes and end-to-end testing from push payloads."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8174-b5d3-e919af54e1a1",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-35",
+        "claim": "FORGE-35: Updating the Figma token sync script for the v2 component library; remaining work is ensuring full token coverage (colors/typography/spacing) and validating sync output."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816d-9b38-e45334f1c2b4",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-32",
+        "claim": "FORGE-32: Building offline mode with a local SQLite task cache; remaining work is to complete background sync on foreground and validate conflict resolution behavior (server wins)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8157-81e4-cf23d63ace6d",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-38",
+        "claim": "FORGE-38: Navigation architecture redesign is still in Backlog and has TBD decisions pending design sign-off; this may block downstream implementation."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8192-a54c-f48b5867031e",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-37",
+        "claim": "FORGE-37: Kotlin Multiplatform viability assessment remains in Backlog; if Android port planning is time-sensitive, this could become a dependency risk."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8157-81e4-cf23d63ace6d",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-38",
+        "claim": "FORGE-38 indicates an open design decision (tab bar vs gesture navigation) that may need resolution before committing to the new navigation architecture."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816e-a2c4-c82f30c023b5",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716537600000000",
+        "claim": "Mei Tanaka reported FORGE-28, FORGE-29, FORGE-30, FORGE-31, and FORGE-33 were completed in #forge-mobile."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8120-ae82-c121cb6ae200",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716192000000000",
+        "claim": "Mei Tanaka said the camera memory leak fix (FORGE-29) was patched and shipped to TestFlight."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81fb-912a-fceb97a1c696",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716105600000000",
+        "claim": "Mei Tanaka said the iOS widget (FORGE-31) was live in TestFlight."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81fb-8bcd-faa375dd3410",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716364800000000",
+        "claim": "Carlos Mendez asked for review of PR #24 (offline mode / SQLite cache) using GRDB and raised a question about conflict resolution."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8122-8bed-f1a4106bc6e8",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716451200000000",
+        "claim": "Mei Tanaka said PR #23 updated the Figma token sync to pull from the v2 component library but would exclude gesture-nav tokens until a navigation decision is finalized."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81b7-94e4-e4ee7d786b6a",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716278400000000",
+        "claim": "Mei Tanaka said they saw a Figma comment proposing a switch from tab bar to gesture-based navigation and raised it for discussion."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816e-a2c4-c82f30c023b5",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716537600000000",
+        "claim": "The sprint wrap noted FORGE-36 was on hold pending a navigation decision and FORGE-38 was created to track the gesture-nav proposal."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816e-a2c4-c82f30c023b5",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716537600000000",
+        "claim": "Carlos Mendez said navigation uncertainty was the biggest risk and that a gesture-nav decision could make FORGE-30 (tab bar) wasted work."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816e-a2c4-c82f30c023b5",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716537600000000",
+        "claim": "The sprint wrap said Forge needed design sign-off on navigation before Sprint 10 kicks off."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81b7-94e4-e4ee7d786b6a",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716278400000000",
+        "claim": "Mei Tanaka said the gesture-nav proposal emerged from an exec UX review session and they did not have the notes."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81b7-94e4-e4ee7d786b6a",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716278400000000",
+        "claim": "Mei Tanaka flagged that the tab bar had been agreed in sprint planning and documented in the squad PRD, but the gesture-nav change was being raised in Figma."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81fb-912a-fceb97a1c696",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716105600000000",
+        "claim": "Carlos Mendez suggested creating a follow-up ticket because the widget’s 'next due' item truncates at 20 characters on a 47mm watch face."
+      },
+      {
+        "recordId": "36ffc8f4-554c-8122-8bed-f1a4106bc6e8",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716451200000000",
+        "claim": "Mei Tanaka and Carlos Mendez agreed to revisit gesture-nav-related token syncing after the design decision is locked down."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81ec-9df4-ee8889519b42",
+        "sourceUrl": "https://www.figma.com/file/tC3a4r5d6S7w/Task-Card-Swipe-Actions",
+        "claim": "**Task Card Components — Swipe Actions** — yuki-designer’s swipe-right archive and swipe-left delete specs (with haptic guidance) were confirmed by engineering, and carlos-mendez reported implementation complete with an iOS 17 confirmation step."
+      },
+      {
+        "recordId": "36ffc8f4-554c-815a-8641-f06738bca510",
+        "sourceUrl": "https://www.figma.com/file/wK2i3d4g5e6t/iOS-Widget-Design-Kit",
+        "claim": "**iOS Widget Design Kit — Small & Medium** — yuki-designer finalized the small widget spec (including truncation rules and adaptive tinting), and mei-tanaka reported implementation complete with an Apple Watch clipping edge case tracked via a follow-up ticket."
+      },
+      {
+        "recordId": "36ffc8f4-554c-818b-9d35-db2c8060d59c",
+        "sourceUrl": "https://www.figma.com/file/oF5f6l7i8n9e/Offline-Mode-UX",
+        "claim": "**Offline Mode — UX States & Sync Indicators** — Forge is holding implementation until navigation direction is finalized because sync-indicator placement may conflict with a potential pivot to gesture navigation."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d2-807f-dbedd1072bf4",
+        "sourceUrl": "https://www.figma.com/file/fN1a2v3V4a5r/Forge-Nav-v2",
+        "claim": "**Forge Mobile — Navigation Architecture v2** — The navigation spec is actively changing after exec UX review (gesture-based model frames exist), despite engineering reporting tab-bar navigation already merged and in TestFlight."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d2-807f-dbedd1072bf4",
+        "sourceUrl": "https://www.figma.com/file/fN1a2v3V4a5r/Forge-Nav-v2",
+        "claim": "**Forge Mobile — Navigation Architecture v2** — yuki-designer stated the team is pivoting away from the tab bar to a gesture-based navigation model, explicitly reversing the sprint-planning decision that engineering says is already merged and in TestFlight; this is a high-risk reversal that can block or force rework."
+      },
+      {
+        "recordId": "36ffc8f4-554c-818b-9d35-db2c8060d59c",
+        "sourceUrl": "https://www.figma.com/file/oF5f6l7i8n9e/Offline-Mode-UX",
+        "claim": "**Offline Mode — UX States & Sync Indicators** — carlos-mendez is holding implementation pending the navigation decision because the proposed sync indicator placement may not work if the team pivots to gesture navigation."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d2-807f-dbedd1072bf4",
+        "sourceUrl": "https://www.figma.com/file/fN1a2v3V4a5r/Forge-Nav-v2",
+        "claim": "**Forge Mobile — Navigation Architecture v2** — If the gesture-navigation pivot proceeds, it likely affects multiple core surfaces (section switching, primary actions via FAB, and interaction patterns) and should be treated as an exec-level UX decision with clear engineering buy-in."
+      },
+      {
+        "recordId": "36efc8f4-554c-81ea-9bf9-f5dee70b7b85",
+        "sourceUrl": "",
+        "claim": "Mobile Offline Mode (Q4 2026) is on track: Forge is actively building offline mode with a local SQLite cache (GRDB) and is reviewing conflict-resolution behavior, which aligns with the initiative’s plan for a SQLite-backed cache + sync queue."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d8-af80-f0e00d6127ad",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/24",
+        "claim": "Mobile Offline Mode (Q4 2026) is on track: Forge is actively building offline mode with a local SQLite cache (GRDB) and is reviewing conflict-resolution behavior, which aligns with the initiative’s plan for a SQLite-backed cache + sync queue."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812f-b1af-f524b41d2ae9",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716364800000000",
+        "claim": "Mobile Offline Mode has delivery risk tied to navigation churn: Forge reported that offline-mode implementation is being held until navigation direction is finalized, and there is an active reversal discussion (tab bar vs gesture navigation) that could block or force rework."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816b-98f3-f8147ca81a34",
+        "sourceUrl": "https://www.figma.com/file/oF5f6l7i8n9e/Offline-Mode-UX",
+        "claim": "Mobile Offline Mode has delivery risk tied to navigation churn: Forge reported that offline-mode implementation is being held until navigation direction is finalized, and there is an active reversal discussion (tab bar vs gesture navigation) that could block or force rework."
+      },
+      {
+        "recordId": "36ffc8f4-554c-812f-b1af-f524b41d2ae9",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716537600000000",
+        "claim": "Navigation architecture work (tab bar implementation, gesture-nav proposal/spike, and related deep-link routing dependency) is prominent this week but does not clearly map to the Mobile Offline Mode roadmap initiative, suggesting off-plan scope or an untracked roadmap item."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cd-bbf2-f35d00861ea4",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-30",
+        "claim": "Navigation architecture work (tab bar implementation, gesture-nav proposal/spike, and related deep-link routing dependency) is prominent this week but does not clearly map to the Mobile Offline Mode roadmap initiative, suggesting off-plan scope or an untracked roadmap item."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cd-bbf2-f35d00861ea4",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-38",
+        "claim": "Navigation architecture work (tab bar implementation, gesture-nav proposal/spike, and related deep-link routing dependency) is prominent this week but does not clearly map to the Mobile Offline Mode roadmap initiative, suggesting off-plan scope or an untracked roadmap item."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d8-af80-f0e00d6127ad",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/26",
+        "claim": "Navigation architecture work (tab bar implementation, gesture-nav proposal/spike, and related deep-link routing dependency) is prominent this week but does not clearly map to the Mobile Offline Mode roadmap initiative, suggesting off-plan scope or an untracked roadmap item."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d8-af80-f0e00d6127ad",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/22",
+        "claim": "PR #22 (forge-pr-022) implemented the tab bar navigation structure (Home, Tasks, Notifications, Profile) per sprint planning (FORGE-30)."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cd-bbf2-f35d00861ea4",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-30",
+        "claim": "FORGE-30: Implemented a 4-tab tab bar navigation structure with deep linking to each tab."
+      },
+      {
+        "recordId": "36ffc8f4-554c-816b-98f3-f8147ca81a34",
+        "sourceUrl": "https://www.figma.com/file/fN1a2v3V4a5r/Forge-Nav-v2",
+        "claim": "**Forge Mobile — Navigation Architecture v2** — yuki-designer stated the team is pivoting away from the tab bar to a gesture-based navigation model, explicitly reversing the sprint-planning decision that engineering says is already merged and in TestFlight; this is a high-risk reversal that can block or force rework."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d2-807f-dbedd1072bf4",
+        "sourceUrl": "https://www.figma.com/file/oF5f6l7i8n9e/Offline-Mode-UX",
+        "claim": "**Offline Mode — UX States & Sync Indicators** — Forge is holding implementation until navigation direction is finalized because sync-indicator placement may conflict with a potential pivot to gesture navigation."
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d8-af80-f0e00d6127ad",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/24",
+        "claim": "PR #24 (forge-pr-024) is adding an offline mode with a local SQLite task cache using GRDB (FORGE-32)."
+      },
+      {
+        "recordId": "36efc8f4-554c-81c5-84cc-ee35b20095d7",
+        "sourceUrl": "",
+        "claim": "FieldKit Offline Sync PRD acceptance criterion: \"Conflict resolution UI surfaces when structural conflicts are detected; user can choose version or merge.\""
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d8-af80-f0e00d6127ad",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/19",
+        "claim": "PR #19 (forge-pr-019) implemented a small iOS home screen widget showing today’s task count and next due item via WidgetKit (FORGE-31)."
+      }
+    ],
+    "squadConsolidationBodies": [
+      "Atlas shipped a batch of billing reliability and API-hardening work this week (incident response for EU latency, v1 billing endpoint removal, tenant rate limiting, and webhook stability fixes), while continuing larger refactors and premium-tier gating. In parallel, Atlas progressed the auth token migration to `/api/auth/tokens/v2`, but production hardening depends on coordination with Lumen for rollback planning ahead of the June 15 v1 sunset. Key risks are (1) premium-tier entitlement gating blocked by pending LaunchDarkly configuration and (2) tracking/evidence mismatches around the BillingService CQRS refactor (Slack described it as merged while Jira still showed In Progress), plus a broader [BLOCK] that current delivery does not map to the active AuthShield SSO Phase 1 PRD acceptance criteria. Highlights - **[Jira]** ATLS-58 — Investigated the EU billing latency spike; root cause was identified/documented and latency returned within SLA.\n- **[Jira]** ATLS-29 — Removed deprecated `/billing/v1` endpoints after confirming zero callers in Datadog traces for 14 days.\n- **[Jira]** ATLS-38 — Added tenant rate limiting to billing API endpoints (1000 req/min), returning 429 with Retry-After headers.\n- **[Jira]** ATLS-41 — Fixed a null pointer exception in the payment processor webhook handler for events with missing metadata.\n- **[Jira]** ATLS-55 — Migrated premium-tier token acquisition to Lumen auth tokens v2 and removed v1 calls from the codebase.\n- **[GitHub]** PR #56 — Updated the billing REST API reference docs with request/response examples for the v2 refactor.\n- **[Figma]** Billing Transactional Email Templates — Applied brand refresh tokens and marked templates ready for HTML export.\n- **[Figma]** Billing Portal UI — v2 Redesign — Updated invoice list (new “Plan tier” column) and fixed 429 error toast wrapping on small mobile viewports.\n- **[Figma]** Premium Tier — Upgrade Flow & Entitlement Gates — Added tooltip spec for the plan-gated lock icon and resolved the open question from jordan-lee. Risks & Blockers - **[BLOCK]** Premium-tier entitlement gating is blocked on LaunchDarkly configuration from DevOps; this may delay getting gates live in prod even if code is ready.\n- **[HIGH]** BillingService CQRS refactor tracking appears inconsistent: Slack discussed it as merged while Jira still showed In Progress/stale; needs a status reconciliation to avoid release/rollout confusion.\n- **[WATCH]** EU billing latency incident follow-up: add a canary/replica-lag check to the deploy runbook to reduce repeat risk.\n- **[WATCH]** PR #55 was closed without merging and the scope moved to the PRD analytics track (ATLS-50); if MRR breakdown analytics is needed for near-term reporting, it could become a schedule risk. Cross-Squad Dependencies - **[Atlas] → [Lumen]** `/api/auth/tokens/v2` rollout hardening — coordinate on rollback planning before the June 15 v1 sunset; current state is “merged/using v2” but production rollback plan is still being coordinated.\n- **[Atlas] → [DevOps]** LaunchDarkly configuration for premium-tier feature flags — blocking entitlement gating work from shipping to prod. Open Flags - **[BLOCK]** prd-fact-check — Scope Drift: this week’s shipped work focused on billing API refactors/reliability and premium-tier/billing UI changes, with no mapped evidence to AuthShield SSO Phase 1 acceptance criteria.\n  Evidence: Evidence did not mention SAML/IdP/MFA/admin portal/audit log work.\n- **[WARN]** prd-fact-check — Stalled Criterion: multiple AuthShield SSO Phase 1 criteria have no supporting delivery evidence this week (SAML federation, MFA pass-through, admin portal IdP metadata upload/rotation, SOC2 login audit log).\n  Evidence: No upstream summaries mention SAML/IdP/MFA/admin portal/audit log work.\n- **[WARN]** slack — Slack vs Jira discrepancy: ATLS-42 was discussed as merged while Jira still showed it In Progress (tracking hygiene / evidence-quality risk). Atlas consolidation · Week 2026-W21 · 6/6 sources · 21 citations · coverage 100%",
+      "Lumen advanced Design System 2.0 by migrating the component library to Figma-synced tokens and closing key accessibility gaps, while also shipping auth tokens v2 (tenantId/scopes) and performance improvements. The main risks are intermittent auth-service 503s blocking e2e coverage and a potential cross-squad design mismatch around gesture navigation (Forge spec vs Lumen revert). A near-term dependency is ensuring the updated focus token is exported from Figma so engineering ships the correct AA-compliant dark-mode value. Highlights - **[GitHub]** Refactored component library to use Figma-synced design tokens for dark mode + brand refresh (LMNE-21).\n- **[GitHub]** Fixed WCAG AA form-input issues (aria labels, focus rings), resolving 9 axe violations (LMNE-17).\n- **[GitHub]** Improved data grid virtualization performance (P99 scroll jank 180ms → 22ms) (LMNE-20).\n- **[GitHub]** Released `/api/auth/tokens/v2` with `tenantId` + `scopes` and deprecated v1 with a June 15 sunset (LMNE-22).\n- **[Figma]** Finalized the “no data yet” empty-state illustration for Dashboard Redesign v4 (SVG asset ready).\n- **[Figma]** Finalized session-expiry warning modal with 5-minute countdown for Auth Flow v2 Token UX. Risks & Blockers - **[BLOCK]** Intermittent auth-service 503s are breaking CI and blocking Playwright e2e work (LMNE-25) — triage reliability (runbook + tracking ticket) before e2e coverage can land.\n- **[HIGH]** Focus token update is changed in Figma but not yet exported; engineering may ship the old focus color and fail AA contrast in dark mode — complete token export + re-verify in app.\n- **[WATCH]** Gesture navigation revert may conflict with Forge’s Figma spec still showing gesture navigation — align cross-squad design/implementation direction before more UI work lands.\n- **[WATCH]** Real-time Notifications V2 appears to have no mapped activity this week and is flagged “at risk” due to attention on auth + UI foundations. Cross-Squad Dependencies - **[Lumen → Forge]** Align on gesture-navigation direction; Lumen is reverting based on user testing while Forge spec may still reflect gesture navigation.\n- **[Lumen → Design Systems consumers]** Token export needed so downstream apps pick up the corrected `color/interactive/focus` value.\n Open Flags - **[WARN]** prd-fact-check — Scope drift: auth tokens v2 endpoint rollout doesn’t clearly map to Luminance Design System 2.0 acceptance criteria.\n  Evidence: LMNE-22 shipped `/api/auth/tokens/v2`; PR #31 released v2 and deprecated v1.\n- **[WARN]** prd-fact-check — Stalled criteria: no supporting evidence this week for Storybook deployment to arcline.design, ProductA migration with Percy validation, or npm publish at v2.0.0.\n  Evidence: No upstream summaries mention Storybook deployment, ProductA migration/Percy, or npm publish.\n Lumen consolidation · Week 2026-W21 · 6/6 sources · 12 citations · coverage 100%",
+      "Forge shipped key stability and UX improvements (rotation crash fix, camera memory-leak fix, haptics, widget, and tab-bar navigation) while beginning offline-mode implementation (GRDB SQLite cache) and deep-link routing work. The biggest delivery risk is active navigation churn: design is pivoting toward gesture navigation after an exec UX review despite tab-bar work already merged/TestFlight, and this decision is now blocking offline-mode UX placement and may force rework. Resolve the navigation direction and capture an explicit decision record before Sprint 10 to unblock offline-mode progress and avoid wasted effort. Highlights - **[GitHub]** PR #25 fixed an iOS 16 crash on device rotation in the task view by deferring collection layout invalidation (FORGE-28).\n- **[Jira]** FORGE-29 fixed a memory leak in the camera permission module by applying a weak delegate pattern.\n- **[Jira]** FORGE-33 shipped haptic feedback on card swipe gestures, respecting system haptic settings.\n- **[Jira]** FORGE-31 shipped the small iOS home screen widget showing today’s task count and next due item (App Group sharing working).\n- **[GitHub]** PR #22 implemented the 4-tab tab bar navigation structure (Home, Tasks, Notifications, Profile) per sprint planning (FORGE-30).\n- **[Jira]** FORGE-34 completed the gesture-based navigation UX spike (prototype + findings + go/no-go decision). Risks & Blockers - **[BLOCK]** Navigation architecture reversal risk — design is pivoting tab bar → gesture navigation after exec UX review, contradicting already-merged/TestFlight tab-bar work — capture an explicit decision record and align eng+design before Sprint 10 to avoid rework.\n- **[HIGH]** Offline-mode schedule risk — offline-mode UX/indicator placement and some implementation are being held until navigation is finalized — timebox the nav decision and confirm offline UX placement.\n- **[WATCH]** PRD/roadmap drift — shipped work this week skewed toward navigation/widgets/haptics while most offline/sync acceptance criteria still lack evidence (perf, conflict UI, test coverage, battery) — re-anchor Sprint 10 scope to FieldKit Offline Sync criteria and define what evidence is required. Cross-Squad Dependencies - **[Forge → Design/Exec UX]** Navigation direction decision (tab bar vs gesture navigation) is required to unblock offline-mode UX placement and deep-link routing work; currently pending sign-off.\n\nIf no additional cross-squad dependencies emerge beyond this decision, treat as the primary coordination item for the week. Open Flags - **[BLOCK]** prd-fact-check — Reversal: Navigation architecture pivoting (tab bar → gesture-based) after exec UX review, contradicting shipped tab-bar work.\n  Evidence: \\\"Navigation architecture is pivoting (tab bar → gesture-based) after exec UX review, explicitly contradicting shipped engineering work (tab bar merged / in TestFlight) and creating risk of rework.\\\"\n- **[WARN]** prd-fact-check — Scope drift: Shipped work centers on navigation + widgets + haptics, which does not map to FieldKit Offline Sync acceptance criteria.\n  Evidence: \\\"Significant shipped work this week centers on navigation + widgets + haptics, which does not map to the FieldKit Offline Sync acceptance criteria.\\\"\n- **[WARN]** prd-fact-check — Stalled criterion: multiple offline/sync acceptance criteria show no supporting activity evidence beyond early implementation.\n  Evidence: \\\"Multiple core offline/sync acceptance criteria show no supporting activity evidence this week beyond early implementation (offline CRUD, sync performance, conflict-resolution UI, battery measurement, coverage).\\\" Forge consolidation · Week 2026-W21 · 6/6 sources · 22 citations · coverage 100%"
+    ],
+    "alignmentSample": [
+      {
+        "recordId": "36ffc8f4-554c-81e3-82ad-e9730c448b21",
+        "sourceUrl": "https://github.com/arcline-inc/platform/pull/56",
+        "claim": "PR #56 (atlas-pr-056) updated the billing REST API reference docs with request/response examples for the v2 refactor.",
+        "sourceContent": "Source ID: atlas-pr-056\nStatus: merged\nAuthor: morgan-park\nPR Number: 56\nRaw: {\"number\":56,\"state\":\"merged\",\"merged\":true,\"merged_at\":\"2026-05-21T08:30:00Z\",\"author\":\"morgan-park\",\"body\":\"Docs update following the v2 API refactor. Adds request/response examples for all billing endpoints.\",\"linked_jira_key\":null,\"base_branch\":\"main\",\"head_branch\":\"docs/billing-api-v2\",\"changed_files\":3,\"additions\":187,\"deletions\":94,\"reviewers\":[\"jordan-lee\"],\"labels\":[\"docs\"]}\nBody Excerpt: Docs update following the v2 API refactor. Adds request/response examples for all billing endpoints.\nTitle: #56 — Update billing docs: REST API reference"
+      },
+      {
+        "recordId": "36ffc8f4-554c-81c2-a4be-d9ff1098e698",
+        "sourceUrl": "https://arcline.atlassian.net/browse/ATLS-47",
+        "claim": "ATLS-47: Fixing Stripe webhook HMAC timestamp validation; remaining work is to address review feedback and merge after regression tests are finalized.",
+        "sourceContent": "Source ID: ATLS-47\nTicket Key: ATLS-47\nRaw: {\"key\":\"ATLS-47\",\"status\":\"In Review\",\"assignee\":\"sarah-chen\",\"type\":\"Bug\",\"priority\":\"High\",\"story_points\":2,\"sprint\":\"Atlas Sprint 14\",\"acceptance_criteria\":\"Valid Stripe events no longer rejected. Monotonic clock used for HMAC window. Regression test added.\",\"labels\":[\"billing\",\"security\",\"bug\"]}\nAssignee: sarah-chen\nStatus: In Review\nAcceptance Criteria: Valid Stripe events no longer rejected. Monotonic clock used for HMAC window. Regression test added.\nTitle: Fix Stripe webhook HMAC timestamp validation bug"
+      },
+      {
+        "recordId": "36ffc8f4-554c-81d4-8b0e-c4c81e81c8af",
+        "sourceUrl": "https://arcline.slack.com/archives/C01BILLINGALERTS/p1716278400000000",
+        "claim": "Alex Kumar created ATLS-58 to track a post-mortem for the EU billing latency incident.",
+        "sourceContent": "Channel: atlas-billing-alerts\nRaw: {\"channel\":\"atlas-billing-alerts\",\"thread_ts\":\"1716278400.000000\",\"participant_count\":4,\"messages\":[{\"author\":\"datadog-bot\",\"text\":\"ALERT: billing-api P99 latency in eu-west-1 exceeded 2000ms threshold. Duration: 18 minutes.\",\"ts\":\"1716278400.000000\"},{\"author\":\"alex-kumar\",\"text\":\"On it. Pulling traces.\",\"ts\":\"1716278700.000000\"},{\"author\":\"alex-kumar\",\"text\":\"Found it — it was the EU replica lagging behind after the v1 endpoint removal migration. Replica caught up; latency back to normal. Created ATLS-58 to track post-mortem.\",\"ts\":\"1716280200.000000\"},{\"author\":\"sarah-chen\",\"text\":\"Good catch. Let's add a canary check for replica lag to the deploy runbook.\",\"ts\":\"1716281000.000000\"}]}\nSource ID: atlas-slack-C01-003\nThread Timestamp: 1716278400.000000\nParticipant Count: 3\nExcerpt: datadog-bot: ALERT: billing-api P99 latency in eu-west-1 exceeded 2000ms threshold. Duration: 18 minutes.\nalex-kumar: On it. Pulling traces.\nalex-kumar: Found it — it was the EU replica lagging behind after the v1 endpoint removal migration. Replica caught up; latency back to normal. Created ATLS-58 to track post-mortem.\nsarah-chen: Good catch. Let's add a canary check for replica lag to the deploy runbook.\nTitle: #atlas-billing-alerts: EU billing latency spike"
+      },
+      {
+        "recordId": "36efc8f4-554c-8119-8b3e-fbcea63a20b2",
+        "sourceUrl": "",
+        "claim": "Unified Auth SSO has rollout risk: Atlas reported needing coordination with Lumen on rollback planning for `/api/auth/tokens/v2`, which suggests cross-squad dependencies that could slow production hardening.",
+        "sourceContent": "Status: Planning\nNotes: WebSocket infra lift required\nTarget Quarter: Q3 2026\nTitle: Real-time Notifications V2"
+      },
+      {
+        "recordId": "36ffc8f4-554c-817d-847d-f76ec34c32f4",
+        "sourceUrl": "https://github.com/arcline-inc/frontend/pull/34",
+        "claim": "PR #34 (lumen-pr-034) refactored the component library to use Figma-synced design tokens to support dark mode and brand refresh (LMNE-21).",
+        "sourceContent": "Linked Jira: LMNE-21\nSource ID: lumen-pr-034\nStatus: merged\nAuthor: kai-zhang\nPR Number: 34\nRaw: {\"number\":34,\"state\":\"merged\",\"merged\":true,\"merged_at\":\"2026-05-20T16:15:00Z\",\"author\":\"kai-zhang\",\"body\":\"Migrates all hardcoded hex color values and spacing to Figma-synced design tokens. Required for dark mode and brand refresh consistency. Refs LMNE-21.\",\"linked_jira_key\":\"LMNE-21\",\"base_branch\":\"main\",\"head_branch\":\"chore/design-token-migration\",\"changed_files\":38,\"additions\":512,\"deletions\":489,\"reviewers\":[\"priya-nair\",\"dev-okonkwo\"],\"labels\":[\"chore\",\"ui\",\"design-system\"]}\nBody Excerpt: Migrates all hardcoded hex color values and spacing to Figma-synced design tokens. Required for dark mode and brand refresh consistency. Refs LMNE-21.\nTitle: #34 — Refactor component library to use design tokens"
+      },
+      {
+        "recordId": "36ffc8f4-554c-81ae-9e85-eedca9242ed2",
+        "sourceUrl": "https://arcline.atlassian.net/browse/LMNE-26",
+        "claim": "LMNE-26: Reverting the gesture navigation experiment; remaining work is to fully remove gesture nav code and restore tab bar navigation without routing test regressions.",
+        "sourceContent": "Source ID: LMNE-26\nTicket Key: LMNE-26\nRaw: {\"key\":\"LMNE-26\",\"status\":\"In Progress\",\"assignee\":\"dev-okonkwo\",\"type\":\"Task\",\"priority\":\"High\",\"story_points\":2,\"sprint\":\"Lumen Sprint 12\",\"acceptance_criteria\":\"Gesture nav code removed. Tab bar navigation restored. No regressions in routing tests.\",\"labels\":[\"navigation\",\"revert\"]}\nAssignee: dev-okonkwo\nStatus: In Progress\nAcceptance Criteria: Gesture nav code removed. Tab bar navigation restored. No regressions in routing tests.\nTitle: Revert gesture navigation experiment"
+      },
+      {
+        "recordId": "36ffc8f4-554c-8180-89b8-fea039093594",
+        "sourceUrl": "https://arcline.slack.com/archives/C02LUMEN/p1716537600000000",
+        "claim": "The sprint summary noted LMNE-25 was blocked by an auth-service OOM incident and no Jira ticket was filed for that incident.",
+        "sourceContent": "Channel: lumen-eng\nRaw: {\"channel\":\"lumen-eng\",\"thread_ts\":\"1716537600.000000\",\"participant_count\":3,\"messages\":[{\"author\":\"priya-nair\",\"text\":\"Sprint 12 week summary: LMNE-17 ✅, LMNE-18 ✅, LMNE-19 ✅, LMNE-20 ✅, LMNE-21 ✅, LMNE-22 ✅. In flight: LMNE-24, LMNE-25, LMNE-26. LMNE-25 was blocked by auth service OOM (Slack thread from Wednesday) — no Jira ticket was filed for that incident despite the ask. Adding to next sprint.\",\"ts\":\"1716537600.000000\"},{\"author\":\"dev-okonkwo\",\"text\":\"The auth blocker cost me ~1 day. Would have been faster to diagnose with a Jira ticket and a runbook entry.\",\"ts\":\"1716538200.000000\"},{\"author\":\"kai-zhang\",\"text\":\"Agree. Let's make it a team norm: if a blocker persists more than 2 hours, it gets a ticket.\",\"ts\":\"1716538800.000000\"}]}\nSource ID: lumen-slack-C02-006\nThread Timestamp: 1716537600.000000\nParticipant Count: 3\nExcerpt: priya-nair: Sprint 12 week summary: LMNE-17 ✅, LMNE-18 ✅, LMNE-19 ✅, LMNE-20 ✅, LMNE-21 ✅, LMNE-22 ✅. In flight: LMNE-24, LMNE-25, LMNE-26. LMNE-25 was blocked by auth service OOM (Slack thread from Wednesday) — no Jira ticket was filed for that incident despite the ask. Adding to next sprint.\ndev-okonkwo: The auth blocker cost me ~1 day. Would have been faster to diagnose with a Jira ticket and a runbook entry.\nkai-zhang: Agree. Let's make it a team norm: if a blocker persists more than 2 hours, it gets a ticket.\nTitle: #lumen-eng: Sprint 12 week summary"
+      },
+      {
+        "recordId": "36efc8f4-554c-8119-8b3e-fbcea63a20b2",
+        "sourceUrl": "",
+        "claim": "Real-time Notifications V2 (Q3 2026) is at risk due to lack of clear WebSocket/notifications-specific progress this week, while the team’s attention appears focused on auth-token v2 rollout and UI foundation work.",
+        "sourceContent": "Status: Planning\nNotes: WebSocket infra lift required\nTarget Quarter: Q3 2026\nTitle: Real-time Notifications V2"
+      },
+      {
+        "recordId": "36ffc8f4-554c-8132-9747-fa04c2f34ef0",
+        "sourceUrl": "https://github.com/arcline-inc/mobile/pull/20",
+        "claim": "PR #20 (forge-pr-020) added haptic feedback to card swipe gestures (FORGE-33).",
+        "sourceContent": "Linked Jira: FORGE-33\nSource ID: forge-pr-020\nStatus: merged\nAuthor: carlos-mendez\nPR Number: 20\nRaw: {\"number\":20,\"state\":\"merged\",\"merged\":true,\"merged_at\":\"2026-05-20T11:10:00Z\",\"author\":\"carlos-mendez\",\"body\":\"UIImpactFeedbackGenerator on card dismiss/archive swipe. Light impact on initiation, medium on completion. Refs FORGE-33.\",\"linked_jira_key\":\"FORGE-33\",\"base_branch\":\"main\",\"head_branch\":\"feature/haptic-swipe\",\"changed_files\":3,\"additions\":44,\"deletions\":5,\"reviewers\":[\"mei-tanaka\"],\"labels\":[\"feature\",\"ios\",\"ux\"]}\nBody Excerpt: UIImpactFeedbackGenerator on card dismiss/archive swipe. Light impact on initiation, medium on completion. Refs FORGE-33.\nTitle: #20 — Add haptic feedback to card swipe gestures"
+      },
+      {
+        "recordId": "36ffc8f4-554c-8174-b5d3-e919af54e1a1",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-35",
+        "claim": "FORGE-35: Updating the Figma token sync script for the v2 component library; remaining work is ensuring full token coverage (colors/typography/spacing) and validating sync output.",
+        "sourceContent": "Source ID: FORGE-35\nTicket Key: FORGE-35\nRaw: {\"key\":\"FORGE-35\",\"status\":\"In Progress\",\"assignee\":\"mei-tanaka\",\"type\":\"Task\",\"priority\":\"Medium\",\"story_points\":2,\"sprint\":\"Forge Sprint 9\",\"acceptance_criteria\":\"Token sync pulls from Forge v2 Figma library. Colors, typography, spacing all synced.\",\"labels\":[\"chore\",\"design-system\"]}\nAssignee: mei-tanaka\nStatus: In Progress\nAcceptance Criteria: Token sync pulls from Forge v2 Figma library. Colors, typography, spacing all synced.\nTitle: Update Figma token sync script for v2 component library"
+      },
+      {
+        "recordId": "36ffc8f4-554c-81b7-94e4-e4ee7d786b6a",
+        "sourceUrl": "https://arcline.slack.com/archives/C03FORGE/p1716278400000000",
+        "claim": "Mei Tanaka flagged that the tab bar had been agreed in sprint planning and documented in the squad PRD, but the gesture-nav change was being raised in Figma.",
+        "sourceContent": "Channel: forge-mobile\nRaw: {\"channel\":\"forge-mobile\",\"thread_ts\":\"1716278400.000000\",\"participant_count\":3,\"messages\":[{\"author\":\"mei-tanaka\",\"text\":\"Heads up: I just saw a comment from @yuki-designer in the Figma file that we need to discuss. She's proposing a switch from tab bar to gesture-based navigation. We literally just shipped the tab bar (FORGE-30) last week.\",\"ts\":\"1716278400.000000\"},{\"author\":\"carlos-mendez\",\"text\":\"Wait, really? The tab bar was agreed in sprint planning AND is in the squad PRD. This is the first I'm hearing about it.\",\"ts\":\"1716279000.000000\"},{\"author\":\"mei-tanaka\",\"text\":\"She says it came out of an exec UX review session on Monday. I don't have the notes. I've got FORGE-26 (deep links) and FORGE-36 (routing) both depending on the current nav structure. This could be a significant rework.\",\"ts\":\"1716279600.000000\"},{\"author\":\"carlos-mendez\",\"text\":\"I'm going to put FORGE-36 on hold until this is resolved. FORGE-38 might be the right ticket to track a potential rework. Let's get @yuki-designer in a sync this week.\",\"ts\":\"1716280200.000000\"}]}\nSource ID: forge-slack-C03-002\nThread Timestamp: 1716278400.000000\nParticipant Count: 2\nExcerpt: mei-tanaka: Heads up: I just saw a comment from @yuki-designer in the Figma file that we need to discuss. She's proposing a switch from tab bar to gesture-based navigation. We literally just shipped the tab bar (FORGE-30) last week.\ncarlos-mendez: Wait, really? The tab bar was agreed in sprint planning AND is in the squad PRD. This is the first I'm hearing about it.\nmei-tanaka: She says it came out of an exec UX review session on Monday. I don't have the notes. I've got FORGE-26 (deep links) and FORGE-36 (routing) both depending on the current nav structure. This could be a significant rework.\ncarlos-mendez: I'm going to put FORGE-36 on hold until this is resolved. FORGE-38 might be the right ticket to track a potential rework. Let's get @yuki-designer in a sync this week.\nTitle: #forge-mobile: Navigation architecture — design review incoming"
+      },
+      {
+        "recordId": "36ffc8f4-554c-81cd-bbf2-f35d00861ea4",
+        "sourceUrl": "https://arcline.atlassian.net/browse/FORGE-30",
+        "claim": "Navigation architecture work (tab bar implementation, gesture-nav proposal/spike, and related deep-link routing dependency) is prominent this week but does not clearly map to the Mobile Offline Mode roadmap initiative, suggesting off-plan scope or an untracked roadmap item.",
+        "sourceContent": "Citations: [{\"recordId\":\"36ffc8f4-554c-81fe-97dc-f9dd078989b8\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-34\",\"claim\":\"FORGE-34: Completed the gesture-based navigation UX spike; a prototype was built, findings documented, and a go/no-go decision made.\"},{\"recordId\":\"36ffc8f4-554c-8183-855c-ef8fe8c058b9\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-33\",\"claim\":\"FORGE-33: Shipped haptic feedback on card swipe gestures (light on start, medium on completion) respecting system haptic settings.\"},{\"recordId\":\"36ffc8f4-554c-812e-8810-c3d2a68f8354\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-31\",\"claim\":\"FORGE-31: Shipped the small iOS home screen widget showing today’s task count and next due item, with App Group sharing working.\"},{\"recordId\":\"36ffc8f4-554c-8162-ae72-f13811b14bc5\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-30\",\"claim\":\"FORGE-30: Implemented a 4-tab tab bar navigation structure with deep linking to each tab.\"},{\"recordId\":\"36ffc8f4-554c-815a-92c1-c303fdad5fee\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-29\",\"claim\":\"FORGE-29: Fixed a memory leak in the camera permission module by applying a weak delegate pattern.\"},{\"recordId\":\"36ffc8f4-554c-81b7-b106-c87e5d178972\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-28\",\"claim\":\"FORGE-28: Fixed the iOS 16 crash on task view rotation and verified on device.\"},{\"recordId\":\"36ffc8f4-554c-8128-a6e9-c3fced424a8a\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-36\",\"claim\":\"FORGE-36: Adding deep link routing for push-notification tap targets; remaining work is to finish implementation/validation for all payload routes and end-to-end testing from push payloads.\"},{\"recordId\":\"36ffc8f4-554c-8174-b5d3-e919af54e1a1\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-35\",\"claim\":\"FORGE-35: Updating the Figma token sync script for the v2 component library; remaining work is ensuring full token coverage (colors/typography/spacing) and validating sync output.\"},{\"recordId\":\"36ffc8f4-554c-816d-9b38-e45334f1c2b4\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-32\",\"claim\":\"FORGE-32: Building offline mode with a local SQLite task cache; remaining work is to complete background sync on foreground and validate conflict resolution behavior (server wins).\"},{\"recordId\":\"36ffc8f4-554c-8157-81e4-cf23d63ace6d\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-38\",\"claim\":\"FORGE-38: Navigation architecture redesign is still in Backlog and has TBD decisions pending design sign-off; this may block downstream implementation.\"},{\"recordId\":\"36ffc8f4-554c-8192-a54c-f48b5867031e\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-37\",\"claim\":\"FORGE-37: Kotlin Multiplatform viability assessment remains in Backlog; if Android port planning is time-sensitive, this could become a dependency risk.\"},{\"recordId\":\"36ffc8f4-554c-8157-81e4-cf23d63ace6d\",\"sourceUrl\":\"https://arcline.atlassian.net/browse/FORGE-38\",\"claim\":\"FORGE-38 indicates an open design decision (tab bar vs gesture navigation) that may need resolution before committing to the new navigation architecture.\"}]\nSource: jira\nStatus: approved\nApproved By: @Danny Mathieson\nTitle: Forge / jira — 2026-W21"
+      }
+    ]
+  },
+  "baselineScores": {
+    "citationCoverage": 1,
+    "sourceFactAlignment": 0.7083333333333334,
+    "backtestDelta": 0.62,
+    "trustScore": 0.8073333333333333,
+    "t2Surfaced": false
+  }
+}

@@ -74,7 +74,7 @@ Each PRD row contains:
 
 ### C. Run the fact check
 
-Apply the three detection rules below. **Be thorough — missing a flag is worse than over-flagging** (the HITL reviewer will dismiss false positives; they cannot add missed flags).
+Apply the four detection rules below. **Be thorough — missing a flag is worse than over-flagging** (the HITL reviewer will dismiss false positives; they cannot add missed flags).
 
 ---
 
@@ -115,15 +115,32 @@ Apply the three detection rules below. **Be thorough — missing a flag is worse
 **Definition:** A design (Figma comment) or engineering decision explicitly contradicts a PRD acceptance criterion or a shipped engineering deliverable.
 
 **How to detect:**
-- Read Figma summaries carefully for language indicating design direction changes: "pivoting", "this reverses", "on hold pending", "rethinking", "exec review decided".
-- Cross-reference with GitHub and Jira summaries for shipped work that is now contradicted by the design change.
-- If a contradiction exists, flag it immediately as a reversal.
+- Read Figma summaries carefully for language indicating a design-direction change: "pivoting", "this reverses", "on hold pending", "rethinking", "exec review decided", "switch from X to Y", "moving away from", or a comment from a design lead overriding an agreed approach.
+- For any such change, cross-reference the **GitHub and Jira** summaries for already-shipped or in-flight work the change now contradicts — a merged PR, a Done ticket, or a decision that was agreed in sprint planning. A reversal is high-severity *precisely* when work has already landed against the **old** direction.
+- Reversals are the easiest tension to under-call, because the Figma comment and the work it contradicts live in **different source summaries** — the conflict is only visible when you read them together. Before concluding "no reversal," always check the Figma summary against the shipped GitHub/Jira work.
+- If a contradiction exists, flag it as a reversal — and **name what it reverses**: identify the specific prior decision, PR, or ticket being overturned (e.g. "reverses the navigation approach agreed in sprint planning and already merged in PR #NN / XXXX-NN"), not merely that a review is underway. The "what it overturns" framing is what makes the flag actionable for the VP.
 
 **Severity:**
 - `warn` — design feedback suggests reconsideration, no shipped work contradicted yet
 - `block` — shipped PR or closed Jira ticket is now reversed by a Figma design decision
 
-> ⚠️ **Critical — Forge squad, this week:** Check the Figma summary for the Forge squad specifically. There is a known design-vs-implementation conflict involving navigation architecture (tab bar → gesture-based) from a `yuki-designer` comment on MobileNavV2 that directly contradicts a recently merged PR and a Done Jira ticket. This is the kind of high-severity reversal that **must be flagged at `block` severity** in the Flags & Drift section. Failure to surface it is a quality failure.
+---
+
+#### Rule 4: Process Gap (untracked blocker or decision)
+
+**Definition:** A delivery blocker, incident, or material decision is discussed in Slack (or another source) but was **never filed as a Jira ticket** — so it lives in conversation but not in the system of record. This is the inverse of scope drift: not unticketed *work*, but an unticketed *blocker or decision* that cost time, blocked a deliverable, or changed direction. It is a governance signal a VP needs — it points to a process weakness, not just an operational hiccup.
+
+**How to detect:**
+- Read the Slack summary's **Risks & Blockers** and **Notable** sections for language like "no ticket was filed", "no Jira ticket", "discussed but not tracked", "resolved over Slack", "should file a ticket", "cost ~N hours/days", or a *proposed process norm* (e.g. "we should file a tracking ticket when a blocker persists more than two hours").
+- Cross-check against the **Jira summary**: if the blocker/decision is referenced only by a Slack thread — or is explicitly called out as having *no* corresponding ticket — and you cannot find a matching Jira item, flag it.
+- Do **not** require someone to use the exact words "process gap." Infer it from the evidence: a blocker that demonstrably cost time + the absence of a tracking ticket = a process gap.
+
+**Severity:**
+- `info` — minor, short-lived, already resolved with no recurrence risk
+- `warn` — a blocker that cost meaningful time and lacks a tracking ticket
+- `block` — a multi-hour/multi-day blocker resolved entirely off-ticket, or a direction-changing decision with no record
+
+> Surface it as a **Process Gap** flag and frame it as a governance issue — e.g. "auth-service OOM blocked LMNE-25 for ~1 day, resolved via Slack with **no Jira ticket filed**; recommend a tracking-ticket norm" — not merely as the operational symptom (the 503s). The master agent collects these flags verbatim into the VP's *Open Discrepancies*, which is where an untracked blocker belongs. Per the master conflict-resolution policy, Slack-only claims are never authoritative — but here the *untracked-ness itself* is the verified finding (the absence of a ticket is a fact, not a Slack claim).
 
 ---
 

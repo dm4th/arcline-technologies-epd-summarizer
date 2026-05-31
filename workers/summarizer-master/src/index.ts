@@ -190,9 +190,10 @@ worker.tool("read_approved_summaries", {
 //
 // Creates or updates the Master EPD Weekly row for the given week.
 //
-// Quorum rules (enforced here so the agent cannot accidentally bypass them):
-//   approvedSquads.length >= 2  → publish row (with provisional markers for missing squads)
-//   approvedSquads.length <= 1  → do NOT publish; write outcome=skipped run log and return
+// Quorum rule (enforced here so the agent cannot accidentally bypass it):
+//   all 3 squads approved (Squad Approval Rate >= 99.9) → publish row
+//   anything below 100%                                 → do NOT publish; write outcome=skipped run log and return
+// (Decision 2026-05-30: full-approval quorum — no 2/3 provisional fallback. See PRD-05 §Quorum.)
 //
 // The body is structured as:
 //   [callout] Executive Summary
