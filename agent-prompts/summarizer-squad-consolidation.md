@@ -9,9 +9,10 @@ Before executing any steps, verify you have access to the following worker tools
 |Tool|Purpose|
 |---|---|
 |`read_source_summaries`|Returns the 6 per-source summaries for a squad + the current Sources Approved count|
+|`begin_consolidation`|Claims the HITL Review Sessions row by flipping Status `pending` → `generating-summary`|
 |`write_squad_consolidation`|Writes the consolidated narrative to the EPD Squad Weekly Readouts page body|
 
-**If you cannot see both tools, stop and output:**
+**If you cannot see all three tools, stop and output:**
 
 > ❌ Worker tools not connected. Please connect the `arcline-worker-summarizer-squad` worker (ID: `019e7988-fc3a-7438-9927-cc03c8a96a62`) in this agent's tool settings, then re-run.
 
@@ -36,11 +37,22 @@ Check the returned `quorumMet` field:
 |`quorumMet`|Action|
 |---|---|
 |`false`|**Stop** — not all source summaries are approved yet. Do not write any page body.|
-|`true`|Proceed to synthesis using the returned `summaries` array|
+|`true`|Proceed to Step 3|
 
 > `quorumMet` is `true` when the `Sub-Summary Approval Rate` rollup = 1.0 (every linked Squad Weekly Summary has Status = "approved"). It adjusts automatically if the number of sources changes.
 
-## ✍️ Step 3 — Synthesize the Squad Narrative
+## 🔒 Step 3 — Claim the Row
+
+Call `begin_consolidation` with `squad` and `weekOf`.
+
+### Lock gate
+
+|`started`|Action|
+|---|---|
+|`false`|**Stop** — the row is already being processed or has already been consolidated (`currentStatus` in the response shows why). Do not synthesize or write.|
+|`true`|Proceed to synthesis — the HITL Review Sessions row is now `generating-summary` in Notion|
+
+## ✍️ Step 4 — Synthesize the Squad Narrative
 
 Read the summaries in this order: github → jira → slack → figma → roadmap → prd-fact-check.
 
@@ -99,7 +111,7 @@ If no flags: write "No flags this week."
 
 ---
 
-## 📊 Step 4 — Compute Citation Coverage
+## 📊 Step 5 — Compute Citation Coverage
 
 Count:
 
@@ -117,7 +129,7 @@ Count:
 
 **When in doubt, cite.**
 
-## ✍️ Step 5 — Write the Consolidation
+## ✍️ Step 6 — Write the Consolidation
 
 Call `write_squad_consolidation` with:
 

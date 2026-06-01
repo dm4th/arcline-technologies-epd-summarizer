@@ -174,7 +174,82 @@ worker.tool("read_source_summaries", {
   },
 });
 
-// ── Tool 2: write_squad_consolidation ─────────────────────────────────────────
+// ── Tool 2: begin_consolidation ───────────────────────────────────────────────
+//
+// Called after quorum is confirmed, before composing the squad narrative. Flips
+// the HITL Review Sessions row from "pending" → "generating-summary" so the row
+// shows live status in Notion while the agent reasons.
+//
+// Returns { started: true } when the flip succeeded (row was "pending").
+// Returns { started: false, currentStatus } when the row is already in progress
+// or done — the agent should stop immediately to avoid duplicate work.
+
+worker.tool("begin_consolidation", {
+  title: "Begin Squad Consolidation",
+  description:
+    "Mark the HITL Review Sessions row as 'generating-summary' before composing the squad narrative. " +
+    "Call this immediately after read_source_summaries confirms quorumMet=true, " +
+    "before synthesizing any content. " +
+    "If started=false the row is already being processed or done — stop immediately.",
+  schema: j.object({
+    squad:  j.enum("atlas", "lumen", "forge").describe("Squad to consolidate"),
+    weekOf: j.string().describe("Week identifier, e.g. 2026-W21"),
+  }),
+  execute: async ({ squad, weekOf }, { notion }) => {
+    const squadPageId = SQUAD_PAGE_ID[squad as Squad];
+    const weekDate    = weekOfToDate(weekOf);
+
+    const sessionResp = await notion.databases.query({
+      database_id: HITL_REVIEW_SESSIONS_DB,
+      filter: {
+        and: [
+          { property: "Squad",   relation: { contains: squadPageId } },
+          { property: "Week Of", date:     { equals: weekDate } },
+        ],
+      },
+      page_size: 5,
+    });
+
+    if (sessionResp.results.length === 0) {
+      return {
+        started: false, reason: "row not found",
+        currentStatus: null, sessionId: null, squad, weekOf,
+      };
+    }
+
+    const page = sessionResp.results[0];
+    if (!isFullPage(page)) {
+      return {
+        started: false, reason: "row not full page",
+        currentStatus: null, sessionId: null, squad, weekOf,
+      };
+    }
+
+    const currentStatus = selectName((page.properties as Record<string, unknown>)["Status"]);
+
+    // Only flip from "pending" — any other status means another run is in progress or done
+    if (currentStatus !== "pending") {
+      return {
+        started: false, reason: "already processed",
+        currentStatus, sessionId: null, squad, weekOf,
+      };
+    }
+
+    await notion.pages.update({
+      page_id: page.id,
+      properties: {
+        "Status": { select: { name: "generating-summary" } },
+      } as Parameters<typeof notion.pages.update>[0]["properties"],
+    });
+
+    return {
+      started: true, reason: null,
+      currentStatus: "generating-summary", sessionId: page.id, squad, weekOf,
+    };
+  },
+});
+
+// ── Tool 3: write_squad_consolidation ─────────────────────────────────────────
 //
 // Writes the consolidated squad narrative to the HITL Review Sessions page body
 // and updates Status to "awaiting-squad-review".
@@ -190,7 +265,8 @@ worker.tool("write_squad_consolidation", {
   title: "Write Squad Consolidation",
   description:
     "Write the consolidated squad narrative to the HITL Review Sessions page body. " +
-    "Enforces quorum: Sub-Summary Approval Rate < 1.0 → writes outcome=skipped and returns. " +
+    "Call this only after begin_consolidation returns started=true. " +
+    "Enforces quorum as a second check: Sub-Summary Approval Rate < 1.0 → writes outcome=skipped and returns. " +
     "= 1.0 → writes consolidation and sets Status to 'awaiting-squad-review'. " +
     "Idempotent — re-running overwrites the existing page body.",
   schema: j.object({
