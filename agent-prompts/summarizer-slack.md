@@ -11,9 +11,10 @@ Before executing any steps, verify you have access to the following worker tools
 | Tool | Purpose |
 |------|---------|
 | `read_mirror_rows` | Reads activity rows from the Slack mirror database |
+| `begin_summary` | Marks the row as generating-review before composing content |
 | `write_squad_summary` | Writes the structured summary page, citations, and run log entry |
 
-**If you cannot see `read_mirror_rows` and `write_squad_summary` as callable tools in your tool list, stop immediately and output:**
+**If you cannot see all three tools in your tool list, stop immediately and output:**
 
 > ❌ Worker tools not connected. Please connect the `arcline-worker-summarizer` worker (ID: `019e7499-8d6e-7452-892b-14d9e6fac1d7`) in this agent's tool settings, then re-run.
 
@@ -55,6 +56,13 @@ If totalRows = 0 → call `write_squad_summary` with:
 - inProgress = "", risks = "", notable = "", citations = []
 
 That row auto-approves and skips HITL. Move to the next squad.
+
+### A2. Mark as generating
+
+Call `begin_summary` with squad, source = "slack", weekOf.
+
+- If `started = false` → this squad's row is already being processed or complete. Skip to the next squad.
+- If `started = true` → proceed. The row now shows "generating-review" in Notion.
 
 ### B. Generate the summary
 

@@ -12,6 +12,7 @@ const PRODUCT_ROADMAP_DB      = "36efc8f4-554c-818c-99ac-c63a7bdfb9fa";
 const PRDS_DB                 = "36efc8f4-554c-81fc-87de-c7eb7e467521";
 const SQUAD_WEEKLY_SUMMARY_DB = "36efc8f4-554c-819e-b339-ec0bb2c97a76";
 const AGENT_RUN_LOG_DB        = "36efc8f4-554c-814e-8c51-ea51792f5344";
+const HITL_REVIEW_SESSIONS_DB = "370fc8f4-554c-8113-a6dd-f893a84555ff";
 
 const SQUAD_PAGE_ID: Record<Squad, string> = {
   atlas: "36efc8f4-554c-81e7-a83b-c976963a5fab",
@@ -65,6 +66,17 @@ function dateStart(prop: unknown): string {
   return "";
 }
 
+// Read the numeric value from a rollup property whose function = "average".
+// Returns 0–1 fraction; treat >= 0.999 as 100%.
+function rollupAverage(prop: unknown): number | null {
+  if (!prop || typeof prop !== "object") return null;
+  const p = prop as Record<string, unknown>;
+  if (p.type !== "rollup") return null;
+  const r = p.rollup as Record<string, unknown> | undefined;
+  if (!r || r.type !== "number" || typeof r.number !== "number") return null;
+  return r.number;
+}
+
 // Extract plain text from a Notion rich_text array embedded in a block
 function blockText(richTextArr: unknown): string {
   if (!Array.isArray(richTextArr)) return "";
@@ -114,6 +126,28 @@ worker.tool("read_squad_summaries", {
     const squadPageId = SQUAD_PAGE_ID[squad as Squad];
     const weekDate    = weekOfToDate(weekOf);
 
+    // ── Quorum check via HITL Review Sessions rollup ──────────────────────────
+    // Non-Product Approval Rate = average of the per-row formula across linked
+    // Squad Weekly Summary rows, where product rows (roadmap/prd-fact-check)
+    // always contribute 1 and non-product rows contribute 1 only when approved.
+    // Reaches 1.0 only when all 4 source rows (github/jira/slack/figma) are approved.
+    const sessionResp = await notion.databases.query({
+      database_id: HITL_REVIEW_SESSIONS_DB,
+      filter: {
+        and: [
+          { property: "Squad",   relation: { contains: squadPageId } },
+          { property: "Week Of", date:     { equals: weekDate } },
+        ],
+      },
+      page_size: 5,
+    });
+    const sessionPage          = sessionResp.results.filter(isFullPage)[0];
+    const nonProductApprovalRate =
+      sessionPage ? rollupAverage(sessionPage.properties["Non-Product Approval Rate"]) : null;
+    const nonProductQuorumMet  =
+      nonProductApprovalRate !== null && nonProductApprovalRate >= 0.999;
+
+    // ── Read per-source summary rows ──────────────────────────────────────────
     const response = await notion.databases.query({
       database_id: SQUAD_WEEKLY_SUMMARY_DB,
       filter: {
@@ -169,11 +203,83 @@ worker.tool("read_squad_summaries", {
       });
     }
 
-    return { summaries, totalSummaries: summaries.length, squad, weekOf };
+    return {
+      summaries,
+      totalSummaries: summaries.length,
+      squad,
+      weekOf,
+      nonProductApprovalRate,
+      nonProductQuorumMet,
+    };
   },
 });
 
-// ── Tool 2: read_roadmap_rows ─────────────────────────────────────────────────
+// ── Tool 2: begin_summary ─────────────────────────────────────────────────────
+//
+// Called after the quorum check passes, before composing content. Flips the
+// pre-seeded placeholder row from "pending" → "generating-review" so the row
+// shows live status in Notion while the agent reasons.
+//
+// Returns { started: true } when the flip succeeded.
+// Returns { started: false, currentStatus } when the row is already in progress
+// or done — the agent should exit to avoid duplicate work.
+
+worker.tool("begin_summary", {
+  title: "Begin Summary Generation",
+  description:
+    "Mark a Squad Weekly Summary row as 'generating-review' before composing content. " +
+    "Call this after read_squad_summaries confirms nonProductQuorumMet=true, " +
+    "before reading roadmap or PRD rows. " +
+    "If started=false the row is already being processed or complete — stop immediately.",
+  schema: j.object({
+    squad:  j.enum("atlas", "lumen", "forge").describe("Squad this summary belongs to"),
+    source: j.enum("roadmap", "prd-fact-check").describe("Product analysis type"),
+    weekOf: j.string().describe("Week identifier, e.g. 2026-W21"),
+  }),
+  execute: async ({ squad, source, weekOf }, { notion }) => {
+    const squadPageId = SQUAD_PAGE_ID[squad as Squad];
+    const weekDate    = weekOfToDate(weekOf);
+
+    const existing = await notion.databases.query({
+      database_id: SQUAD_WEEKLY_SUMMARY_DB,
+      filter: {
+        and: [
+          { property: "Squad",   relation: { contains: squadPageId } },
+          { property: "Week Of", date:     { equals: weekDate } },
+          { property: "Source",  select:   { equals: source } },
+        ],
+      },
+      page_size: 5,
+    });
+
+    if (existing.results.length === 0) {
+      return { started: false, reason: "row not found", currentStatus: null, pageId: null, squad, source, weekOf };
+    }
+
+    const page = existing.results[0];
+    if (!isFullPage(page)) {
+      return { started: false, reason: "row not full page", currentStatus: null, pageId: null, squad, source, weekOf };
+    }
+
+    const currentStatus = selectName((page.properties as Record<string, unknown>)["Status"]);
+
+    // Only flip from "pending" — any other status means another run is in progress or done
+    if (currentStatus !== "pending") {
+      return { started: false, reason: "already processed", currentStatus, pageId: null, squad, source, weekOf };
+    }
+
+    await notion.pages.update({
+      page_id: page.id,
+      properties: {
+        "Status": { select: { name: "generating-review" } },
+      } as Parameters<typeof notion.pages.update>[0]["properties"],
+    });
+
+    return { started: true, reason: null, currentStatus: "generating-review", pageId: page.id, squad, source, weekOf };
+  },
+});
+
+// ── Tool 3: read_roadmap_rows ─────────────────────────────────────────────────
 //
 // Returns every Product Roadmap row owned by the given squad.
 // notionPageId is the citation target for roadmap-level claims.
@@ -214,7 +320,7 @@ worker.tool("read_roadmap_rows", {
   },
 });
 
-// ── Tool 3: read_prd_rows ─────────────────────────────────────────────────────
+// ── Tool 4: read_prd_rows ─────────────────────────────────────────────────────
 //
 // Returns all PRD rows for the given squad with their acceptance criteria.
 // The acceptance criteria are extracted from the page body (numbered list items
@@ -276,7 +382,7 @@ worker.tool("read_prd_rows", {
   },
 });
 
-// ── Tool 4: write_squad_summary ───────────────────────────────────────────────
+// ── Tool 5: write_squad_summary ───────────────────────────────────────────────
 //
 // Identical contract to the per-source worker's write_squad_summary, but:
 //   - source enum is "roadmap" | "prd-fact-check"

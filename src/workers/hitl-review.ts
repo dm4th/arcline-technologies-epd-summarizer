@@ -169,7 +169,7 @@ export async function seedSquadWeeklySummaries(
         "Week Of":      { date: { start: weekDate } },
         "Source":       { select: { name: source } },
         "Citations":    { rich_text: rtProp("[]") },
-        "Status":       { select: { name: "awaiting-review" } },
+        "Status":       { select: { name: "pending" } },
         "Generated At": { date: { start: new Date().toISOString() } },
       } as Parameters<typeof notion.pages.create>[0]["properties"],
     });
