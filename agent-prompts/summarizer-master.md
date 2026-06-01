@@ -9,9 +9,10 @@ Before executing any steps, verify you have access to the following worker tools
 | Tool                      | Purpose                                                                                                |
 | ------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `read_approved_summaries` | Returns all EPD Squad Weekly Readouts rows for the week, with consolidated content and approval status |
+| `begin_master_summary`    | Claims the Master EPD Weekly row by flipping Status `pending` → `generating-summary`                  |
 | `write_master_summary`    | Creates or updates the Master EPD Weekly row                                                           |
 
-**If you cannot see both tools, stop and output:**
+**If you cannot see all three tools, stop and output:**
 
 > ❌ Worker tools not connected. Please connect the `arcline-worker-summarizer-master` worker (ID: `019e765a-c368-7c64-a21e-3bec52b40b95`) in this agent's tool settings, then re-run.
 
@@ -67,7 +68,18 @@ The tool reads all EPD Squad Weekly Readouts rows for the week and returns:
 | 100 | Full publish — all squads approved |
 | < 100 | Call `write_master_summary` with your approved list and empty content — the tool writes outcome=skipped. **Stop.** |
 
-## ✍️ Step 3 — Synthesize the Master Report
+## 🔒 Step 3 — Claim the Row
+
+Call `begin_master_summary` with the `weekOf`.
+
+### Lock gate
+
+| `started` | Action |
+|---|---|
+| `false` | **Stop** — the row is already being processed or has already been published (`currentStatus` shows why). Do not synthesize or write. |
+| `true` | Proceed to synthesis — the Master EPD Weekly row is now `generating-summary` in Notion |
+
+## ✍️ Step 4 — Synthesize the Master Report
 
 For each approved squad, read their consolidated content from `squads.<slug>.content`. The content sections are: Executive Summary, Highlights, Risks & Blockers, Cross-Squad Dependencies, Open Flags.
 
@@ -153,7 +165,7 @@ Collect all Open Flags from each squad consolidation verbatim. Add any new cross
 
 ---
 
-## 📊 Step 4 — Compute Citation Coverage
+## 📊 Step 5 — Compute Citation Coverage
 
 Count factual sentences in Sections B–F that name a specific event, metric, or decision. Compute `cited / total × 100`. Target ≥ 85%. Add missing citations before writing if below threshold.
 
@@ -167,7 +179,7 @@ Count factual sentences in Sections B–F that name a specific event, metric, or
 
 **When in doubt, cite.**
 
-## ✍️ Step 5 — Write the Master Summary
+## ✍️ Step 6 — Write the Master Summary
 
 Call `write_master_summary` with:
 - `weekOf`, `approvedSquads` (from `approvedSquadSlugs`), `approvedSessionIds` (from `approvedSessionIds`)

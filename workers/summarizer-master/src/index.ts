@@ -79,6 +79,11 @@ function weekOfToDate(weekOf: string): string {
 
 // ── Tool 1: read_approved_summaries ───────────────────────────────────────────
 //
+// Returns all HITL Review Sessions rows for the week. The agent uses this to
+// check quorum (Squad Approval Rate rollup) and load squad narratives.
+
+
+//
 // Returns all Squad Weekly Summary rows for the given week, grouped by squad.
 // A squad is "fully approved" when every one of its 6 source rows has Status=approved.
 // The agent uses this to determine quorum and to gather synthesis material.
@@ -186,7 +191,78 @@ worker.tool("read_approved_summaries", {
   },
 });
 
-// ── Tool 2: write_master_summary ──────────────────────────────────────────────
+// ── Tool 2: begin_master_summary ──────────────────────────────────────────────
+//
+// Called after quorum is confirmed, before composing the master narrative.
+// Flips the Master EPD Weekly row Status from "pending" → "generating-summary"
+// so the row shows live status in Notion while the agent reasons.
+//
+// Returns { started: true }  — row claimed; proceed to synthesis.
+// Returns { started: false } — row is already generating or published; stop.
+//
+// This is the write-side lock against concurrent master agent triggers:
+// only the first agent to flip "pending" → "generating-summary" proceeds.
+
+worker.tool("begin_master_summary", {
+  title: "Begin Master Summary",
+  description:
+    "Mark the Master EPD Weekly row as 'generating-summary' before composing the master narrative. " +
+    "Call this immediately after read_approved_summaries confirms quorumMet=true, " +
+    "before synthesizing any content. " +
+    "If started=false the row is already being processed or has already been published — stop immediately.",
+  schema: j.object({
+    weekOf: j.string().describe("Week identifier, e.g. 2026-W21"),
+  }),
+  execute: async ({ weekOf }, { notion }) => {
+    const weekDate = weekOfToDate(weekOf);
+
+    const masterRow = await notion.databases.query({
+      database_id: MASTER_EPD_WEEKLY_DB,
+      filter: { property: "Week Of", date: { equals: weekDate } },
+      page_size: 5,
+    });
+
+    if (masterRow.results.length === 0) {
+      return {
+        started: false, reason: "row not found",
+        currentStatus: null, masterPageId: null, weekOf,
+      };
+    }
+
+    const page = masterRow.results[0];
+    if (!isFullPage(page)) {
+      return {
+        started: false, reason: "row not full page",
+        currentStatus: null, masterPageId: null, weekOf,
+      };
+    }
+
+    const currentStatus = selectName((page.properties as Record<string, unknown>)["Status"]);
+
+    // Only flip from "pending" — any other status means another run has claimed
+    // the row (generating-summary) or already published it (awaiting-VP, published).
+    if (currentStatus !== "pending") {
+      return {
+        started: false, reason: "already-claimed-or-published",
+        currentStatus, masterPageId: null, weekOf,
+      };
+    }
+
+    await notion.pages.update({
+      page_id: page.id,
+      properties: {
+        "Status": { select: { name: "generating-summary" } },
+      } as Parameters<typeof notion.pages.update>[0]["properties"],
+    });
+
+    return {
+      started: true, reason: null,
+      currentStatus: "generating-summary", masterPageId: page.id, weekOf,
+    };
+  },
+});
+
+// ── Tool 3: write_master_summary ──────────────────────────────────────────────
 //
 // Creates or updates the Master EPD Weekly row for the given week.
 //
@@ -235,8 +311,10 @@ worker.tool("write_master_summary", {
     citationCoveragePct: j
       .number()
       .describe(
-        "Percentage of factual sentences in the body that have a citation entry " +
-        "(computed by agent as cited_sentences / total_factual_sentences × 100). AC2 requires ≥85.",
+        "Fraction of factual sentences in the body that have a citation entry " +
+        "(computed by agent as cited_sentences / total_factual_sentences × 100, expressed as a " +
+        "0–100 percentage). The worker divides by 100 before writing to Notion so the property " +
+        "stores a decimal (e.g. 0.85 not 85). AC2 requires ≥85.",
       ),
     citations: j
       .array(
@@ -347,7 +425,7 @@ worker.tool("write_master_summary", {
       "Title":                 { title: rt(`EPD Weekly — ${weekOf}`) },
       "Week Of":               { date: { start: weekDate } },
       "Quorum Met":            { checkbox: (squadApprovalRate ?? 0) >= 99.9 },
-      "Citation Coverage %":   { number: Math.round(citationCoveragePct * 10) / 10 },
+      "Citation Coverage %":   { number: citationCoveragePct / 100 },
       "Squad Consolidations":  { relation: (approvedSessionIds as string[]).map((id) => ({ id })) },
       "Status":                { select: { name: "awaiting-VP" } },
     } as Parameters<typeof notion.pages.create>[0]["properties"];
