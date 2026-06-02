@@ -6,29 +6,27 @@ You produce the **Master EPD Weekly** report — the single artifact a VP reads 
 
 Before executing any steps, verify you have access to the following worker tools:
 
-| Tool                      | Purpose                                                                                                |
-| ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `read_approved_summaries` | Returns all EPD Squad Weekly Readouts rows for the week, with consolidated content and approval status |
-| `begin_master_summary`    | Claims the Master EPD Weekly row by flipping Status `pending` → `generating-summary`                  |
-| `write_master_summary`    | Creates or updates the Master EPD Weekly row                                                           |
+| Tool                       | Purpose                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `read_prior_week_feedback` | Fetches VP comments from the previous week's Master EPD Weekly page                                   |
+| `read_approved_summaries`  | Returns all EPD Squad Weekly Readouts rows for the week, with consolidated content and approval status |
+| `begin_master_summary`     | Claims the Master EPD Weekly row by flipping Status `pending` → `generating-summary`                  |
+| `write_master_summary`     | Creates or updates the Master EPD Weekly row                                                           |
 
-**If you cannot see all three tools, stop and output:**
+**If you cannot see all four tools, stop and output:**
 
 > ❌ Worker tools not connected. Please connect the `arcline-worker-summarizer-master` worker (ID: `019e765a-c368-7c64-a21e-3bec52b40b95`) in this agent's tool settings, then re-run.
 
 # 📌 Prior Week VP Feedback
 
-Before executing any steps, retrieve **comments** on the previous week's Master EPD Weekly page.
+**Before executing any other steps**, call `read_prior_week_feedback` with the current `weekOf`. The tool derives the prior week automatically and fetches any VP comments left on that page.
 
-Use the Notion Comments API (`GET /v1/comments?block_id={prevWeekPageId}`) or the equivalent `read_comments` tool with the prior week's master page ID. To find the prior week's page, query the Master EPD Weekly database filtered to the week before the current triggering week.
+| `hasFeedback` | Action |
+|---|---|
+| `false` | Pass `vpFeedbackFollowUp: ""` to `write_master_summary`. Do not mention the absence of feedback. |
+| `true` | Compose a `vpFeedbackFollowUp` paragraph: quote the VP comment verbatim, then state whether this week's data **resolves**, **worsens**, or is **neutral** to their concern. Cite the specific `notionPageId`(s) from the squad consolidations that support your conclusion. |
 
-**If comments exist:**
-1. Include a **"VP Feedback Follow-up"** section in your report (after the Executive Summary).
-2. Quote the VP's concern verbatim.
-3. State whether this week's data **resolves**, **worsens**, or is **neutral** to that concern.
-4. Cite the specific Mirror DB source records (by `notionPageId`) that support your conclusion.
-
-**If no prior week page exists or no comments are found**, omit this section entirely — do not mention its absence.
+The `vpFeedbackFollowUp` section is inserted in the page body immediately after the Executive Summary, before Highlights. If `vpFeedbackFollowUp` is empty the section is omitted entirely.
 
 # ⚙️ Operational Steps
 
@@ -183,6 +181,7 @@ Count factual sentences in Sections B–F that name a specific event, metric, or
 
 Call `write_master_summary` with:
 - `weekOf`, `approvedSquads` (from `approvedSquadSlugs`), `approvedSessionIds` (from `approvedSessionIds`)
+- `vpFeedbackFollowUp` — composed in the Prior Week VP Feedback step above (empty string if none)
 - All six sections and the conflict policy
 - `citationCoveragePct` and `citations`
 

@@ -77,16 +77,80 @@ function weekOfToDate(weekOf: string): string {
   return monday.toISOString().split("T")[0];
 }
 
-// ── Tool 1: read_approved_summaries ───────────────────────────────────────────
+// ── Tool 1: read_prior_week_feedback ─────────────────────────────────────────
 //
-// Returns all HITL Review Sessions rows for the week. The agent uses this to
-// check quorum (Squad Approval Rate rollup) and load squad narratives.
-
-
+// Fetches VP comments from the previous week's Master EPD Weekly page.
+// Call this first — before reading squad summaries — so the agent has context
+// on any concerns the VP raised last week and can address them in the new report.
 //
-// Returns all Squad Weekly Summary rows for the given week, grouped by squad.
-// A squad is "fully approved" when every one of its 6 source rows has Status=approved.
-// The agent uses this to determine quorum and to gather synthesis material.
+// Returns { hasFeedback, comments[], priorWeekOf, priorPageId }.
+// If hasFeedback=false, the agent skips the VP Feedback Follow-up section.
+
+worker.tool("read_prior_week_feedback", {
+  title: "Read Prior Week VP Feedback",
+  description:
+    "Fetch any VP comments left on the previous week's Master EPD Weekly page. " +
+    "Call this before read_approved_summaries. " +
+    "If hasFeedback=false, pass an empty string for vpFeedbackFollowUp when calling write_master_summary. " +
+    "If hasFeedback=true, compose a follow-up paragraph that quotes the VP verbatim and states " +
+    "whether this week's data resolves, worsens, or is neutral to their concern.",
+  hints: { readOnlyHint: true },
+  schema: j.object({
+    weekOf: j
+      .string()
+      .describe("Current week identifier, e.g. 2026-W21 — the tool derives the prior week automatically"),
+  }),
+  execute: async ({ weekOf }, { notion }) => {
+    // Derive the prior week's Monday date by subtracting 7 days
+    const currentMonday = weekOfToDate(weekOf);
+    const priorDate     = new Date(currentMonday);
+    priorDate.setUTCDate(priorDate.getUTCDate() - 7);
+    const priorMonday   = priorDate.toISOString().split("T")[0];
+
+    // Compute a human-readable prior weekOf label (e.g. "2026-W20")
+    const priorYear   = priorDate.getUTCFullYear();
+    const jan4        = new Date(Date.UTC(priorYear, 0, 4));
+    const dow         = jan4.getUTCDay() || 7;
+    const week1Mon    = new Date(jan4);
+    week1Mon.setUTCDate(jan4.getUTCDate() - (dow - 1));
+    const diffDays    = Math.round((priorDate.getTime() - week1Mon.getTime()) / 86400000);
+    const priorWeekOf = `${priorYear}-W${String(Math.floor(diffDays / 7) + 1).padStart(2, "0")}`;
+
+    // Look up the prior week's Master EPD Weekly row
+    const masterRow = await notion.databases.query({
+      database_id: MASTER_EPD_WEEKLY_DB,
+      filter: { property: "Week Of", date: { equals: priorMonday } },
+      page_size: 5,
+    });
+
+    if (masterRow.results.length === 0) {
+      return { priorWeekOf, priorPageId: null, hasFeedback: false, comments: [] as Array<{ text: string; createdAt: string }> };
+    }
+
+    const priorPageId = masterRow.results[0].id;
+
+    // Fetch all comments on that page
+    const commentsResp = await notion.comments.list({ block_id: priorPageId });
+
+    const comments = (commentsResp.results as Array<Record<string, unknown>>).map((c) => ({
+      text: (c.rich_text as Array<{ plain_text: string }>).map((t) => t.plain_text).join(""),
+      createdAt: c.created_time as string,
+    })).filter((c) => c.text.trim().length > 0);
+
+    return {
+      priorWeekOf,
+      priorPageId,
+      hasFeedback: comments.length > 0,
+      comments,
+    };
+  },
+});
+
+// ── Tool 2: read_approved_summaries ───────────────────────────────────────────
+//
+// Returns all HITL Review Sessions rows for the week, grouped by squad.
+// The agent uses this to check quorum (Squad Approval Rate rollup) and load
+// squad narratives for synthesis.
 
 worker.tool("read_approved_summaries", {
   title: "Read Approved Summaries",
@@ -191,7 +255,7 @@ worker.tool("read_approved_summaries", {
   },
 });
 
-// ── Tool 2: begin_master_summary ──────────────────────────────────────────────
+// ── Tool 3: begin_master_summary ──────────────────────────────────────────────
 //
 // Called after quorum is confirmed, before composing the master narrative.
 // Flips the Master EPD Weekly row Status from "pending" → "generating-summary"
@@ -262,7 +326,7 @@ worker.tool("begin_master_summary", {
   },
 });
 
-// ── Tool 3: write_master_summary ──────────────────────────────────────────────
+// ── Tool 4: write_master_summary ──────────────────────────────────────────────
 //
 // Creates or updates the Master EPD Weekly row for the given week.
 //
@@ -272,13 +336,14 @@ worker.tool("begin_master_summary", {
 // (Decision 2026-05-30: full-approval quorum — no 2/3 provisional fallback. See PRD-05 §Quorum.)
 //
 // The body is structured as:
-//   [callout] Executive Summary
+//   [callout]  Executive Summary
+//   ## VP Feedback Follow-up   ← only present if prior-week VP comment found
 //   ## Highlights
 //   ## Risks & Blockers
 //   ## Cross-Squad Dependencies
 //   ## Roadmap Movement
 //   ## Open Discrepancies
-//   [callout] Conflict-Resolution Policy (editable)
+//   [callout]  Conflict-Resolution Policy (editable)
 
 worker.tool("write_master_summary", {
   title: "Write Master Summary",
@@ -301,6 +366,14 @@ worker.tool("write_master_summary", {
     crossSquadDeps:    j.string().describe("Markdown — explicit dependencies between squads this week"),
     roadmapMovement:   j.string().describe("Markdown — initiative progress vs. plan; at-risk initiatives"),
     openDiscrepancies: j.string().describe("Markdown — planted tensions and data-source conflicts surfaced"),
+    vpFeedbackFollowUp: j
+      .string()
+      .describe(
+        "Composed VP Feedback Follow-up section. " +
+        "Pass empty string if read_prior_week_feedback returned hasFeedback=false — the section will be omitted. " +
+        "Otherwise: quote the VP comment verbatim, state whether this week's data resolves / worsens / is neutral " +
+        "to their concern, and cite the specific notionPageId(s) that support your conclusion.",
+      ),
     conflictPolicy:    j
       .string()
       .describe(
@@ -333,7 +406,7 @@ worker.tool("write_master_summary", {
     {
       weekOf, approvedSquads, approvedSessionIds, executiveSummary, highlights,
       risksBlockers, crossSquadDeps, roadmapMovement,
-      openDiscrepancies, conflictPolicy, citationCoveragePct, citations,
+      openDiscrepancies, vpFeedbackFollowUp, conflictPolicy, citationCoveragePct, citations,
     },
     { notion },
   ) => {
@@ -468,6 +541,13 @@ worker.tool("write_master_summary", {
         },
       },
       { type: "divider", divider: {} },
+
+      // VP Feedback Follow-up — only present when prior-week VP comments found
+      ...(vpFeedbackFollowUp.trim() ? [
+        { type: "heading_2" as const, heading_2: { rich_text: rt("VP Feedback Follow-up") } },
+        { type: "paragraph"  as const, paragraph:  { rich_text: rt(vpFeedbackFollowUp) } },
+        { type: "divider"    as const, divider: {} },
+      ] : []),
 
       { type: "heading_2", heading_2: { rich_text: rt("Highlights") } },
       { type: "paragraph",  paragraph:  { rich_text: rt(highlights) } },
