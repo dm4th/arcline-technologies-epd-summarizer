@@ -1,0 +1,128 @@
+{
+  "week": "2026-W21",
+  "generatedAt": "2026-05-31T00:03:35.116Z",
+  "judgeModel": "claude-haiku-4-5-20251001",
+  "masterPageId": "36efc8f4-554c-80c2-96d3-f8ac0e7b7c10",
+  "masterBody": "Atlas stabilized billing (EU latency incident contained; rate limiting + v2 token migration) while Lumen shipped auth tokens v2 and major UI foundation wins (design tokens, WCAG fixes, virtualization perf). Forge shipped iOS stability + UX features but is now blocked by a high-stakes navigation-direction pivot that is also stalling offline-mode UX/implementation. Immediate leadership action: finalize the navigation decision (tab bar vs gesture) and unblock LaunchDarkly flag configuration so premium-tier gates can ship; both items are gating downstream delivery and creating rework risk.\n\n## Highlights\n\n- **[Atlas]** Investigated the EU billing latency spike; documented root cause and returned latency to within SLA (ATLS-58).\n- **[Atlas]** Added tenant rate limiting to billing API endpoints (1000 req/min) with 429 + Retry-After semantics (ATLS-38).\n- **[Atlas]** Migrated premium-tier token acquisition to `/api/auth/tokens/v2` and removed v1 calls (ATLS-55).\n- **[Lumen]** Improved data grid virtualization performance (P99 scroll jank 180ms → 22ms) (LMNE-20).\n- **[Lumen]** Released `/api/auth/tokens/v2` with `tenantId` + `scopes` and set a June 15 sunset for v1 (LMNE-22).\n- **[Lumen]** Fixed WCAG AA form-input issues (aria labels, focus rings), resolving 9 axe violations (LMNE-17).\n- **[Forge]** Fixed an iOS 16 rotation crash in the task view (GitHub PR #25 / FORGE-28).\n- **[Forge]** Shipped the small iOS home screen widget showing today’s task count + next due item (FORGE-31).\n- **[Forge]** Implemented the 4-tab tab bar navigation structure per sprint planning (GitHub PR #22 / FORGE-30).\n\n## Risks & Blockers\n\n- **[BLOCK] Forge** Navigation architecture pivot risk — exec UX review is pushing tab bar → gesture navigation despite tab-bar work already merged/TestFlight; decision needs to be finalized to avoid rework and unblock offline-mode UX (FORGE).\n- **[BLOCK] Atlas** Premium-tier entitlement gating blocked on LaunchDarkly configuration from DevOps; code readiness may not translate to prod readiness until flags are configured (ATLS).\n- **[BLOCK] Lumen** Intermittent auth-service 503s are breaking CI and blocking Playwright e2e coverage work; needs reliability triage + a runbook before e2e can land (LMNE-25).\n- **[HIGH] Atlas** Status tracking inconsistency risk — CQRS refactor and other items discussed as “merged” while Jira still shows In Progress/stale; requires reconciliation to avoid rollout confusion.\n- **[HIGH] Lumen** Focus token updated in Figma but not yet exported; risk of shipping incorrect focus color and failing AA contrast in dark mode unless token export is completed and re-verified.\n- **[WATCH] Forge** Offline-mode schedule risk remains tied to navigation finalization; timebox decision and confirm offline UX placement to prevent schedule slip.\n\n## Cross-Squad Dependencies\n\n- **[Atlas → Lumen]** `/api/auth/tokens/v2` rollout hardening and rollback planning ahead of the June 15 v1 sunset.\n- **[Atlas → DevOps]** LaunchDarkly configuration for premium-tier flags to unblock entitlement gating in production.\n- **[Lumen ↔ Forge]** Align on navigation direction (gesture vs tab bar) so design specs and implementation converge and offline-mode UX can proceed.\n\n## Roadmap Movement\n\n- **[Atlas — Billing reliability & premium tier enablement]** **On Track (with ops dependency)** — core API hardening landed (rate limiting, v2 token migration), but premium-tier gating is blocked on LaunchDarkly configuration.\n- **[Lumen — Auth tokens v2 + UI foundations]** **On Track (with infra risk)** — tokens v2 shipped with v1 sunset plan and major UI/accessibility/perf wins; auth-service reliability issues are currently blocking e2e coverage work.\n- **[Forge — FieldKit Offline Sync]** **At Risk** — stability/UX shipped, but offline-mode progress is gated by an unresolved navigation-direction decision and related UX placement uncertainty.\n\n## Open Discrepancies\n\n- **[STATUS CONFLICT] Atlas** BillingService CQRS refactor status is being discussed as merged in Slack while Jira appears stale/In Progress; reconcile Jira to avoid release/rollout confusion.\n  Evidence A: \"Slack discussed it as merged\" (Slack signal).\n  Evidence B: \"Jira still showed In Progress/stale\" (Jira signal).\n  Conflict-resolution ruling: **Jira wins** for status; update Jira or provide the definitive ticket/commit mapping.\n- **[DIRECTION CONFLICT] Lumen ↔ Forge** Gesture navigation direction is inconsistent across squads: Lumen indicates a revert based on user testing while Forge is dealing with an exec-driven pivot away from tab bar toward gesture navigation.\n  Evidence A: \"Lumen is reverting based on user testing\".\n  Evidence B: \"Design is pivoting tab bar → gesture navigation after exec UX review\".\n  Conflict-resolution ruling: **Figma wins** for latest design decision once a dated decision record is captured; until then, treat as unresolved and escalate for explicit sign-off.\n\nConflict-Resolution Policy (Editable — see SE for changes)\n\n- Status of work (done vs in-progress): **Jira wins** — it is the PM system of record.\n- What the code actually does: **GitHub wins** — code is authoritative over descriptions.\n- Design decisions: **Figma wins** — latest dated version wins.\n- Slack-only claims: **Flag only** — never treat as authoritative; surface in Open Discrepancies.\n\nGenerated by summarizer.master · Week 2026-W21 · Squads approved: atlas, lumen, forge · Citation coverage: 100% · 24 citations",
+  "citationCoverage": {
+    "score": 1,
+    "totalFactualSentences": 17,
+    "citedSentences": 17,
+    "uncitedSentences": []
+  },
+  "sourceFactAlignment": {
+    "score": 0.7083333333333334,
+    "sampledCount": 12,
+    "totalCitations": 175,
+    "verdicts": [
+      {
+        "claim": "PR #56 (atlas-pr-056) updated the billing REST API reference docs with request/response examples for the v2 refactor.",
+        "recordId": "36ffc8f4-554c-81e3-82ad-e9730c448b21",
+        "verdict": "support",
+        "reason": "The source document explicitly confirms that PR #56 updated billing docs following the v2 API refactor and added request/response examples for all billing endpoints, which directly matches all key elements of the claim.",
+        "score": 1
+      },
+      {
+        "claim": "ATLS-47: Fixing Stripe webhook HMAC timestamp validation; remaining work is to address review feedback and merge after regression tests are finalized.",
+        "recordId": "36ffc8f4-554c-81c2-a4be-d9ff1098e698",
+        "verdict": "partial",
+        "reason": "The source confirms ATLS-47 is about fixing Stripe webhook HMAC timestamp validation and that regression tests are part of acceptance criteria, but does not explicitly state that remaining work involves addressing review feedback or that tests need finalization—it only shows the ticket is \"In Review\" status.",
+        "score": 0.5
+      },
+      {
+        "claim": "Alex Kumar created ATLS-58 to track a post-mortem for the EU billing latency incident.",
+        "recordId": "36ffc8f4-554c-81d4-8b0e-c4c81e81c8af",
+        "verdict": "support",
+        "reason": "Alex Kumar explicitly states in the message \"Created ATLS-58 to track post-mortem\" in response to identifying the EU replica lag issue that caused the billing latency incident.",
+        "score": 1
+      },
+      {
+        "claim": "Unified Auth SSO has rollout risk: Atlas reported needing coordination with Lumen on rollback planning for `/api/auth/tokens/v2`, which suggests cross-squad dependencies that could slow production hardening.",
+        "recordId": "36efc8f4-554c-8119-8b3e-fbcea63a20b2",
+        "verdict": "unrelated",
+        "reason": "The source document describes a WebSocket infrastructure project (\"Real-time Notifications V2\") with no mention of authentication, SSO, Atlas, Lumen, rollback planning, or the `/api/auth/tokens/v2` endpoint.",
+        "score": 0
+      },
+      {
+        "claim": "PR #34 (lumen-pr-034) refactored the component library to use Figma-synced design tokens to support dark mode and brand refresh (LMNE-21).",
+        "recordId": "36ffc8f4-554c-817d-847d-f76ec34c32f4",
+        "verdict": "support",
+        "reason": "The source document confirms all key elements: PR #34 explicitly migrated to \"Figma-synced design tokens,\" this was \"required for dark mode and brand refresh consistency,\" and it references the linked Jira ticket LMNE-21.",
+        "score": 1
+      },
+      {
+        "claim": "LMNE-26: Reverting the gesture navigation experiment; remaining work is to fully remove gesture nav code and restore tab bar navigation without routing test regressions.",
+        "recordId": "36ffc8f4-554c-81ae-9e85-eedca9242ed2",
+        "verdict": "support",
+        "reason": "The source document directly confirms all key elements of the claim—the ticket LMNE-26 is about reverting gesture navigation, and its acceptance criteria explicitly state that gesture nav code must be removed, tab bar navigation restored, and no regressions in routing tests are required.",
+        "score": 1
+      },
+      {
+        "claim": "The sprint summary noted LMNE-25 was blocked by an auth-service OOM incident and no Jira ticket was filed for that incident.",
+        "recordId": "36ffc8f4-554c-8180-89b8-fea039093594",
+        "verdict": "support",
+        "reason": "The source document explicitly states in priya-nair's message that \"LMNE-25 was blocked by auth service OOM (Slack thread from Wednesday) — no Jira ticket was filed for that incident despite the ask,\" which directly confirms both elements of the claim.",
+        "score": 1
+      },
+      {
+        "claim": "Real-time Notifications V2 (Q3 2026) is at risk due to lack of clear WebSocket/notifications-specific progress this week, while the team’s attention appears focused on auth-token v2 rollout and UI foundation work.",
+        "recordId": "36efc8f4-554c-8119-8b3e-fbcea63a20b2",
+        "verdict": "partial",
+        "reason": "The source document confirms \"Real-time Notifications V2\" exists with a Q3 2026 target and mentions \"WebSocket infra lift required,\" but contains no information about current progress, risk status, team focus areas, auth-token v2 rollout, or UI foundation work needed to verify the full claim.",
+        "score": 0.5
+      },
+      {
+        "claim": "PR #20 (forge-pr-020) added haptic feedback to card swipe gestures (FORGE-33).",
+        "recordId": "36ffc8f4-554c-8132-9747-fa04c2f34ef0",
+        "verdict": "support",
+        "reason": "The source document explicitly confirms that PR #20 (forge-pr-020) added haptic feedback (UIImpactFeedbackGenerator) to card swipe gestures and is linked to FORGE-33, matching all elements of the claim.",
+        "score": 1
+      },
+      {
+        "claim": "FORGE-35: Updating the Figma token sync script for the v2 component library; remaining work is ensuring full token coverage (colors/typography/spacing) and validating sync output.",
+        "recordId": "36ffc8f4-554c-8174-b5d3-e919af54e1a1",
+        "verdict": "partial",
+        "reason": "The source confirms the task is about updating the Figma token sync script for v2 component library and mentions colors/typography/spacing in acceptance criteria, but does not explicitly state that \"remaining work\" includes ensuring full token coverage or validating sync output—it only describes what the acceptance criteria require, not what work remains.",
+        "score": 0.5
+      },
+      {
+        "claim": "Mei Tanaka flagged that the tab bar had been agreed in sprint planning and documented in the squad PRD, but the gesture-nav change was being raised in Figma.",
+        "recordId": "36ffc8f4-554c-81b7-94e4-e4ee7d786b6a",
+        "verdict": "partial",
+        "reason": "The source confirms the tab bar was agreed in sprint planning and is in the squad PRD (via Carlos's statement), and that the gesture-nav change was raised in Figma (via Mei's statement), but it was Carlos—not Mei—who explicitly stated the sprint planning and PRD details, while Mei only flagged the Figma comment without herself mentioning the sprint planning/PRD documentation.",
+        "score": 0.5
+      },
+      {
+        "claim": "Navigation architecture work (tab bar implementation, gesture-nav proposal/spike, and related deep-link routing dependency) is prominent this week but does not clearly map to the Mobile Offline Mode roadmap initiative, suggesting off-plan scope or an untracked roadmap item.",
+        "recordId": "36ffc8f4-554c-81cd-bbf2-f35d00861ea4",
+        "verdict": "partial",
+        "reason": "The source documents multiple navigation-related work items (FORGE-30 tab bar, FORGE-34 gesture-nav spike, FORGE-36 deep-link routing) that are indeed prominent this week, and FORGE-38 indicates unresolved design decisions, but the source does not explicitly address whether this work maps to or deviates from a \"Mobile Offline Mode roadmap initiative,\" so the connection to off-plan scope cannot be confirmed.",
+        "score": 0.5
+      }
+    ]
+  },
+  "backtestDelta": {
+    "score": 0.62,
+    "missingFacts": [
+      "Tension 1 (Atlas ATLS-42 status drift): The AI report mentions \"Status tracking inconsistency risk\" and \"CQRS refactor and other items discussed as 'merged' while Jira still shows In Progress/stale\" but does NOT explicitly call out the specific GitHub PR #51 / ATLS-42 mismatch that is the concrete blocking issue. The ground truth flags this as requiring immediate reconciliation; the AI buries it as a generic \"HIGH\" risk without the actionable detail.",
+      "Tension 2 (Lumen incident process gap): The AI mentions \"Intermittent auth-service 503s are breaking CI and blocking Playwright e2e coverage work\" but FAILS to surface the critical process violation: that the incident was resolved entirely via Slack with NO Jira ticket filed despite an explicit request, and the belated LMNE-28 ticket remains unscheduled. The ground truth explicitly flags this as a \"PROCESS GAP\" requiring a team norm change; the AI treats it only as an operational blocker, missing the governance dimension.",
+      "Tension 3 (Forge navigation decision required): The AI mentions \"Navigation architecture pivot risk\" and notes the tab bar is \"already merged/TestFlight\" but does NOT explicitly state that the Figma comment from the design lead REVERSES a prior sprint-planning agreement. The ground truth frames this as a design-engineering alignment failure requiring a 48-hour sync; the AI frames it only as an exec UX review concern.",
+      "Tension 4 (LaunchDarkly blocking premium-tier): The AI correctly identifies this blocker but does NOT explicitly note that this is a DevOps dependency (not an engineering blocker) and that \"code readiness may not translate to prod readiness.\" The ground truth frames this as requiring VP escalation; the AI lists it without that escalation framing.",
+      "Tension 5 (Positive coordination story): The AI does NOT surface the explicit positive coordination highlight: \"Lumen auth token v2 migration completed — Atlas was a dependent consumer of Lumen's new endpoint and migrated in the same week it shipped. Notably smooth cross-team coordination.\" This is called out in the ground truth as a \"should surface\" for high-quality signal and is mentioned only obliquely in the AI report.",
+      "Sprint velocity / ticket counts: The ground truth explicitly lists closed tickets by team (Atlas 7, Lumen 6, Forge implicitly 3+). The AI does not provide sprint completion rates or velocity metrics, which the ground truth identifies as \"should surface.\"",
+      "Lumen design token migration (LMNE-21): The AI does not mention this significant UI foundation win (38 files changed, zero hardcoded hex values, enables dark mode). Ground truth lists it as a highlight; AI omits it.",
+      "Atlas legacy /billing/v1 endpoint removal (ATLS-29): The AI does not mention the clean deprecation with Datadog trace analysis confirming zero callers. Ground truth highlights this as a quality deprecation pattern; AI omits it.",
+      "Forge iOS 16 rotation crash fix (FORGE-28): The AI lists this but as a \"Highlight\"; the ground truth includes it but does not elevate it as a major finding. Minor omission of context.",
+      "Forge gesture nav experiment revert (LMNE-26): The AI does not mention the user testing data (67% preference for tab bar) that should inform the navigation decision. This is relevant to Tension 3 and should be part of the decision brief.",
+      "Post-mortem recommendation for ATLS-58: The ground truth explicitly recommends a post-mortem for the EU billing latency incident. The AI does not surface this follow-up action."
+    ],
+    "t2Surfaced": false
+  },
+  "trustScore": 0.8073333333333333,
+  "trustScoreBreakdown": {
+    "coverageContrib": 0.4,
+    "alignmentContrib": 0.2833333333333334,
+    "backtestContrib": 0.124
+  },
+  "weakness": "**Tension 2 not surfaced (known gap):** The Lumen auth service blocker (24+ hour OOM, resolved via Slack, no Jira ticket filed) did NOT appear in the master's Open Discrepancies. Root cause: the prd-fact-check agent does not flag Slack-only blockers with no corresponding ticket. Fix path: add explicit heuristic — if Slack thread mentions a delivery blocker not linked to any Jira ticket, surface as [PROCESS-GAP]. Measure first (this harness), then patch the prompt.\n\n**Alignment failures:** \"Unified Auth SSO has rollout risk: Atlas reported needing coordination…\" → unrelated\n\n**Missing from master vs ground truth:** Tension 1 (Atlas ATLS-42 status drift): The AI report mentions \"Status tracking inconsistency risk\" and \"CQRS refactor and other items discussed as 'merged' while Jira still shows In Progress/stale\" but does NOT explicitly call out the specific GitHub PR #51 / ATLS-42 mismatch that is the concrete blocking issue. The ground truth flags this as requiring immediate reconciliation; the AI buries it as a generic \"HIGH\" risk without the actionable detail.; Tension 2 (Lumen incident process gap): The AI mentions \"Intermittent auth-service 503s are breaking CI and blocking Playwright e2e coverage work\" but FAILS to surface the critical process violation: that the incident was resolved entirely via Slack with NO Jira ticket filed despite an explicit request, and the belated LMNE-28 ticket remains unscheduled. The ground truth explicitly flags this as a \"PROCESS GAP\" requiring a team norm change; the AI treats it only as an operational blocker, missing the governance dimension.; Tension 3 (Forge navigation decision required): The AI mentions \"Navigation architecture pivot risk\" and notes the tab bar is \"already merged/TestFlight\" but does NOT explicitly state that the Figma comment from the design lead REVERSES a prior sprint-planning agreement. The ground truth frames this as a design-engineering alignment failure requiring a 48-hour sync; the AI frames it only as an exec UX review concern."
+}

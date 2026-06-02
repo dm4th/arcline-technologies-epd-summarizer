@@ -31,9 +31,9 @@ pnpm-debug.log*
 # Local Claude state (project-level settings can be committed; local overrides should not)
 .claude/settings.local.json
 
-# Eval outputs (large, regeneratable)
-evals/reports/*.json
-evals/reports/*.md
+# Eval outputs — committed so GitHub links in submission.html resolve
+# evals/reports/*.json
+# evals/reports/*.md
 
 # Generated submission artifact (regeneratable from build script)
 submission.html
