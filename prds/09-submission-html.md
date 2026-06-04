@@ -1,10 +1,10 @@
 # PRD-09 — Submission HTML
 
 <!-- status:
-state: in-progress
+state: in-review
 owner: sonnet-2026-05-30-E1
-updated: 2026-05-30T15:00:00Z
-notes: Claimed for Wave E submission HTML build.
+updated: 2026-06-02T22:00:00Z
+notes: AC1-11 ✅ — 364KB self-contained HTML, 18 sections, 7 Loom embeds, base64 Lucid diagram, inline master report + citations, all external links verified live. AC12 ⚠ no build-script (hand-authored, gitignored — submit file directly). Eval JSON dead link fixed (commit 326a3b2).
 -->
 
 ## Goal
@@ -129,3 +129,46 @@ The HTML is the **resume artifact**. The Notion workspace is the **customer arti
 - **Print test**: print to PDF. Confirm clean output across pages.
 - **Phone test**: open on a phone (or DevTools 375px). Confirm typography and architecture diagram remain legible.
 - **Cold-reader test**: give the file to someone unfamiliar with the project and ask "what does this person propose to build, and why should I trust it works?" — they should be able to answer both without follow-up questions.
+
+## Implementation Notes
+
+> Written post-build. Read this section before building any PRD that depends on this one.
+
+### What was actually built
+
+- **`submission.html`** (364 KB, gitignored at line 39 of `.gitignore`): Single self-contained HTML file with inline CSS and minimal vanilla JS. 18 sections, fully readable from `file://` with no network dependency. Submit this file directly — there is no build script that regenerates it (see Gotcha 1). All Notion workspace content (Master Report, Trust Score, HITL mock, citations, appendix summary) is reproduced inline as styled HTML; no screenshots are used.
+
+- **Architecture diagram** (§03): The PRD specified an inline SVG diagram. What shipped instead is a **two-panel sticky layout** — a fixed 52px HTML label column containing hand-labeled lane names, sitting beside a scrollable `<img>` tag containing the Lucid export (`solution-diagram/Notion _ Solutions Engineer Process Diagram.svg`) base64-encoded as a data URI (~264K chars of base64). The hand-crafted swimlane SVG originally written by Claude was replaced entirely at Dan's direction. A `<div style="display:flex;height:520px">` wrapper holds both panels; the image panel uses `overflow-x:auto` for horizontal scrolling.
+
+- **§03b — Other Paths Considered**: Three `.risk-card` blocks (Path 1/2/3 — Rejected) added beyond the PRD's section list, showing the three architectural alternatives considered and why each was ruled out.
+
+- **§11c — Demo Walkthrough Plan**: Six `.week-block` entries (Videos 1–6) each describing a Loom clip + a compact `video-placeholder-sm` div that was replaced with live responsive `<iframe>` Loom embeds once URLs were available. Intro video also embedded at the top `#video` section.
+
+- **`q-assumption` / `q-assumption-sm` CSS classes**: Blue callout boxes used in §02 (Five Questions) to annotate POC-scoped assumptions inline within each question's answer. Not in the PRD brief.
+
+- **Risk 3 — AI Token Cost (Low)**: The PRD called for "Top 2 Risks." Shipped as Top 3; Risk 3 covers AI token cost with a Low severity badge, cost estimate (~$1–3/week), and pointer to the existing Observability Dashboard for tracking.
+
+- **All external links verified live**: 9 Notion links (200), 2 GitHub links (200), Lucid invitation URL, 7 Loom embeds. The Eval JSON link was fixed (see Gotcha 5). `solution-intro.md` on GitHub is live.
+
+### Gotchas for downstream sessions
+
+**1. `scripts/build-submission.ts` was never built — AC12 is unmet**
+AC12 requires a TypeScript script that regenerates `submission.html` deterministically from the workspace + eval outputs. This script does not exist. The file was authored iteratively by Claude sessions making targeted `Edit` calls and Python `str.replace()` scripts directly against the HTML. `submission.html` is gitignored (`.gitignore` line 39: "Generated submission artifact (regeneratable from build script)") so it is not in version control. **Submit the file directly from the local filesystem.** Any session that looks for `scripts/build-submission.ts` will not find it.
+
+**2. Lucid SVG text is vector paths — lane labels cannot be extracted programmatically**
+The Lucid export (`solution-diagram/Notion _ Solutions Engineer Process Diagram.svg`) encodes all text as `<use>` element glyph references, not `<text>` nodes. You cannot `grep` the SVG for lane names or extract them with any standard XML parser. Dan provided all lane labels manually. The two-panel layout (HTML label column + image) is the workaround. If the diagram is re-exported from Lucid, lane labels in the HTML column must be re-verified against the new image by eye.
+
+**3. Rotated text in 52px lane divs — do not use `writing-mode` or flex centering**
+The 7 lane label `<div>`s in the HTML label column use `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(270deg)` with `overflow:hidden` on the parent. `align-items:center;justify-content:center` on a flex parent is unreliable for rotated text and was tried and abandoned. Key constraints: font-size 7px, no `text-transform:uppercase`, letter-spacing `.02em`. Two labels were abbreviated to fit within the ~70px row height ("Mirror Data Sources" → "Mirror Data", "Engineering Managers" → "Eng. Managers").
+
+**4. Python string replacement seam bug when splicing large HTML blocks**
+When replacing the hand-crafted swimlane SVG with the Lucid image block, a Python boundary calculation consumed 6 chars of the immediately following `<p class="diagram-caption">` tag, producing `</div>class="diagram-caption">`. The pattern: `content[start:end]` where `end` was computed from the old string length sometimes drifts if the new content is inserted at a slightly different offset. Fix: always use `content.replace(old_str, new_str)` with exact string matching rather than slicing by computed position. If the old string is not uniquely present, use a larger context window.
+
+**5. `evals/reports/*.json` was gitignored — caused dead nav link**
+The original `.gitignore` had `evals/reports/*.json` and `evals/reports/*.md` under the comment "large, regeneratable." The files are 19 KB and 8 KB respectively. The nav and footer both link to `https://github.com/dm4th/arcline-technologies-epd-summarizer/blob/main/evals/reports/2026-W21.json`, which was 404. Fix: commented out those two gitignore rules and committed/pushed both eval files (commit `326a3b2`). If new eval reports are generated, they will now be tracked automatically.
+
+**6. Workers count was wrong throughout the document**
+The inline SVG timeline showed "Workers ×6" and the time-budget table said "Data workers (6 parallel)." The correct count is 4 (GitHub, Jira, Slack, Figma — PRDs 03a–03d). The hero text ("Four data-source workers") was already correct. The "6" likely crept in by conflating workers with the 6 source-summarizer agent types. Fixed in the SVG text and table. If the worker count ever changes (e.g., a Roadmap or PRD data-source worker is added), update both the inline SVG `<text>` element and the table row.
+
+**7. Em-dash cleanup required 3 passes and 101 replacements**
+The initial draft used em-dashes heavily throughout. Dan requested systematic removal. Three Python `str.replace()` passes handled ~101 replacements: section labels (`—` → `·`), prose dashes (→ `,` `;` `:` or parentheses), risk badge/title separators (→ `:`). Content inside the `.master-report` mock and appendix sample was deliberately preserved — those em-dashes represent authentic AI output formatting. The `— VP Engineering` blockquote attribution was also preserved. The `<td>—</td>` null placeholder in the appendix table was preserved.

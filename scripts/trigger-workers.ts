@@ -8,12 +8,15 @@
  *   pnpm workers --source=jira --week=2026-W21
  */
 
+import { loadEnv } from "../src/lib/env";
 import { githubWorkerConfig } from "../src/workers/github";
 import { jiraWorkerConfig } from "../src/workers/jira";
 import { slackWorkerConfig } from "../src/workers/slack";
 import { figmaWorkerConfig } from "../src/workers/figma";
 import { runSourceWorker } from "../src/workers/lib/source-worker";
 import type { SourceWorkerConfig } from "../src/workers/lib/types";
+
+loadEnv();
 
 const ALL_CONFIGS: Record<string, SourceWorkerConfig> = {
   github: githubWorkerConfig,

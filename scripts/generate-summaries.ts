@@ -131,6 +131,66 @@ function selectName(prop: unknown): string {
   return s && typeof s.name === "string" ? s.name : "";
 }
 
+// ── JSON repair ───────────────────────────────────────────────────────────────
+// Claude occasionally embeds literal control characters (bare \n, \t, \r) inside
+// JSON string values instead of escaping them. This walks the raw text character
+// by character, tracking string vs. structural context, and escapes any bare
+// control characters it finds inside strings. Safe to run on well-formed JSON too.
+
+function fixJsonStrings(raw: string): string {
+  let out = "";
+  let inStr = false;
+  let escaped = false;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (escaped)        { out += ch; escaped = false; continue; }
+    if (ch === "\\" && inStr) { out += ch; escaped = true;  continue; }
+    if (ch === '"')     { inStr = !inStr; out += ch; continue; }
+    if (inStr) {
+      if      (ch === "\n") { out += "\\n";  continue; }
+      else if (ch === "\r") { out += "\\r";  continue; }
+      else if (ch === "\t") { out += "\\t";  continue; }
+    }
+    out += ch;
+  }
+  return out;
+}
+
+// Three-stage JSON parse: raw → strip preamble → fix control chars.
+// Throws only if all three stages fail, showing the actual parse error + context snippet.
+function safeParseJson<T>(text: string, context: string): T {
+  // Stage 1: straight parse
+  try { return JSON.parse(text) as T; } catch { /* fall through */ }
+
+  // Stage 2: strip any non-JSON preamble before the first `{`
+  const s = text.indexOf("{");
+  const e = text.lastIndexOf("}");
+  if (s !== -1 && e !== -1) {
+    const slice = text.slice(s, e + 1);
+    try { return JSON.parse(slice) as T; } catch { /* fall through */ }
+
+    // Stage 3: fix bare control characters inside string values, try again
+    const fixed = fixJsonStrings(slice);
+    try { return JSON.parse(fixed) as T; } catch (err3) {
+      // Report: actual error + 200-char window around the failure point
+      const msg = err3 instanceof Error ? err3.message : String(err3);
+      const posMatch = msg.match(/position (\d+)/);
+      const pos = posMatch ? parseInt(posMatch[1], 10) : 0;
+      const window = fixed.slice(Math.max(0, pos - 80), pos + 120);
+      throw new Error(
+        `Failed to parse JSON for ${context} (after all 3 repair stages).\n` +
+        `Parse error: ${msg}\n` +
+        `Context around position ${pos}:\n  ...${window}...`
+      );
+    }
+  }
+
+  throw new Error(
+    `Failed to parse JSON for ${context}: no JSON object found in response.\n` +
+    `Raw (first 400 chars): ${text.slice(0, 400)}`
+  );
+}
+
 // ── Step 1: Read mirror rows for one squad/source combo ───────────────────────
 
 async function readMirrorRows(source: SourceType, squad: SquadId): Promise<MirrorRow[]> {
@@ -225,22 +285,12 @@ async function generateSourceSummary(
 
   const response = await anthropic.messages.create({
     model:      "claude-sonnet-4-6",
-    max_tokens: 4096,
+    max_tokens: 8192,   // 8192 is the Sonnet output ceiling; Slack with 12+ rows needs it
     messages:   [{ role: "user", content: prompt }],
   });
 
   const text = (response.content[0] as { text: string }).text.trim();
-  try {
-    return JSON.parse(text) as SourceSummaryOutput;
-  } catch {
-    // Claude sometimes emits a tiny preamble — strip to first `{`
-    const start = text.indexOf("{");
-    const end   = text.lastIndexOf("}");
-    if (start !== -1 && end !== -1) {
-      return JSON.parse(text.slice(start, end + 1)) as SourceSummaryOutput;
-    }
-    throw new Error(`Failed to parse source summary JSON for ${squad}/${source}: ${text.slice(0, 200)}`);
-  }
+  return safeParseJson<SourceSummaryOutput>(text, `${squad}/${source}`);
 }
 
 // ── Step 3: Write source summary to Notion ────────────────────────────────────
@@ -422,21 +472,12 @@ async function generateConsolidation(
 
   const response = await anthropic.messages.create({
     model:      "claude-sonnet-4-6",
-    max_tokens: 4096,
+    max_tokens: 8192,   // consolidation output can be large (citations from all 4 sources)
     messages:   [{ role: "user", content: prompt }],
   });
 
   const text = (response.content[0] as { text: string }).text.trim();
-  try {
-    return JSON.parse(text) as ConsolidationOutput;
-  } catch {
-    const start = text.indexOf("{");
-    const end   = text.lastIndexOf("}");
-    if (start !== -1 && end !== -1) {
-      return JSON.parse(text.slice(start, end + 1)) as ConsolidationOutput;
-    }
-    throw new Error(`Failed to parse consolidation JSON for ${squad}: ${text.slice(0, 200)}`);
-  }
+  return safeParseJson<ConsolidationOutput>(text, `${squad}/consolidation`);
 }
 
 // ── Step 6: Write consolidation to HITL Review Session page body ──────────────
