@@ -4,8 +4,11 @@ This directory is the **work-breakdown** for the Arcline EPD Weekly Digest POC. 
 
 Background context lives in (read these first if you're new):
 - `../problem-statement.md` — Arcline's ask, frozen.
+- `../round-2-problem-statement.md` — Round 2 ask (CRO + Sales Enablement stakeholders). Drives PRDs 13–20.
 - `../solution-intro.md` — Dan's first-pass narrative, frozen. Superseded by these PRDs where they conflict.
-- `~/.claude/plans/i-am-applying-for-swirling-allen.md` — the master plan that produced this directory, including critique of `solution-intro.md`.
+- `~/.claude/plans/i-am-applying-for-swirling-allen.md` — the Round 1 master plan that produced PRDs 00–12.
+- `~/.claude/plans/we-made-it-to-encapsulated-gosling.md` — the Round 2 master plan that produced PRDs 13–20.
+- `REFERENCE-gtm-hub.md` — **read before building any GTM PRD (13–20).** Index of reusable assets from Dan's existing AI-Native GTM Hub (`~/Develop/personal-website`) — agent prompts, output types, Notion field-mapping. Borrow the domain logic; do not copy its Lambda/DynamoDB architecture.
 
 ## Locked decisions (do not relitigate without checking with Dan)
 - Build scope: all 4 data sources (GitHub, Jira, Slack, Figma).
@@ -15,6 +18,12 @@ Background context lives in (read these first if you're new):
 - HITL: per-squad consolidated review → 3 approvals/week → master.
 - Submission: single HTML, layered hook (backtest accuracy → live-trigger video → teaching workspace).
 - Eval is its own PRD (PRD-08).
+
+### Round 2 locked decisions (PRDs 13–20)
+- Agents are **native Notion Custom Agents** (Feb 2026 feature) — NOT an Agent Library DB, NOT the GTM Hub's Anthropic-SDK-on-Lambda pattern. Workers provide tools; Custom Agents provide reasoning.
+- GTM pipeline runs **daily** (vs EPD's weekly) and writes to the same Agent Run Log.
+- Each new worker adds a `package.json` script alias following the existing convention (e.g. `"gtm-daily-digest": "tsx --env-file=.env.local scripts/..."` and `"<worker>:deploy": "pnpm --filter <pkg> deploy"`). Build sessions: add the alias when you create the script.
+- PRD-19 Part B (candidate agents) is a **practice guide Dan builds himself** — the implementing session writes the guide pages, never creates the agents.
 
 ## Dependency graph
 
@@ -27,6 +36,14 @@ Background context lives in (read these first if you're new):
           ├─► 07
           ├─► 08 ───────────────► 09
           └─► 10
+
+Round 2 dependency graph:
+01 ─► 13 ─► 14 ─┬─► 15
+                ├─► 16
+                └─► 18
+13 ──────────────► 17 (also needs 04a, 05)
+13 ──────────────► 19 (can start after 13 is clear)
+15, 16, 17, 18 ─► 20
 ```
 
 ## Recommended parallel waves
@@ -38,6 +55,10 @@ Background context lives in (read these first if you're new):
 | D | 05 | submission |
 | E | 09 | submission HTML |
 | F | 11 | interview prep (post-submission) |
+| **R2-A** | **13** | **GTM schema foundation** |
+| **R2-B** | **14, 17** | **GTM data + EPD pipeline updates** |
+| **R2-C** | **15, 16, 18, 19** | **GTM workers + presentation deck** |
+| **R2-D** | **20** | **Teaching layer (requires R2-C complete)** |
 
 ## Deferred / Post-POC backlog (NOT in this submission)
 Captured so the idea isn't lost; explicitly **out of scope** for the 30-day POC submission. Do not build for the current deliverable.
@@ -75,3 +96,11 @@ States: `waiting`, `ready`, `in-progress`, `in-review`, `completed`, `blocked`. 
 | 10 | completed | opus-review-2026-05-29 | 2026-05-29T12:25:00Z | APPROVED by Opus — AC1 ✅ 11/11 DB explainers. AC2 ✅ 4 PRD-03 worker agents + HITL + Dashboard explainers (PRD-04/05 agents future). AC4 ✅ all 17 explainers 137–245 words (<300). AC3 caveat: hub uses ASCII code-block diagram (renders inline), not the PRD-09 SVG — PRD-09 not yet built, acceptable V1. Hub: 36ffc8f4-554c-81a8-9a77-c1abefc99d18. |
 | 11 | in-review | sonnet-2026-06-01-F1 | 2026-06-02T00:00:00Z | AC1/2/3/4 ✅ — 5 skill files: SKILL.md + instructions.md + question-bank.md (36q) + grading-rubric.md + session-log.md. Cross-session score tracking added post-initial-build. PRD-09 dep waived by Dan. |
 | 12 | completed | sonnet-2026-05-30 | 2026-05-30T00:00:00Z | Demo reset infrastructure + W19/W20 historical data. Ships: reset-data.ts (week-scoped, 3 filter strategies), demo-week.ts (800ms-staggered auto-approve + VP comment injection), 24 fixture files, 2 ground truth reports, week-aware eval path, summarizer-master VP feedback section. Dry-run verified live (190 W21 rows). |
+| 13 | waiting | - | 2026-06-05 | Round 2: GTM workspace schema — 4 new DBs (GTM Meeting Notes, Opportunities, Daily Digest, Battle Cards) + Key Releases / GTM Highlights patches to existing DBs. |
+| 14 | waiting | - | 2026-06-05 | Round 2: GTM mock fixtures — 8 opportunities, 10 meeting notes, 3 battle cards, 1 daily digest stub. seed-gtm-fixtures.ts + reset-data.ts update. |
+| 15 | waiting | - | 2026-06-05 | Round 2: workers/gtm-meeting-summarizer — daily digest from recent meeting notes, at-risk flags, action items. |
+| 16 | waiting | - | 2026-06-05 | Round 2: workers/gtm-release-bridge — reads Key Releases from Master EPD, flags open deals with matching Product Interest. |
+| 17 | waiting | - | 2026-06-05 | Round 2: Squad Summarizer Key Releases extraction + Master Summarizer GTM Highlights property + standalone GTM Weekly page under Revenue section. |
+| 18 | waiting | - | 2026-06-05 | Round 2: workers/gtm-battle-card-updater — reads Key Releases + Product Roadmap, updates Our Differentiators on Battle Cards. |
+| 19 | waiting | - | 2026-06-05 | Round 2: Notion presentation deck — Agenda, What We Heard, Discovery Questions, Live Demo Flow (7 steps), Objection Prep, Candidate Agents practice guide for Dan. |
+| 20 | waiting | - | 2026-06-05 | Round 2: Teaching layer update — 4 new GTM explainers + Day-2 Operations / How to Maintain This page. |
