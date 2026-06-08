@@ -512,55 +512,47 @@ async function createOrUpdateGtmWeeklyPage(
   keyReleasesBySquad: Record<string, string>,
   gtmHighlights: string,
 ): Promise<string> {
-  const notion      = getNotionClient();
-  const pageTitle   = `GTM Weekly — ${weekOf}`;
-  const briefsTitle = "GTM Weekly Briefs";
-  const startedAt   = new Date();
+  const notion    = getNotionClient();
+  const pageTitle = `GTM Weekly — ${weekOf}`;
+  const weekDate  = weekOfToDate(weekOf);
+  const startedAt = new Date();
 
-  // Find or create "GTM Weekly Briefs" under Revenue page
-  const briefsSearch = await notion.search({ query: briefsTitle, filter: { property: "object", value: "page" } });
-  let briefsPageId: string | null = null;
-  for (const result of briefsSearch.results) {
-    if (!isFullPage(result)) continue;
-    const parent    = result.parent as Record<string, unknown>;
-    const parentId  = (parent.page_id as string | undefined)?.replace(/-/g, "");
-    const revId     = REVENUE_PAGE_ID.replace(/-/g, "");
-    const titleProp = Object.values(result.properties).find((p) => (p as Record<string, unknown>).type === "title") as Record<string, unknown> | undefined;
-    const titleText = titleProp ? (titleProp.title as Array<{ plain_text: string }>).map((t) => t.plain_text).join("") : "";
-    if (parentId === revId && titleText === briefsTitle) { briefsPageId = result.id; break; }
-  }
-  if (!briefsPageId) {
-    const c = await notion.pages.create({
-      parent: { page_id: REVENUE_PAGE_ID },
-      properties: { title: { title: rt(briefsTitle) } } as Parameters<typeof notion.pages.create>[0]["properties"],
-    });
-    briefsPageId = c.id;
-  }
+  // ── Find or create the week's row by exact-match `Week Of` query ───────────
+  // PRD-13 Addendum: GTM | Weekly Briefs is a database (one row per week), found
+  // via a structured-property query — no traversal, no title-search, no
+  // REVENUE_PAGE_ID. See header comment above for the redesign rationale.
+  const existing = await notion.databases.query({
+    database_id: NOTION_IDS.dbs.gtmWeeklyBriefs,
+    filter: { property: "Week Of", date: { equals: weekDate } },
+    page_size: 5,
+  });
 
-  // Find or create the week page
-  const weekSearch = await notion.search({ query: pageTitle, filter: { property: "object", value: "page" } });
-  let weekPageId: string | null = null;
-  for (const result of weekSearch.results) {
-    if (!isFullPage(result)) continue;
-    const parent    = result.parent as Record<string, unknown>;
-    const parentId  = (parent.page_id as string | undefined)?.replace(/-/g, "");
-    const bId       = briefsPageId.replace(/-/g, "");
-    const titleProp = Object.values(result.properties).find((p) => (p as Record<string, unknown>).type === "title") as Record<string, unknown> | undefined;
-    const titleText = titleProp ? (titleProp.title as Array<{ plain_text: string }>).map((t) => t.plain_text).join("") : "";
-    if (parentId === bId && titleText === pageTitle) { weekPageId = result.id; break; }
-  }
+  const props = {
+    "Title":   { title: rt(pageTitle) },
+    "Week Of": { date: { start: weekDate } },
+    // Always (re)write as "draft" — fresh content needs a CRO/SE look before
+    // going out, the same way a master-summary rewrite resets the EPD row to
+    // "awaiting-VP" rather than preserving a stale "approved"/"published" state.
+    "Status":  { select: { name: "draft" } },
+  } as Parameters<typeof notion.pages.create>[0]["properties"];
 
-  if (weekPageId) {
+  let weekPageId: string;
+
+  if (existing.results.length > 0 && isFullPage(existing.results[0])) {
+    weekPageId = existing.results[0].id;
+
     let cursor: string | undefined;
     do {
       const cl = await notion.blocks.children.list({ block_id: weekPageId, ...(cursor ? { start_cursor: cursor } : {}) });
       for (const b of cl.results) await notion.blocks.delete({ block_id: b.id });
       cursor = cl.has_more ? (cl.next_cursor ?? undefined) : undefined;
     } while (cursor);
+
+    await notion.pages.update({ page_id: weekPageId, properties: props });
   } else {
     const c = await notion.pages.create({
-      parent: { page_id: briefsPageId },
-      properties: { title: { title: rt(pageTitle) } } as Parameters<typeof notion.pages.create>[0]["properties"],
+      parent: { database_id: NOTION_IDS.dbs.gtmWeeklyBriefs },
+      properties: props,
     });
     weekPageId = c.id;
   }
@@ -700,7 +692,7 @@ async function main(): Promise<void> {
   console.log("\n" + "─".repeat(60));
   if (!DRY_RUN) {
     console.log(`✓  Master report for ${weekOf} written. Status: awaiting-VP.`);
-    console.log(`✓  GTM Weekly page created/updated under Revenue > GTM Weekly Briefs.`);
+    console.log(`✓  GTM Weekly — ${weekOf} row created/updated in GTM | Weekly Briefs.`);
     console.log("─".repeat(60));
     console.log("\n  NEXT STEP:");
     console.log(`     pnpm eval --week=${weekOf}`);

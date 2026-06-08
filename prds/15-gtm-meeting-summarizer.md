@@ -1,10 +1,10 @@
 # PRD-15 — GTM Meeting Notes Daily Summarizer Worker
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-06-06-15
-updated: 2026-06-07T09:15:00Z
-notes: All 7 ACs verified live — worker 019e9eda-b299-70bd-8619-3454f1fb4f0e deployed with auto-publish/draft gate; AC-2 proven via live Custom Agent run producing digest 378fc8f4-554c-814f-b751-c7457e59adf5 for 2026-06-07 with correct Vantage at-risk flagging.
+state: completed
+owner: opus-review-2026-06-08
+updated: 2026-06-08T16:30:00Z
+notes: APPROVED by Opus review — all 7 ACs re-verified live. AC1/AC2 worker 019e9eda… live + 06-07 digest produced by the real Custom Agent (draft via at-risk gate). AC3 4 Summary sections. AC4 Vantage + Nexus in "Flags for CRO". AC5 one row/date. AC6 run-log outcome=ok dur=5160ms notes=notesProcessed=2/atRisk=2/dealsTouched=2. AC7 2026-01-01 published "No meetings" row + outcome=skipped log. Non-blocking: archive 06-06 trigger-row + 01-01 stub before CRO demo.
 -->
 
 ## Goal

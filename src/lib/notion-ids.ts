@@ -85,18 +85,23 @@ export const NOTION_IDS: NotionIds = {
     //     page (under a "Summaries" callout: column_list 378fc8f4-…809e). There is
     //     no single "Revenue" container in the live workspace; each GTM DB ID is
     //     stored directly above and is the source of truth, not this field.
-    //     ⚠️  `REVENUE_PAGE_ID` is ALSO hardcoded (same archived ID) in
+    //     ⚠️  `REVENUE_PAGE_ID` was ALSO hardcoded (same archived ID) in
     //     workers/summarizer-master/src/index.ts and scripts/generate-master.ts —
-    //     their "find or create GTM Weekly Briefs page" search filters on
-    //     `parent.page_id === REVENUE_PAGE_ID`, but the live page's parent is a
-    //     `block_id` (a column), so the match always fails and falls through to
-    //     `pages.create({ parent: { page_id: REVENUE_PAGE_ID }})` — which targets
-    //     an archived page. Next `pnpm generate-master` run will likely error or
-    //     create orphans. FIX: this whole traversal is obsoleted by the PRD-13
+    //     their "find or create GTM Weekly Briefs page" search filtered on
+    //     `parent.page_id === REVENUE_PAGE_ID`, but the live page's parent was a
+    //     `block_id` (a column), so the match always failed and fell through to
+    //     `pages.create({ parent: { page_id: REVENUE_PAGE_ID }})` — targeting an
+    //     archived page (generate-master would have errored or created orphans).
+    //     ✅ FIXED (2026-06-08): the whole traversal was obsoleted by the PRD-13
     //     Addendum + PRD-17 spec update converting GTM Weekly Briefs from a page
-    //     hierarchy to a `gtmWeeklyBriefs` database — Tool 6 should be rewritten
-    //     to `pages.create({ parent: { database_id: NOTION_IDS.dbs.gtmWeeklyBriefs }})`
-    //     and `REVENUE_PAGE_ID` removed entirely. Do not patch this ID — replace the logic.
+    //     hierarchy to the `gtmWeeklyBriefs` database. Both `write_gtm_weekly_page`
+    //     (Tool 6, workers/summarizer-master/src/index.ts) and
+    //     `createOrUpdateGtmWeeklyPage` (scripts/generate-master.ts) now do an
+    //     exact-match `databases.query({ database_id: NOTION_IDS.dbs.gtmWeeklyBriefs,
+    //     filter: { property: "Week Of", date: { equals: weekDate } } })` —
+    //     `REVENUE_PAGE_ID` has been removed entirely from both files. This
+    //     `pages.revenue` field itself remains unused by any live code path; it is
+    //     kept only as a documented historical marker. Do not wire it back up.
     revenue:    "377fc8f4-554c-811e-af04-ef340c18ec34",
   },
 };

@@ -13,7 +13,7 @@ Before executing any steps, verify you have access to the following worker tools
 | `begin_master_summary`     | Claims the Master EPD Weekly row by flipping Status `pending` → `generating-summary`                  |
 | `write_master_summary`     | Creates or updates the Master EPD Weekly row                                                           |
 | `write_gtm_highlights`     | PATCHes the GTM Highlights property on the Master EPD Weekly row (CRO-facing brief, ≤150 words)       |
-| `write_gtm_weekly_page`    | Creates or updates the standalone GTM Weekly page under Revenue > GTM Weekly Briefs                    |
+| `write_gtm_weekly_page`    | Creates or updates this week's row in the `GTM | Weekly Briefs` database (CRO-facing brief, found by `Week Of`) |
 
 **If you cannot see all six tools, stop and output:**
 
@@ -219,9 +219,9 @@ Then call `write_gtm_highlights` with:
 - `masterPageId` = the `pageId` returned by `write_master_summary`
 - `highlightsText` = your composed GTM Highlights
 
-### 7B. Create/update the GTM Weekly page
+### 7B. Create/update the GTM Weekly Briefs row
 
-Compose the CRO-facing GTM Weekly page body as a markdown string with these 4 required sections:
+Compose the CRO-facing GTM Weekly brief body as a markdown string with these 4 required sections:
 
 ```markdown
 # GTM Weekly — [weekOf]
@@ -245,6 +245,6 @@ Then call `write_gtm_weekly_page` with:
 - `weekOf` = the current week identifier (e.g. `2026-W21`)
 - `body` = your composed markdown body
 
-The tool creates "GTM Weekly Briefs" under the Revenue page if it doesn't yet exist, then creates or updates the "GTM Weekly — {weekOf}" child page.
+**PRD-13 Addendum (2026-06-08):** `GTM | Weekly Briefs` is a **database** (one row per week — `Title`, `Week Of`, `Status`, `Deals Flagged`, `Flagged Deals`), not a page hierarchy. The tool finds the row for this week by an exact-match query on its `Week Of` date property (the Monday of `weekOf`) — no title search, no parent-page traversal. If a row for the week already exists, the tool clears and rewrites its body and refreshes `Title`/`Week Of`/`Status`; otherwise it creates a new row (`Status = "draft"`) in `NOTION_IDS.dbs.gtmWeeklyBriefs`. Returns `{ pageId, url }`.
 
 # 🏁 Done

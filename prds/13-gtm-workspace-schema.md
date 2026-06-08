@@ -124,8 +124,8 @@ incident — additive, idempotent-looking scripts can still fork a workspace if 
 ### Current live state (verified)
 - Canonical EPD databases: `36efc8f4…` set (populated, 27 GitHub rows / 54 summaries / 100+ run-log rows intact)
 - GTM databases: `377fc8f4…` set under "Revenue" sub-page (`377fc8f4-554c-811e-af04-ef340c18ec34`)
-- `Key Releases` on Squad Weekly Summary (`36efc8f4-554c-819e-…`) ✅
 - `GTM Highlights` on Master EPD Weekly (`36efc8f4-554c-8158-…`) ✅
+- `Key Releases` on Squad Weekly Summary: body section only (property removed 2026-06-08) ✅
 - `notion-ids.ts` exports all 4 GTM IDs with correct `377…` values ✅
 - Orphaned `377…` EPD shadow databases: archived ✅
 
@@ -161,9 +161,9 @@ The CRO's pitch requires a parallel GTM pipeline that reads meeting notes and op
   - `GTM | Daily Digest`  → `377fc8f4-554c-8120-9027-f33bf647c36b`
   - `GTM | Battle Cards`  → `377fc8f4-554c-8113-aa58-f4c21e1fa2c4`
   - "Revenue" sub-page    → `377fc8f4-554c-811e-af04-ef340c18ec34`
-- 2 new properties patched onto existing databases:
-  - `Key Releases` (rich_text) on **Squad Weekly Summary** (`NOTION_IDS.dbs.squadWeeklySummary` = `36efc8f4-554c-819e-b339-ec0bb2c97a76`)
+- 1 new property patched onto existing databases:
   - `GTM Highlights` (rich_text) on **Master EPD Weekly** (`NOTION_IDS.dbs.masterEpdWeekly` = `36efc8f4-554c-8158-808b-d084ce4c4a16`)
+  - ~~`Key Releases` on Squad Weekly Summary~~ — removed 2026-06-08 (see PRD-17 Implementation Notes). Key Releases is written as a `## Key Releases` **body section**, not as a property.
 - Updated `src/lib/notion-ids.ts` with 4 new `dbs.*` entries.
 - New script: `scripts/patch-schema-round2.ts` — idempotent, additive only.
 - New `package.json` alias: `pnpm patch-round2`.

@@ -294,11 +294,9 @@ async function main(): Promise<void> {
   });
 
   // ── 7. Patch existing databases ───────────────────────────────────────────
-  console.log("\nPatching Squad Weekly Summary…");
-  await addMissingProps(NOTION_IDS.dbs.squadWeeklySummary, "Squad Weekly Summary", {
-    "Key Releases": { rich_text: {} },
-  });
-
+  // Note: "Key Releases" was removed from Squad Weekly Summary patch (2026-06-08).
+  // It is now written only as a `## Key Releases` section in the page body,
+  // not as a rich_text property (see PRD-17 Implementation Notes for details).
   console.log("\nPatching Master EPD Weekly…");
   await addMissingProps(NOTION_IDS.dbs.masterEpdWeekly, "Master EPD Weekly", {
     "GTM Highlights": { rich_text: {} },
