@@ -1,10 +1,10 @@
 # PRD-16 — Release → Opportunity Cross-Reference (Bridge Worker)
 
 <!-- status:
-state: waiting
+state: ready
 owner: -
-updated: -
-notes: -
+updated: 2026-06-08T16:50:00Z
+notes: Deps all completed (13, 14, 17) — PRD-17 approval unblocked this. READY to claim (Wave R2-C). Reads Key Releases from Master EPD, flags open deals with matching Product Interest.
 -->
 
 ## Goal

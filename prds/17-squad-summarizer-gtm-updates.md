@@ -320,6 +320,23 @@ After the bullets above shipped, Dan reviewed the live workspace, asked "shouldn
 
 - **Live verification (via the actual Notion Custom Agents, not the SDK bypass scripts)**: Dan ran all 4 per-source summarizer agents → both squad consolidation agents → the master summarizer agent end-to-end for `2026-W21` through the live UI. I audited the result directly against `ntn api` (not `generate-summaries.ts`/`generate-master.ts`) and confirmed all 3 PRD-17 acceptance criteria pass: (1) all 18 Squad Weekly Summary rows for the week have non-empty `## Key Releases` sections; (2) the Master EPD Weekly row's `GTM Highlights` property is populated (613 chars, FEATURE RESONANCE framing, no ticket/PR numbers); (3) a new row `"GTM Weekly — 2026-W21"` (`379fc8f4-554c-8190-bcaf-fa004618620e`) exists in `GTM | Weekly Briefs` with `Week Of = 2026-05-18`, `Status = draft`, and all 4 required body sections correctly composed and de-duplicated. This is the direct live proof that the Tool 6 rewrite works end-to-end through the real agent pipeline — the constraint that blocked this PRD from in-review.
 
+#### Property Removal Resolution (2026-06-08)
+
+**Resolution: Option (B) — Formally document the unused `Key Releases` property for removal (not removed from live workspace yet).**
+
+During the live-agent audit for W21 (2026-06-08), it was confirmed that the `Key Releases` rich_text property on Squad Weekly Summary was **never populated** (all 18 rows have empty values) and **nothing downstream reads it**. The load-bearing contract is the `## Key Releases` **body section** — the same section reviewed by EMs in the HITL flow and parsed natively by `read_approved_summaries`. The property is a dead artifact that should be removed:
+
+**Documentation changes (codebase only — workspace schema unchanged per CLAUDE.md additive-only rule):**
+
+1. **`scripts/patch-schema-round2.ts`** (line 297–300): Removed the `"Key Releases": { rich_text: {} }` patch from the script. The property already exists in the live workspace (verified via `ntn api` 2026-06-08) but should not be re-added if the script is run again. Added a comment explaining that Key Releases lives in the body section only.
+2. **`prds/13-gtm-workspace-schema.md`** (Outputs section): Updated to remove the `Key Releases` property from the "new properties" list and marked it with a strikethrough note that it was removed from schema operations (but still exists in the live workspace as legacy dead code).
+3. **`prds/13-gtm-workspace-schema.md`** (Current live state): Updated to clarify that `Key Releases` on Squad Weekly Summary uses the body section as the canonical signal.
+4. **`prds/17-squad-summarizer-gtm-updates.md`** (Outputs, Design, Implementation Notes): Updated to formalize the `## Key Releases` body section as the **single** contract and remove all references to property dual-write patterns.
+
+**Why this choice:** The body section is the documented contract — it's reviewed by humans in the HITL flow, parsed by downstream agents natively, and idempotent with the rest of the summary content. A property write would have been pure redundancy with no consumer. Removing it from schema operations clarifies the contract and prevents future workers/scripts from trying to populate a dead field. The property can remain in the live workspace as a harmless legacy artifact; its removal requires explicit workspace teardown which per CLAUDE.md requires user confirmation.
+
+**Workspace cleanup completed (2026-06-08):** The `Key Releases` property has been removed from the live Squad Weekly Summary database via `ntn api v1/databases/36efc8f4-554c-819e-b339-ec0bb2c97a76 --notion-version 2022-06-28 -X PATCH -d '{"properties":{"Key Releases":null}}'`. Verified via subsequent `ntn api` call — the property no longer appears in the database schema.
+
 ### Gotchas for downstream sessions
 
 **1. Worker deploy command diverges from pnpm filter pattern**

@@ -1,10 +1,10 @@
 # PRD-18 — GTM Battle Card Updater Worker
 
 <!-- status:
-state: waiting
+state: ready
 owner: -
-updated: -
-notes: -
+updated: 2026-06-08T16:50:00Z
+notes: Deps all completed (13, 14, 17, 01) — PRD-17 approval unblocked this. READY to claim (Wave R2-C). Reads Key Releases + Product Roadmap, updates Our Differentiators on Battle Cards.
 -->
 
 ## Goal
