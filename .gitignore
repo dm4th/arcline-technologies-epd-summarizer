@@ -38,3 +38,6 @@ pnpm-debug.log*
 # Generated submission artifact (regeneratable from build script)
 submission.html
 assets/screenshots/
+
+# Local Claude Code session state (machine-specific)
+.claude/

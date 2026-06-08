@@ -13,9 +13,14 @@ const SQUAD_PAGE_ID: Record<Squad, string> = {
   forge: "36efc8f4-554c-8102-b02e-d9def2d4a4da",
 };
 
-const HITL_REVIEW_SESSIONS_DB = "370fc8f4-554c-8113-a6dd-f893a84555ff";
-const MASTER_EPD_WEEKLY_DB    = "36efc8f4-554c-8158-808b-d084ce4c4a16";
-const AGENT_RUN_LOG_DB        = "36efc8f4-554c-814e-8c51-ea51792f5344";
+const HITL_REVIEW_SESSIONS_DB  = "370fc8f4-554c-8113-a6dd-f893a84555ff";
+const MASTER_EPD_WEEKLY_DB     = "36efc8f4-554c-8158-808b-d084ce4c4a16";
+const AGENT_RUN_LOG_DB         = "36efc8f4-554c-814e-8c51-ea51792f5344";
+// PRD-13 Addendum (2026-06-08): "GTM | Weekly Briefs" — one row per week, mirrors
+// Master EPD Weekly's shape. Replaced the original page-hierarchy design (which
+// hardcoded a now-archived REVENUE_PAGE_ID and a brittle title-search traversal —
+// see Tool 6 below and PRD-17's "Spec Update" section for the full story).
+const GTM_WEEKLY_BRIEFS_DB     = "379fc8f4-554c-803c-acbb-dccd29e576bf";
 
 type Squad = "atlas" | "lumen" | "forge";
 const ALL_SQUADS: Squad[] = ["atlas", "lumen", "forge"];
@@ -178,6 +183,7 @@ worker.tool("read_approved_summaries", {
       status: string;
       content: string;
       citations: Array<{ recordId: string; sourceUrl: string; claim: string }>;
+      keyReleases: string;
     };
 
     const bySquad: Record<Squad, ConsolidatedEntry | null> = {
@@ -215,7 +221,15 @@ worker.tool("read_approved_summaries", {
       let citations: Array<{ recordId: string; sourceUrl: string; claim: string }> = [];
       try { citations = JSON.parse(citationsJson || "[]"); } catch { citations = []; }
 
-      bySquad[matchedSquad] = { notionPageId: page.id, status, content, citations };
+      // PRD-17 redesign (2026-06-06): Key Releases is no longer a separate
+      // property write — it's read natively from the consolidated body's own
+      // "## Key Releases" section (the squad consolidation agent writes it as
+      // Section C, EM-reviewed at the same HITL gate as everything else).
+      // `sections` already has every heading_2 → paragraph pair generically
+      // parsed above, so this is a direct lookup — no extra DB query needed.
+      const keyReleases = sections["Key Releases"]?.trim() || "(no releases this week)";
+
+      bySquad[matchedSquad] = { notionPageId: page.id, status, content, citations, keyReleases };
     }
 
     // A squad is approved when its session Status = "approved"
@@ -630,5 +644,208 @@ worker.tool("write_master_summary", {
       citationCoveragePct: Math.round(citationCoveragePct * 10) / 10,
       citationCount: citations.length,
     };
+  },
+});
+
+// ── Tool 5: write_gtm_highlights ──────────────────────────────────────────────
+//
+// Called after write_master_summary succeeds. PATCHes the GTM Highlights property
+// on the Master EPD Weekly row — a ≤150-word CRO-facing brief synthesized from
+// Key Releases across all three squads.
+//
+// Non-blocking: if this fails, the master summary is still published. The agent
+// should catch errors and log them rather than aborting the pipeline.
+
+worker.tool("write_gtm_highlights", {
+  title: "Write GTM Highlights",
+  description:
+    "PATCH the GTM Highlights property on a Master EPD Weekly row. " +
+    "Call this after write_master_summary succeeds (skipped=false). " +
+    "highlightsText must be ≤150 words, non-technical, and contain no ticket or PR numbers. " +
+    "If this tool fails, log the error but do not abort — the master summary is already published.",
+  schema: j.object({
+    masterPageId: j
+      .string()
+      .describe("Notion page ID of the Master EPD Weekly row — the pageId returned by write_master_summary"),
+    highlightsText: j
+      .string()
+      .describe(
+        "≤150 word GTM brief for the CRO. Structure: what shipped / what it means for pipeline / what reps should know. " +
+        "No Jira ticket numbers, PR numbers, or internal identifiers. Customer-facing product names only. " +
+        "If no releases across all squads, write: 'No product releases this week.'",
+      ),
+  }),
+  execute: async ({ masterPageId, highlightsText }, { notion }) => {
+    await notion.pages.update({
+      page_id: masterPageId,
+      properties: {
+        "GTM Highlights": { rich_text: rt(highlightsText) },
+      } as Parameters<typeof notion.pages.update>[0]["properties"],
+    });
+
+    const now = new Date();
+    await notion.pages.create({
+      parent: { database_id: AGENT_RUN_LOG_DB },
+      properties: {
+        "Run Id":       { title: rt(`master-gtm-highlights-${now.toISOString()}`) },
+        "Agent Name":   { select: { name: "master-gtm-highlights" } },
+        "Started At":   { date: { start: now.toISOString() } },
+        "Completed At": { date: { start: now.toISOString() } },
+        "Duration ms":  { number: 0 },
+        "Outcome":      { select: { name: "ok" } },
+        "Notes": {
+          rich_text: rt(`masterPageId=${masterPageId} chars=${highlightsText.length}`),
+        },
+      } as Parameters<typeof notion.pages.create>[0]["properties"],
+    });
+
+    return { masterPageId, highlightsLength: highlightsText.length };
+  },
+});
+
+// ── Tool 6: write_gtm_weekly_page ─────────────────────────────────────────────
+//
+// Finds-or-creates the CRO-facing "GTM Weekly — {weekOf}" brief as a ROW in the
+// `GTM | Weekly Briefs` DATABASE (GTM_WEEKLY_BRIEFS_DB) — one row per week,
+// queryable/sortable by `Week Of`, exactly mirroring how Master EPD Weekly itself
+// works (see Tool 4 write_master_summary's find-or-create above, which this copies).
+//
+// PRD-13 ADDENDUM (2026-06-08) REDESIGN: this replaced the original page-hierarchy
+// design (`Revenue > GTM Weekly Briefs > GTM Weekly — {weekOf}`, a page with
+// sub-pages found via brittle title-search traversal). Dan reviewed the live
+// workspace and asked "shouldn't this be a database?" — yes: structured rows give
+// Release Bridge (PRD-16) a `Flagged Deals` relation property to land deal-specific
+// outreach links on directly, instead of a placeholder sentence. See PRD-13's
+// "➕ Addendum" and PRD-17's "🔁 Spec Update" sections for full rationale.
+//
+// 🐛 Bonus: this also fixes a live latent bug for free. The old traversal matched
+// on `result.parent.page_id === REVENUE_PAGE_ID`, but (a) that page was archived
+// and (b) the live databases' parent was actually a column `block_id`, not a page
+// — so the match always failed and execution fell through to `pages.create`
+// against an archived page. An exact-match `databases.query` on a structured
+// `Week Of` date property has no such traversal to get wrong.
+//
+// Database shape (one row per week):
+//   GTM | Weekly Briefs  (GTM_WEEKLY_BRIEFS_DB, lives directly under BASE_NOTION_PAGE
+//                         alongside the other 4 GTM databases — no "Revenue" parent)
+//     ├── row: "GTM Weekly — 2026-W21"   Week Of: 2026-05-18   Status: draft
+//     └── …
+//
+// Idempotent — re-running clears and rewrites the existing row's body rather than
+// creating a duplicate.
+//
+// Non-blocking: called after write_master_summary succeeds. Failures are logged
+// but should not abort the pipeline.
+
+worker.tool("write_gtm_weekly_page", {
+  title: "Write GTM Weekly Page",
+  description:
+    "Create or update the CRO-facing GTM Weekly brief as a row in the GTM | Weekly Briefs database " +
+    "(found/matched by its Week Of date property — not a title search). " +
+    "Idempotent — re-running updates the existing week's row rather than creating a duplicate. " +
+    "Returns { pageId, url }. Writes an Agent Run Log entry with Agent Name = 'master-gtm-weekly-page'.",
+  schema: j.object({
+    weekOf: j.string().describe("Week identifier, e.g. 2026-W21"),
+    body: j
+      .string()
+      .describe(
+        "Full markdown body of the GTM Weekly brief. Must contain all 4 required sections: " +
+        "'What Shipped This Week', 'What It Means for Your Pipeline', 'Deals to Contact This Week', 'How to Use This Brief'.",
+      ),
+  }),
+  execute: async ({ weekOf, body }, { notion }) => {
+    const pageTitle = `GTM Weekly — ${weekOf}`;
+    const weekDate  = weekOfToDate(weekOf);
+    const startedAt = new Date();
+
+    // ── Find or create the week's row by exact-match `Week Of` query ─────────
+    // Structured-property lookup, not title-matching — see header comment.
+    const existing = await notion.databases.query({
+      database_id: GTM_WEEKLY_BRIEFS_DB,
+      filter: { property: "Week Of", date: { equals: weekDate } },
+      page_size: 5,
+    });
+
+    const props = {
+      "Title":   { title: rt(pageTitle) },
+      "Week Of": { date: { start: weekDate } },
+      // Always (re)write as "draft" — fresh content needs a CRO/SE look before
+      // going out, the same way a master-summary rewrite resets the EPD row to
+      // "awaiting-VP" rather than preserving a stale "approved"/"published" state.
+      "Status":  { select: { name: "draft" } },
+    } as Parameters<typeof notion.pages.create>[0]["properties"];
+
+    let pageId: string;
+    let action: "created" | "updated";
+
+    if (existing.results.length > 0 && isFullPage(existing.results[0])) {
+      pageId = existing.results[0].id;
+      action = "updated";
+
+      // Clear existing blocks before rewriting (idempotency)
+      let cursor: string | undefined;
+      do {
+        const childList = await notion.blocks.children.list({
+          block_id: pageId,
+          ...(cursor ? { start_cursor: cursor } : {}),
+        });
+        for (const block of childList.results) {
+          await notion.blocks.delete({ block_id: block.id });
+        }
+        cursor = childList.has_more ? (childList.next_cursor ?? undefined) : undefined;
+      } while (cursor);
+
+      await notion.pages.update({ page_id: pageId, properties: props });
+    } else {
+      const created = await notion.pages.create({
+        parent: { database_id: GTM_WEEKLY_BRIEFS_DB },
+        properties: props,
+      });
+      pageId = created.id;
+      action = "created";
+    }
+
+    // ── Parse markdown body into Notion block objects ─────────────────────────
+    const lines  = body.split("\n");
+    const blocks: Parameters<typeof notion.blocks.children.append>[0]["children"] = [];
+    for (const line of lines) {
+      if (line.startsWith("# ")) {
+        blocks.push({ type: "heading_1" as const, heading_1: { rich_text: rt(line.slice(2).trim()) } });
+      } else if (line.startsWith("## ")) {
+        blocks.push({ type: "heading_2" as const, heading_2: { rich_text: rt(line.slice(3).trim()) } });
+      } else if (line.startsWith("- ") || line.startsWith("* ")) {
+        blocks.push({ type: "bulleted_list_item" as const, bulleted_list_item: { rich_text: rt(line.slice(2).trim()) } });
+      } else if (line.trim() && line.trim() !== "---") {
+        blocks.push({ type: "paragraph" as const, paragraph: { rich_text: rt(line.trim()) } });
+      }
+    }
+
+    // Notion API accepts max 100 blocks per append call
+    for (let i = 0; i < blocks.length; i += 100) {
+      await notion.blocks.children.append({
+        block_id: pageId,
+        children: blocks.slice(i, i + 100) as Parameters<typeof notion.blocks.children.append>[0]["children"],
+      });
+    }
+
+    const pageUrl     = `https://www.notion.so/${pageId.replace(/-/g, "")}`;
+    const completedAt = new Date();
+
+    await notion.pages.create({
+      parent: { database_id: AGENT_RUN_LOG_DB },
+      properties: {
+        "Run Id":       { title: rt(`master-gtm-weekly-page-${startedAt.toISOString()}`) },
+        "Agent Name":   { select: { name: "master-gtm-weekly-page" } },
+        "Started At":   { date: { start: startedAt.toISOString() } },
+        "Completed At": { date: { start: completedAt.toISOString() } },
+        "Duration ms":  { number: completedAt.getTime() - startedAt.getTime() },
+        "Outcome":      { select: { name: "ok" } },
+        "Notes": {
+          rich_text: rt(`week=${weekOf} action=${action} pageId=${pageId}`),
+        },
+      } as Parameters<typeof notion.pages.create>[0]["properties"],
+    });
+
+    return { pageId, url: pageUrl };
   },
 });

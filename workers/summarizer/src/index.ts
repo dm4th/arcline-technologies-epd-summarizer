@@ -243,6 +243,15 @@ worker.tool("write_squad_summary", {
     notable:     j
       .string()
       .describe("Markdown — cross-team dependencies, process notes, standout moments"),
+    keyReleases: j
+      .string()
+      .describe(
+        "Markdown — bulleted list of items FULLY shipped this week, in customer-facing " +
+        "language (no ticket/PR numbers). Use '(no releases this week)' if nothing shipped. " +
+        "Generated in the SAME pass as the other sections — reviewed by EMs alongside them " +
+        "(PRD-17 redesign: this used to be a separate side-channel write; it now goes " +
+        "through the same HITL gate as everything else).",
+      ),
     citations: j
       .array(
         j.object({
@@ -256,7 +265,7 @@ worker.tool("write_squad_summary", {
       ),
   }),
   execute: async (
-    { squad, source, weekOf, whatShipped, inProgress, risks, notable, citations },
+    { squad, source, weekOf, whatShipped, inProgress, risks, notable, keyReleases, citations },
     { notion },
   ) => {
     const squadPageId   = SQUAD_PAGE_ID[squad as Squad];
@@ -303,6 +312,9 @@ worker.tool("write_squad_summary", {
       { type: "divider" as const, divider: {} },
       { type: "heading_2" as const, heading_2: { rich_text: rt("Notable") } },
       { type: "paragraph"  as const, paragraph:  { rich_text: rt(notable) } },
+      { type: "divider" as const, divider: {} },
+      { type: "heading_2" as const, heading_2: { rich_text: rt("Key Releases") } },
+      { type: "paragraph"  as const, paragraph:  { rich_text: rt(keyReleases) } },
     ];
 
     let pageId: string;
@@ -381,3 +393,12 @@ worker.tool("write_squad_summary", {
     return { pageId, action, citationCount: citations.length, status };
   },
 });
+
+// NOTE (PRD-17 redesign, 2026-06-06): Key Releases is no longer a separate
+// side-channel write. It is now a `## Key Releases` section generated as part
+// of the SAME write_squad_summary body — reviewed by EMs in the HITL flow like
+// every other section, then rolled up natively by the squad consolidation agent
+// and the Master Summarizer. The `write_key_releases` tool + `Key Releases`
+// rich_text property (PRD-13 schema) have both been removed. Do not re-add a
+// side-channel write here — see prds/17-squad-summarizer-gtm-updates.md
+// "Implementation Notes" for why this was reversed.

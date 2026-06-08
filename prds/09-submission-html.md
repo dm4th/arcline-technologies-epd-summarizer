@@ -1,10 +1,10 @@
 # PRD-09 — Submission HTML
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-05-30-E1
-updated: 2026-06-02T22:00:00Z
-notes: AC1-11 ✅ — 364KB self-contained HTML, 18 sections, 7 Loom embeds, base64 Lucid diagram, inline master report + citations, all external links verified live. AC12 ⚠ no build-script (hand-authored, gitignored — submit file directly). Eval JSON dead link fixed (commit 326a3b2).
+state: completed
+owner: dan-2026-06-06
+updated: 2026-06-06T00:00:00Z
+notes: COMPLETED per Dan — Round 1 sign-off. AC1-11 ✅ (364KB self-contained HTML, 18 sections, 7 Loom embeds, base64 Lucid diagram, inline master report + citations, all external links verified live). AC12 accepted as-is (hand-authored, no build script — submit file directly).
 -->
 
 ## Goal

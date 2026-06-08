@@ -275,6 +275,13 @@ worker.tool("write_squad_consolidation", {
     sourcesApproved:   j.number().describe("Count of approved sources (for display in observability footer)"),
     executiveSummary:  j.string().describe("≤150 words — squad-level summary for the VP digest"),
     highlights:        j.string().describe("Markdown — what shipped this week across all sources"),
+    keyReleases:       j.string().describe(
+      "Markdown — bulleted, customer-facing rollup of the squad's Key Releases sections " +
+      "from its 4 approved per-source summaries (github/jira/slack/figma). No ticket/PR " +
+      "numbers. Use '(no releases this week)' if all 4 sources reported none. This is the " +
+      "EM-reviewed source of truth the GTM pipeline reads — not a separate side-channel write " +
+      "(PRD-17 redesign).",
+    ),
     risksBlockers:     j.string().describe("Markdown — blockers, risks, open questions"),
     crossSquadDeps:    j.string().describe("Markdown — dependencies on or from other squads"),
     openFlags:         j.string().describe("Markdown — [BLOCK]/[WARN] flags from prd-fact-check, design reversals, data conflicts"),
@@ -288,7 +295,7 @@ worker.tool("write_squad_consolidation", {
     ).describe("One entry per factual sentence. Empty only if all sources had zero activity."),
   }),
   execute: async (
-    { squad, weekOf, sourcesApproved, executiveSummary, highlights,
+    { squad, weekOf, sourcesApproved, executiveSummary, highlights, keyReleases,
       risksBlockers, crossSquadDeps, openFlags, citationCoveragePct, citations },
     { notion },
   ) => {
@@ -418,6 +425,9 @@ worker.tool("write_squad_consolidation", {
         { type: "divider", divider: {} },
         { type: "heading_2", heading_2: { rich_text: rt("Highlights") } },
         { type: "paragraph",  paragraph:  { rich_text: rt(highlights) } },
+        { type: "divider", divider: {} },
+        { type: "heading_2", heading_2: { rich_text: rt("Key Releases") } },
+        { type: "paragraph",  paragraph:  { rich_text: rt(keyReleases) } },
         { type: "divider", divider: {} },
         { type: "heading_2", heading_2: { rich_text: rt("Risks & Blockers") } },
         { type: "paragraph",  paragraph:  { rich_text: rt(risksBlockers) } },

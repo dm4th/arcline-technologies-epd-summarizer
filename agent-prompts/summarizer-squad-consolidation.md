@@ -80,7 +80,22 @@ What shipped this week. One bullet per merged PR / Done ticket / shipped design:
 
 Only completed work (merged PRs, status=Done Jira tickets, published Figma files).
 
-### Section C: Risks & Blockers
+### Section C: Key Releases
+
+> ⚠️ **This section feeds the GTM pipeline directly** (Master Summarizer → GTM Highlights → CRO-facing GTM Weekly page). It is the **only** place that pipeline reads from — there is no separate property write. Whatever you write here, reviewed and approved at this gate, is what the revenue org sees. Get it right.
+
+Roll up the `## Key Releases` sections from the squad's 4 approved per-source summaries (github/jira/slack/figma — read each from `read_source_summaries`) into ONE squad-level, de-duplicated, customer-facing list:
+
+```markdown
+- Deliverable name — what it does for the customer and why it matters.
+```
+
+Rules:
+- Merge near-duplicate items across sources (e.g. the same shipment confirmed independently in GitHub and Slack) into a single bullet — don't double-count.
+- Preserve the customer-facing language from the upstream sections — **do not re-introduce ticket IDs, PR numbers, or file names** during consolidation.
+- If all 4 upstream sections read `(no releases this week)`, write exactly: `(no releases this week)`.
+
+### Section D: Risks & Blockers
 
 ```markdown
 - **[SEVERITY]** Description — source of signal — recommended action.
@@ -88,7 +103,7 @@ Only completed work (merged PRs, status=Done Jira tickets, published Figma files
 
 SEVERITY: `BLOCK` / `HIGH` / `WATCH`. Include [BLOCK] flags from prd-fact-check, stalled criteria, closed-without-merge PRs, Figma reversals.
 
-### Section D: Cross-Squad Dependencies
+### Section E: Cross-Squad Dependencies
 
 Any work requiring another squad, or required by another squad. Pull from roadmap "At Risk" sections and any coordination signals in Slack summaries.
 
@@ -98,7 +113,7 @@ Any work requiring another squad, or required by another squad. Pull from roadma
 
 If none: write "None identified."
 
-### Section E: Open Flags
+### Section F: Open Flags
 
 Collect every `[BLOCK]` and `[WARN]` flag from the prd-fact-check summary verbatim. Add any design reversals from Figma, data conflicts between sources, and Slack-only claims that are unverified.
 
@@ -115,7 +130,7 @@ If no flags: write "No flags this week."
 
 Count:
 
-1. **Total factual sentences** across all five sections that name a specific PR, ticket, Figma file, design decision, or initiative.
+1. **Total factual sentences** across all six sections that name a specific PR, ticket, Figma file, design decision, or initiative. (Yes — Key Releases counts too: even though its sentences are phrased in customer-facing language, they assert that something specific shipped, and that assertion needs the same evidentiary backing as everything else.)
 2. **Cited sentences**: how many of those have a corresponding entry in your citations array.
 3. **Coverage %**: `(cited / total) × 100`. Target ≥ 85%.
 
@@ -134,7 +149,7 @@ Count:
 Call `write_squad_consolidation` with:
 
 - `squad`, `weekOf`, `sourcesApproved` (from `read_source_summaries`)
-- All five sections
+- All six sections (executiveSummary, highlights, keyReleases, risksBlockers, crossSquadDeps, openFlags)
 - `citationCoveragePct` and `citations`
 
 Check the result:

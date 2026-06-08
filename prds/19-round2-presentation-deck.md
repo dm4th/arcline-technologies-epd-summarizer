@@ -1,10 +1,10 @@
 # PRD-19 — Round 2 Presentation Deck in Notion
 
 <!-- status:
-state: waiting
+state: ready
 owner: -
-updated: -
-notes: -
+updated: 2026-06-08T00:00:00Z
+notes: Dep PRD-13 completed → READY (synced with README, which already read ready; file block was stale at 'waiting' — Opus fixed the desync 2026-06-08). Deck pages can be written now; Live Demo Flow beats 3/5/6 depend on PRD-17 rework (GTM Weekly DB row) + PRD-16 (Release Bridge, still waiting) — write those beats with the bracketed "not yet walkable" caveats already in the Design section.
 -->
 
 ## Goal
@@ -132,9 +132,16 @@ A numbered checklist using Notion checkbox blocks. Dan checks each off during th
      → Still in Master EPD row → show GTM Highlights field
      → "150 words. No PR numbers. Written for your revenue team."
 
-□ 3. (2 min) GTM Weekly page (CRO-facing artifact)
-     → Navigate to Revenue > GTM Weekly Briefs > GTM Weekly — 2026-W21
-     → "This is the version your team can subscribe to. No engineering context required."
+□ 3. (2 min) GTM Weekly Briefs (CRO-facing artifact)
+     → Open GTM | Weekly Briefs database → "GTM Weekly — 2026-W21" row
+     → "One row per week — Week Of, Status, deals flagged, all filterable. This is the
+        version your team can subscribe to. No engineering context required."
+     → [Note: this is now a database (NOTION_IDS.dbs.gtmWeeklyBriefs =
+        379fc8f4-554c-803c-acbb-dccd29e576bf — created live by Dan 2026-06-08, see
+        PRD-13 Addendum), not a page hierarchy — see PRD-17 "Spec Update" for why.
+        The DB itself is live; the "GTM Weekly — 2026-W21" row still needs to be
+        written by PRD-17's rebuilt Tool 6 before this demo beat is walkable
+        end-to-end — update this beat to drop the bracket once that row exists.]
 
 □ 4. (2 min) GTM Daily Digest
      → Open GTM | Daily Digest → today's row
@@ -208,10 +215,10 @@ Demo action: Navigate to Teaching Hub → "Day-2 Operations" explainer (PRD-20).
 
 **Candidate Agent 2: Release Notes Generator**
 - **Name:** Release Notes Generator
-- **Access:** Master EPD Weekly (or GTM Weekly page)
+- **Access:** Master EPD Weekly (or GTM | Weekly Briefs)
 - **Trigger:** Manual, after GTM Weekly publishes
 - **Instructions:**
-  > "Read this week's GTM Weekly page. For each item in 'What Shipped This Week', write three versions of a release note: (1) For developers — technical details and migration notes, (2) For admins — configuration changes and permissions, (3) For end users — what's new and how to use it. Format as three clearly labeled sections per feature."
+  > "Read this week's GTM Weekly Briefs row in GTM | Weekly Briefs. For each item in 'What Shipped This Week', write three versions of a release note: (1) For developers — technical details and migration notes, (2) For admins — configuration changes and permissions, (3) For end users — what's new and how to use it. Format as three clearly labeled sections per feature."
 - **Demo moment:** Dir of Sales Enablement will immediately see this as their release comms solution — one agent, three audiences, no manual drafting.
 
 ---
@@ -221,7 +228,7 @@ Demo action: Navigate to Teaching Hub → "Day-2 Operations" explainer (PRD-20).
 - **Access:** GTM | Opportunities, GTM | Meeting Notes
 - **Trigger:** Weekly (Monday morning, 1 hour before standup)
 - **Instructions:**
-  > "Every Monday, check for Opportunities where Close Date is within 90 days and Health is at-risk or churned. For each, find their most recent Meeting Notes. Write a renewal risk brief: deal name, close date, last meeting sentiment, key risk factors, recommended escalation action. Keep each entry to 3 sentences. Post results as a comment on the GTM Weekly page for this week."
+  > "Every Monday, check for Opportunities where Close Date is within 90 days and Health is at-risk or churned. For each, find their most recent Meeting Notes. Write a renewal risk brief: deal name, close date, last meeting sentiment, key risk factors, recommended escalation action. Keep each entry to 3 sentences. Post results as a comment on this week's row in GTM | Weekly Briefs."
 - **Demo moment:** CRO's "my team is spread thin" objection answered — the radar surfaces at-risk renewals before the weekly standup, no manual pipeline review needed.
 
 ---

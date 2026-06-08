@@ -12,7 +12,7 @@ Before executing any steps, verify you have access to the following worker tools
 |------|---------|
 | `read_mirror_rows` | Reads activity rows from the Slack mirror database |
 | `begin_summary` | Marks the row as generating-review before composing content |
-| `write_squad_summary` | Writes the structured summary page, citations, and run log entry |
+| `write_squad_summary` | Writes the structured summary page (5 sections incl. Key Releases), citations, and run log entry |
 
 **If you cannot see all three tools in your tool list, stop immediately and output:**
 
@@ -58,7 +58,9 @@ If totalRows = 0 → call `write_squad_summary` with:
 
 - squad = "\<slug\>", source = "slack", weekOf = "\<weekOf\>"
 - whatShipped = "No activity this week."
-- inProgress = "", risks = "", notable = "", citations = []
+- inProgress = "", risks = "", notable = ""
+- keyReleases = "(no releases this week)"
+- citations = []
 
 That row auto-approves and skips HITL. Move to the next squad.
 
@@ -83,16 +85,23 @@ Each row returned contains:
 | status | Thread status |
 | lastUpdated | Date of last message |
 
-Slack threads capture **conversations and decisions**, not deliverables. Write four sections for the page body:
+Slack threads capture **conversations and decisions**, not deliverables. Write **five** sections for the page body, all in this same pass:
 
 - **What Shipped** — Work announced as complete in Slack. Include: what was announced, by whom, and in which channel. Past tense.
 - **In Progress** — Active coordination threads not yet resolved: ongoing PR reviews, cross-team work in progress, open debates. Present tense.
 - **Risks & Blockers** — Incidents mentioned in excerpts (alert-bot messages, "blocked", "outage", P99 references). Decisions deferred or unresolved. Work mentioned as blocked that has no corresponding Jira ticket (Slack-only blockers are a process gap — name them explicitly). Unacted "we need to track this" comments.
 - **Notable** — Decisions made in Slack that belong in Jira but are not there. Cross-team coordination threads (look for #cross-team in channel name). Unassigned action items surfaced in threads. Process improvements suggested by team members.
+- **Key Releases** — A bulleted, customer-facing translation of **confirmed, unambiguous shipped-work announcements** this week (a strict subset of What Shipped — see rules below). This section is reviewed by the EM in the same HITL pass as the rest of the summary; it is not a separate side-channel output.
+
+  Rules for what counts as a Key Release:
+  - Slack is signal, **not authoritative** — include an item only if the thread explicitly and unambiguously confirms a deploy, release, or feature going live.
+  - Exclude discussions of planned work, in-progress items, or things "about to ship."
+  - **No Slack message IDs or channel names** — translate to customer-facing product capability language.
+  - If nothing clearly shipped per Slack this week, write exactly: `(no releases this week)`
 
 ### C. Citation Rules — ⚠️ Read Carefully
 
-Every sentence naming a specific person, channel, thread topic, incident, or decision **must have a citation entry**. The eval harness requires ≥90% factual sentence coverage — **below 90% fails quality checks.**
+Every sentence naming a specific person, channel, thread topic, incident, or decision **must have a citation entry** — this includes Key Releases sentences (cite the same underlying confirming-thread mirror row you'd cite in What Shipped, even though the Key Releases sentence itself is phrased in customer-facing language). The eval harness requires ≥90% factual sentence coverage — **below 90% fails quality checks.**
 
 For each such sentence, add one entry to the citations array:
 
@@ -113,8 +122,10 @@ Once you've completed the citations array, call `write_squad_summary` with:
 - squad = \<slug\>
 - source = "slack"
 - weekOf = \<weekOf\>
-- All four sections (whatShipped, inProgress, risks, notable)
+- All five sections (whatShipped, inProgress, risks, notable, keyReleases)
 - Your full citations array
+
+This single call replaces what used to be two calls (`write_squad_summary` + `write_key_releases`). Key Releases now lives in the page body where the EM reviews it — not in a side-channel property.
 
 Repeat steps A–D for each remaining squad.
 

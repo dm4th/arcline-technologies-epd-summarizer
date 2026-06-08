@@ -10,7 +10,7 @@ Before executing any steps, verify you have access to the following worker tools
 |------|---------|
 | `read_mirror_rows` | Reads activity rows from the Jira mirror database |
 | `begin_summary` | Marks the row as generating-review before composing content |
-| `write_squad_summary` | Writes the structured summary page, citations, and run log entry |
+| `write_squad_summary` | Writes the structured summary page (5 sections incl. Key Releases), citations, and run log entry |
 
 **If you cannot see all three tools in your tool list, stop immediately and output:**
 
@@ -56,7 +56,9 @@ If totalRows = 0 → call `write_squad_summary` with:
 
 - squad = "\<slug\>", source = "jira", weekOf = "\<weekOf\>"
 - whatShipped = "No activity this week."
-- inProgress = "", risks = "", notable = "", citations = []
+- inProgress = "", risks = "", notable = ""
+- keyReleases = "(no releases this week)"
+- citations = []
 
 That row auto-approves and skips HITL. Move to the next squad.
 
@@ -81,16 +83,23 @@ Each row returned contains:
 | status | Done / In Progress / In Review / To Do / Backlog / Blocked |
 | lastUpdated | Date of last status change |
 
-Write four sections for the page body:
+Write **five** sections for the page body, all in this same pass:
 
 - **What Shipped** — Every ticket with status=Done. Include: ticket key, title, whether acceptance criteria appear complete (from excerpt). Past tense. One bullet per ticket.
 - **In Progress** — Tickets with status=In Progress or In Review. Include: ticket key, title, what remains per the acceptance criteria. Present tense.
 - **Risks & Blockers** — Blocked tickets. High/critical priority To Do tickets. In Progress tickets with lastUpdated > 3 days ago (flag as potentially stale). Acceptance criteria that appear incomplete or unclear.
 - **Notable** — Sprint velocity signal: count of Done vs. In Progress tickets. Critical-priority Bug tickets that shipped. Stale tickets (lastUpdated > 5 days, not Done). Cross-squad dependencies visible in titles or criteria text.
+- **Key Releases** — A bulleted, customer-facing translation of tickets that are **fully shipped** this week (a strict subset of What Shipped — see rules below). This section is reviewed by the EM in the same HITL pass as the rest of the summary; it is not a separate side-channel output.
+
+  Rules for what counts as a Key Release:
+  - Include only tickets with status = "Done" or "Released" (not "In Progress" or "To Do").
+  - Exclude in-progress, blocked, or deprioritized tickets.
+  - **No Jira ticket IDs** — translate to what the capability does for the end user.
+  - If nothing shipped for this squad this week, write exactly: `(no releases this week)`
 
 ### C. Citation Rules — ⚠️ Read Carefully
 
-Every sentence naming a specific ticket key (e.g. ATLS-42), assignee, or status transition **must have a citation entry**. The eval harness requires ≥90% factual sentence coverage — **below 90% fails quality checks.**
+Every sentence naming a specific ticket key (e.g. ATLS-42), assignee, or status transition **must have a citation entry** — this includes Key Releases sentences (cite the same underlying Done/Released-ticket mirror row you'd cite in What Shipped, even though the Key Releases sentence itself is phrased in customer-facing language). The eval harness requires ≥90% factual sentence coverage — **below 90% fails quality checks.**
 
 For each such sentence, add one entry to the citations array:
 
@@ -111,8 +120,10 @@ Once you've completed the citations array, call `write_squad_summary` with:
 - squad = \<slug\>
 - source = "jira"
 - weekOf = \<weekOf\>
-- All four sections (whatShipped, inProgress, risks, notable)
+- All five sections (whatShipped, inProgress, risks, notable, keyReleases)
 - Your full citations array
+
+This single call replaces what used to be two calls (`write_squad_summary` + `write_key_releases`). Key Releases now lives in the page body where the EM reviews it — not in a side-channel property.
 
 Repeat steps A–D for each remaining squad.
 

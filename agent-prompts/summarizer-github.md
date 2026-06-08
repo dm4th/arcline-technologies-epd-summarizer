@@ -10,7 +10,7 @@ Before executing any steps, verify you have access to the following worker tools
 |------|---------|
 | `read_mirror_rows` | Reads activity rows from the GitHub mirror database |
 | `begin_summary` | Marks the row as generating-review before composing content |
-| `write_squad_summary` | Writes the structured summary page, citations, and run log entry |
+| `write_squad_summary` | Writes the structured summary page (5 sections incl. Key Releases), citations, and run log entry |
 
 **If you cannot see all three tools in your tool list, stop immediately and output:**
 
@@ -56,7 +56,9 @@ If totalRows = 0 → call `write_squad_summary` with:
 
 - squad = "\<slug\>", source = "github", weekOf = "\<weekOf\>"
 - whatShipped = "No activity this week."
-- inProgress = "", risks = "", notable = "", citations = []
+- inProgress = "", risks = "", notable = ""
+- keyReleases = "(no releases this week)"
+- citations = []
 
 That row auto-approves and skips HITL. Move to the next squad.
 
@@ -81,16 +83,23 @@ Each row returned contains:
 | status | open / merged / closed |
 | lastUpdated | Date of last activity |
 
-Write four sections for the page body:
+Write **five** sections for the page body, all in this same pass:
 
 - **What Shipped** — Every PR with status=merged. Include: PR title, PR number (from sourceId), what it does, any Jira ticket referenced (look for "Refs XXXX" or "Closes XXXX" in excerpt). Past tense. One bullet per PR.
 - **In Progress** — Every PR with status=open. Include: PR title, PR number, current state, reviewer if mentioned in excerpt. Present tense.
 - **Risks & Blockers** — PRs mentioning a blocker in the body. PRs closed without merging. PRs waiting on another team or ticket.
 - **Notable** — Cross-team PRs. Large diffs (>500 additions or >300 deletions). Security-path changes. Code review decisions that changed direction.
+- **Key Releases** — A bulleted, customer-facing translation of items that are **fully shipped** this week (a strict subset of What Shipped — see rules below). This section is reviewed by the EM in the same HITL pass as the rest of the summary; it is not a separate side-channel output.
+
+  Rules for what counts as a Key Release:
+  - Include only merged PRs with a clear "merged to main" indicator or release tag.
+  - Exclude open PRs, closed-without-merge, blocked items, or anything framed as in-progress.
+  - **No PR numbers, ticket IDs, or internal identifiers** — translate to customer-facing product capability language. (Example: instead of "Merged PR #47 (ATLAS-112): token refresh," write "AuthShield token refresh no longer expires active sessions.")
+  - If nothing shipped for this squad this week, write exactly: `(no releases this week)`
 
 ### C. Citation Rules — ⚠️ Read Carefully
 
-Every sentence naming a specific PR number, author, ticket reference, or merge event **must have a citation entry**. The eval harness requires ≥90% factual sentence coverage — **below 90% fails quality checks.**
+Every sentence naming a specific PR number, author, ticket reference, or merge event **must have a citation entry** — this includes Key Releases sentences (cite the same underlying merged-PR mirror row you'd cite in What Shipped, even though the Key Releases sentence itself is phrased in customer-facing language). The eval harness requires ≥90% factual sentence coverage — **below 90% fails quality checks.**
 
 For each such sentence, add one entry to the citations array:
 
@@ -111,8 +120,10 @@ Once you've completed the citations array, call `write_squad_summary` with:
 - squad = \<slug\>
 - source = "github"
 - weekOf = \<weekOf\>
-- All four sections (whatShipped, inProgress, risks, notable)
+- All five sections (whatShipped, inProgress, risks, notable, keyReleases)
 - Your full citations array
+
+This single call replaces what used to be two calls (`write_squad_summary` + `write_key_releases`). Key Releases now lives in the page body where the EM reviews it — not in a side-channel property.
 
 Repeat steps A–D for each remaining squad.
 

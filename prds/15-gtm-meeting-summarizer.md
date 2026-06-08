@@ -1,10 +1,10 @@
 # PRD-15 — GTM Meeting Notes Daily Summarizer Worker
 
 <!-- status:
-state: waiting
-owner: -
-updated: -
-notes: -
+state: in-review
+owner: sonnet-2026-06-06-15
+updated: 2026-06-07T09:15:00Z
+notes: All 7 ACs verified live — worker 019e9eda-b299-70bd-8619-3454f1fb4f0e deployed with auto-publish/draft gate; AC-2 proven via live Custom Agent run producing digest 378fc8f4-554c-814f-b751-c7457e59adf5 for 2026-06-07 with correct Vantage at-risk flagging.
 -->
 
 ## Goal
@@ -145,3 +145,35 @@ cd workers/gtm-meeting-summarizer && ntn workers deploy
 # Test zero-meetings case by running with a date that has no fixture data
 # Expected: one published row with "No meetings recorded"
 ```
+
+## Implementation Notes
+
+> Written post-build. Read this section before building any PRD that depends on this one.
+
+### What was actually built
+
+- **`workers/gtm-meeting-summarizer/`**: New `ntn` Worker sub-project (package.json, tsconfig.json, workers.json, `src/index.ts`) following the `workers/summarizer/` pattern exactly. Deployed live — **worker ID `019e9eda-b299-70bd-8619-3454f1fb4f0e`**, name `arcline-worker-gtm-meeting-summarizer`. All 4 tools from the brief shipped: `read_recent_meeting_notes`, `read_opportunity`, `write_gtm_daily_digest`, `write_agent_run_log`.
+- **`write_gtm_daily_digest` gained an `atRiskCount` parameter** (not in the brief's literal signature) — this resolves the PRD's Open Question. Logic: `atRiskCount = 0 → Status = published` (auto-publish, no review needed), `atRiskCount > 0 → Status = draft` (CRO reviews before it goes live). The Custom Agent computes this count from its own analysis and passes it through; the worker just applies the gate.
+- **`write_agent_run_log` dropped the brief's `squadId` parameter** — the shared Agent Run Log schema has no such field (verified against the live `summarizer` worker's usage); `Agent Name` is the sole discriminator across all EPD and GTM agents. Matched the existing convention rather than the PRD's literal signature.
+- **`read_recent_meeting_notes` resolves `opportunityTitle` inline** via one extra `pages.retrieve` per linked note (N+1, acceptable at fixture scale of 10–17 rows — flag for revisit if data volume grows into the hundreds).
+- **`agent-prompts/gtm-daily-digest.md`**: Full Custom Agent prompt written in the same operational-steps format as `agent-prompts/summarizer-github.md` / `summarizer-master.md`. Includes day-of-week-aware lookback logic (`Monday → daysBack=3`, else `daysBack=1`), all 4 digest sections with formatting rules, and the auto-publish/draft decision table.
+- **`scripts/trigger-gtm-daily-digest.ts`** + root `package.json` aliases `gtm-daily-digest` / `gtm-meeting-summarizer:deploy`: A standalone simulation script (mirrors `generate-summaries.ts`) that calls the Anthropic SDK + Notion API directly — useful for demo runs, backfill, and testing without going through the live Custom Agent. Supports `--dry-run`, `--days-back=N`, `--date=YYYY-MM-DD`.
+
+### Gotchas for downstream sessions
+
+**1. `JSONValue` strict-typing rejects `undefined` in union return shapes**
+The first `read_opportunity` draft returned `{ error, opportunityId }` on the not-found branch and a full property object on success — TypeScript inferred a union with `title?: undefined` etc., which fails the worker SDK's `JSONValue` constraint (`undefined` isn't a valid JSON value). Fix: return the **same flat shape** on both branches with a `found: boolean` discriminator and empty-string/zero defaults instead of optional fields. Any tool returning a union (success vs. not-found vs. error) will hit this — design the return type as one flat shape from the start.
+
+**2. `ntn workers deploy` requires `--name` on first deploy of a brand-new worker**
+Running `ntn workers deploy` in a fresh worker directory fails non-interactively with "A worker name is required to create a new worker." Fix: `ntn workers deploy --name "gtm-meeting-summarizer"`. The `workers.json` does **not** need a `workerId` seeded — `ntn` creates the worker and writes the ID back into `workers.json` automatically on first successful deploy.
+
+**3. "Today" drifted mid-session, producing a misleading-looking note count during live testing**
+I recommended testing with `daysBack=4` assuming "today" was 2026-06-06 (per the session's `currentDate` context). By the time Dan ran the live Custom Agent, real wall-clock time had advanced to 2026-06-07, shifting the `on_or_after` cutoff from `2026-06-02` to `2026-06-03` — which correctly excluded the Meridian/Orion notes (dated 06-02) and returned only Vantage + Nexus (06-03). The agent reported "only 2 of 4 expected meetings found" and (incorrectly) speculated the missing notes "don't appear in the database for that range" — when in fact they simply fell outside the date filter. **The worker's `on_or_after` filter is correct**; the confusion was a one-day calibration error in the *test prompt*, surfaced by a date that rolled over during the session. Future sessions giving date-relative test instructions against fixture data should compute the cutoff explicitly (`today - daysBack`) rather than eyeballing "today," and should expect the agent to sometimes misdiagnose filter exclusions as missing data.
+
+**4. Three test/demo artifacts now live in GTM | Daily Digest — clean up before the CRO demo**
+This session's verification runs created three rows that are not part of the PRD-14 seed set:
+- `2026-06-06` (pageId `377fc8f4-554c-8139-8513-c8090aa024ae`, status=draft) — created by `pnpm gtm-daily-digest --days-back=4` trigger-script runs (AC-2/3/4/5 verification)
+- `2026-06-07` (pageId `378fc8f4-554c-814f-b751-c7457e59adf5`, status=draft) — created by the **live Custom Agent** run (the canonical AC-2 proof)
+- `2026-01-01` (pageId `377fc8f4-554c-811b-9541-ed492bc22ac8`, status=published) — zero-meetings/`outcome=skipped` test stub (AC-7 proof)
+
+These are real, valid rows (not corrupted data) — but they'll clutter the Daily Digest view during the live CRO demo. Recommend archiving the `2026-01-01` stub and the `2026-06-06` trigger-script row before the interview, keeping the `2026-06-07` live-agent row as the authentic "agent ran this morning" artifact.

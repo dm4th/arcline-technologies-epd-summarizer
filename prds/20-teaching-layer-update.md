@@ -11,7 +11,7 @@ notes: -
 Extend the existing teaching hub with 4 new explainer pages covering the GTM pipeline and a "Day-2 Operations" guide, so Arcline's team can maintain and extend the system independently without needing ongoing Notion support.
 
 ## Why this exists
-The existing 11-explainer hub (from PRD-10) covers the EPD pipeline thoroughly. Round 2 adds a parallel GTM pipeline with 4 new databases and 3 new workers — none of which are documented for a first-time reader. More importantly, the CRO's implicit objection ("who maintains this after the pilot?") is best answered not in conversation, but by pointing to a page that a non-engineer can follow. The Day-2 Operations explainer makes that answer tangible and clickable.
+The existing 11-explainer hub (from PRD-10) covers the EPD pipeline thoroughly. Round 2 adds a parallel GTM pipeline with 5 new databases (including `GTM | Weekly Briefs` — added 2026-06-08, see PRD-13 Addendum + PRD-17 Spec Update; it replaces what was originally spec'd as a page hierarchy) and 3 new workers — none of which are documented for a first-time reader. More importantly, the CRO's implicit objection ("who maintains this after the pilot?") is best answered not in conversation, but by pointing to a page that a non-engineer can follow. The Day-2 Operations explainer makes that answer tangible and clickable.
 
 ## Dependencies
 - PRD-10 (existing hub page at `36ffc8f4-554c-81a8-9a77-c1abefc99d18` — new explainers are added as sub-pages here).
@@ -48,9 +48,14 @@ Content to cover:
       ↓  [Key Releases]          ↓
   Master EPD ──────────► Release Bridge ──► Deals Flagged
       ↓                      
-  GTM Weekly (CRO-facing)    Battle Cards ← Battle Card Updater
+  GTM | Weekly Briefs        Battle Cards ← Battle Card Updater
+  (CRO-facing, one row/wk)
   ```
-- One sentence on each of the 4 GTM databases and what they contain.
+  *(`GTM | Weekly Briefs` is a database — one row per week, mirroring Master EPD Weekly —
+  not a standalone page. Added 2026-06-08; see PRD-13 Addendum + PRD-17 Spec Update for
+  why. Update this diagram's box label if an earlier draft still says "GTM Weekly".)*
+- One sentence on each of the 5 GTM databases and what they contain (Meeting Notes,
+  Opportunities, Daily Digest, Battle Cards, **Weekly Briefs**).
 - Why daily (GTM) vs weekly (EPD): sales pipeline moves faster than a sprint — a deal can slip in a day.
 
 ### Page 2: GTM Daily Digest — How It Works

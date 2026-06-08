@@ -1,14 +1,60 @@
 # PRD-17 — Squad Summarizer + Master GTM Weekly Updates
 
 <!-- status:
-state: waiting
-owner: -
-updated: -
-notes: -
+state: in-progress
+owner: sonnet-2026-06-06-A1
+updated: 2026-06-06T22:45:00Z
+notes: ⚠️ STALE-NOTE CORRECTION (Opus 2026-06-08): the "all 8 ACs verified live" claim below was made 2026-06-06 against the OLD page-hierarchy ACs. The ACs were rewritten 2026-06-08 (see "Spec Update") to require a row in the GTM | Weekly Briefs DATABASE — that DB currently has 0 rows, so AC3/AC4 do NOT pass yet. REWORK OUTSTANDING before in-review: (1) rewrite Tool 6 / write_gtm_weekly_page to query gtmWeeklyBriefs by Week Of + pages.create/update against the DB; (2) DELETE the live REVENUE_PAGE_ID constant from workers/summarizer-master/src/index.ts AND scripts/generate-master.ts (it points at archived page 377…811e — generate-master is currently broken because of it); (3) port old W21 page content into the first DB row, then archive the old page (with Dan's OK). [PRIOR 2026-06-06 note, now superseded:] SDK path verified (all 8 ACs live against old design); remaining was updating 5 Custom Agents + confirming tools reachable.
 -->
 
+## 🔁 Spec Update — GTM Weekly Briefs becomes a database (2026-06-08, Dan + review session)
+
+> **Read this before touching `write_gtm_weekly_page` / `createOrUpdateGtmWeeklyPage`.**
+> The artifact's *home* is changing from a page hierarchy to a database. The 4-section
+> brief content is unchanged — only the container around it changes.
+
+**What's changing:** `Revenue > GTM Weekly Briefs > GTM Weekly — {weekOf}` (a page
+hierarchy, title-matched) becomes **one row per week in a new `GTM | Weekly Briefs`
+database** (`NOTION_IDS.dbs.gtmWeeklyBriefs`), mirroring how `Master EPD Weekly` already
+works. The brief's 4-section body (What Shipped / What It Means / Deals to Contact / How
+to Use) lives in each row's page body exactly as it did in the sub-page — Notion renders
+database-row pages identically to regular pages, so the CRO-facing read experience is
+unchanged.
+
+**Why:** (1) Consistency — `Master EPD Weekly` is already a database; the GTM "analog
+produced alongside it" shouldn't be structurally different. (2) Structured metadata —
+`Week Of` (date), `Status` (draft/published), `Deals Flagged` (number), `Flagged Deals`
+(relation → `GTM | Opportunities`) turn the placeholder "See Release Bridge for
+deal-specific outreach" into a real, traceable, clickable link. (3) Cleaner find-or-create
+— `pages.create({ parent: { database_id }})` + a query on `Week Of`/`Title`, instead of
+brittle title-matched page traversal. (4) Scale — 52 weeks of sub-pages have no
+sort/filter; a database gets views for free.
+
+**🐛 Bonus finding — this also fixes a live latent bug:** `REVENUE_PAGE_ID` is hardcoded
+(`377fc8f4-554c-811e-…`) in both `workers/summarizer-master/src/index.ts` and
+`scripts/generate-master.ts`. That page is **now archived** (confirmed via
+`ntn api v1/search`, 2026-06-08 — verified zero live children). The "find existing GTM
+Weekly Briefs page" search filters on `result.parent.page_id === REVENUE_PAGE_ID`, but the
+*live* page's parent is a `block_id` (it's nested in a column layout, not a direct page
+child) — so the match **always fails**, and the code falls through to
+`pages.create({ parent: { page_id: REVENUE_PAGE_ID }})`, targeting an archived page. The
+next `pnpm generate-master` run will likely error or create orphans. **The database
+conversion fixes this for free** — `pages.create({ parent: { database_id:
+NOTION_IDS.dbs.gtmWeeklyBriefs }})` needs no traversal, no search-by-title, and no
+`REVENUE_PAGE_ID` at all. Delete the constant from both files as part of this rewrite.
+Full investigation notes: `src/lib/notion-ids.ts` → `pages.revenue` comment block.
+
+**New schema dependency:** `NOTION_IDS.dbs.gtmWeeklyBriefs` — added by the **PRD-13
+Addendum** (`prds/13-gtm-workspace-schema.md`). Properties: `Title` (title), `Week Of`
+(date), `Status` (select: draft/published), `Deals Flagged` (number), `Flagged Deals`
+(relation → `GTM | Opportunities`).
+
+**Does NOT block the in-progress build** — `write_key_releases` / `write_gtm_highlights`
+(Changes 1 & 2's other halves) are unaffected. Only `write_gtm_weekly_page` /
+`createOrUpdateGtmWeeklyPage` (Step C) needs rework before this PRD can move to in-review.
+
 ## Goal
-Update two existing workers — the Squad Source Summarizer and the Master Summarizer — to extract "Key Releases" per squad and produce two GTM-facing outputs: a `GTM Highlights` property on the Master EPD row (internal), and a standalone "GTM Weekly" page under a new Revenue section (CRO-facing).
+Update two existing workers — the Squad Source Summarizer and the Master Summarizer — to extract "Key Releases" per squad and produce two GTM-facing outputs: a `GTM Highlights` property on the Master EPD row (internal), and a new row in the `GTM | Weekly Briefs` database (CRO-facing — see "Spec Update" above for why this is a database, not a page hierarchy).
 
 ## Why this exists
 The EPD pipeline produces a rich VP-level digest, but the CRO needs a non-technical weekly view of what shipped and what it means for the pipeline — with no ticket numbers, no PR references, just customer impact. By adding a `Key Releases` extraction pass to the existing Squad Summarizer and a `GTM Highlights` + standalone GTM Weekly output to the Master Summarizer, the EPD pipeline directly feeds the revenue org without any extra human effort. This is the "does this improve how we communicate product updates to customers?" answer.
@@ -22,15 +68,14 @@ The EPD pipeline produces a rich VP-level digest, but the CRO needs a non-techni
 > exactly what the ≤150-word GTM Highlights and the non-technical GTM Weekly page require.
 
 ## Dependencies
-- PRD-13 (`Key Releases` property on Squad Weekly Summary; `GTM Highlights` property on Master EPD Weekly must already exist).
+- PRD-13 (`Key Releases` property on Squad Weekly Summary; `GTM Highlights` property on Master EPD Weekly; **and the PRD-13 Addendum's `gtmWeeklyBriefs` database** — must all already exist).
 - PRD-04a (Squad Source Summarizer worker — `workers/summarizer/` — must be complete; this PRD modifies it).
 - PRD-05 (Master Summarizer worker — `workers/summarizer-master/` — must be complete; this PRD modifies it).
 
 ## Inputs
 - `workers/summarizer/src/index.ts` — existing source summarizer; add a `Key Releases` extraction pass.
 - `workers/summarizer-master/src/index.ts` — existing master summarizer; add GTM output pass.
-- `src/lib/notion-ids.ts` — must include `gtmDailyDigest` (for finding/creating the GTM Weekly page parent).
-- `BASE_NOTION_PAGE` or a new "Revenue" page ID — parent for the GTM Weekly page (see Design).
+- `src/lib/notion-ids.ts` — must include `gtmWeeklyBriefs` (the database `write_gtm_weekly_page` writes rows into — see PRD-13 Addendum). **Do NOT use `REVENUE_PAGE_ID` / `NOTION_IDS.pages.revenue`** — that page is archived and stale (see "Spec Update" above and the comment block in `notion-ids.ts`).
 
 ## Outputs
 
@@ -39,7 +84,7 @@ The EPD pipeline produces a rich VP-level digest, but the CRO needs a non-techni
 
 **Change 2 — Master Summarizer writes two new artifacts:**
 - `GTM Highlights` property on the Master EPD Weekly row (≤150 words, non-technical, internal).
-- A standalone Notion page titled `"GTM Weekly — [weekOf]"` under a new `Revenue > GTM Weekly Briefs` sub-page.
+- A new row in the `GTM | Weekly Briefs` database (`NOTION_IDS.dbs.gtmWeeklyBriefs`), `Title = "GTM Weekly — [weekOf]"`, with `Week Of` / `Status` properties populated and the 4-section brief content in the row's page body (CRO-facing).
 
 ## Design
 
@@ -93,16 +138,17 @@ Rules:
 
 Write the output to `GTM Highlights` on the Master EPD Weekly row using a new tool `write_gtm_highlights(masterPageId, highlightsText)`.
 
-**Step C — Create/update the standalone GTM Weekly page:**
+**Step C — Create/update the GTM Weekly Briefs row:**
 
 Add a new tool `write_gtm_weekly_page(weekOf, body)`:
-- Checks if a page titled `"GTM Weekly — {weekOf}"` already exists under a page called `"GTM Weekly Briefs"` (which itself lives under `BASE_NOTION_PAGE`).
-- If the `"GTM Weekly Briefs"` page doesn't exist, creates it.
-- Creates or updates the `"GTM Weekly — {weekOf}"` child page.
-- Writes the page body using `ntn pages update {id} --content "{markdown}"` style (Markdown content).
-- Returns the page ID.
+- Queries `GTM | Weekly Briefs` (`NOTION_IDS.dbs.gtmWeeklyBriefs`) by `Week Of` (date, set to the Monday of `weekOf`) — Notion's `databases.query` filter, not a title search. This is the "find" half; it's exact-match on a structured property, not brittle title-matching.
+- If a row for that week exists, update it (`pages.update` — refresh `Status`, `Week Of`, and overwrite the page body).
+- If not, create one: `pages.create({ parent: { database_id: NOTION_IDS.dbs.gtmWeeklyBriefs }, properties: { Title: "GTM Weekly — {weekOf}", "Week Of": weekOfDate, Status: "draft" } })`.
+- Writes the page body (the same 4-section content as before — see structure below) via `blocks.children.append` (handles the 100-block-per-append limit).
+- Returns `{ pageId, url }`.
+- **No `REVENUE_PAGE_ID`, no page-hierarchy traversal, no title search against archived pages** — this tool only ever touches `gtmWeeklyBriefs` (database) and `opportunities` (relation target). See "Spec Update" above for why the old traversal was already broken.
 
-GTM Weekly page body structure (Markdown written via `blocks.children.append` or `ntn pages update`):
+GTM Weekly Briefs row body structure (written via `blocks.children.append`) — **content unchanged from the original page-hierarchy design**, only the container changed:
 ```markdown
 # GTM Weekly — [Week Of]
 _Prepared by the Arcline AI Digest pipeline. For questions, contact [VP Eng name]._
@@ -127,40 +173,69 @@ _Prepared by the Arcline AI Digest pipeline. For questions, contact [VP Eng name
 - PATCHes `GTM Highlights` property on Master EPD Weekly row.
 
 `write_gtm_weekly_page(weekOf: string, body: string)`
-- Creates or updates the CRO-facing GTM Weekly page.
+- Finds-or-creates the CRO-facing weekly brief as a **row in `GTM | Weekly Briefs`** (query by `Week Of`, not title-search — see Step C).
 - Returns `{ pageId, url }`.
 - Writes a row to Agent Run Log with `Agent Name = "master-gtm-weekly-page"`.
 
 ### GTM Highlights is non-blocking
 Both `write_gtm_highlights` and `write_gtm_weekly_page` are called AFTER the existing master publish flow completes. They do not affect the `Quorum Met` logic, the `Status = awaiting-VP` transition, or the citation coverage calculation. If either fails, the master summary is still published — the GTM output failure is logged but not fatal.
 
-### Revenue section page structure
-A new top-level section under `BASE_NOTION_PAGE`:
+### `GTM | Weekly Briefs` database location
+The database lives directly under `BASE_NOTION_PAGE` (created by the PRD-13 Addendum's
+`patch-schema-round2.ts`, alongside the other 5 GTM databases — see PRD-13 for exactly
+where in the live layout). `write_gtm_weekly_page` references it purely by ID
+(`NOTION_IDS.dbs.gtmWeeklyBriefs`) — **no traversal, no "Revenue" page lookup, no
+title-matching**:
 ```
-BASE_NOTION_PAGE/
-  ├── [existing EPD databases]
-  └── Revenue/          ← new page, created by write_gtm_weekly_page on first run
-        └── GTM Weekly Briefs/    ← created on first run
-              └── GTM Weekly — 2026-W21    ← created each week
+GTM | Weekly Briefs  (database, NOTION_IDS.dbs.gtmWeeklyBriefs)
+  ├── row: "GTM Weekly — 2026-W21"   Week Of: 2026-05-18   Status: published
+  ├── row: "GTM Weekly — 2026-W22"   Week Of: 2026-05-25   Status: draft
+  └── …                              ← one row per week, queryable/sortable/filterable
 ```
+*(Supersedes the original `Revenue > GTM Weekly Briefs > GTM Weekly — {weekOf}` page-hierarchy diagram — see "Spec Update" at the top of this PRD for the full rationale and the `REVENUE_PAGE_ID` bug this also fixes.)*
 
 ## Acceptance Criteria
 1. After running `pnpm generate-summaries` for 2026-W21, all Squad Weekly Summary rows for that week have a non-empty `Key Releases` property.
 2. After running `pnpm generate-master` for 2026-W21, the Master EPD Weekly row has a non-empty `GTM Highlights` property (≤150 words, no ticket/PR numbers).
-3. A Notion page titled `"GTM Weekly — 2026-W21"` exists under `Revenue > GTM Weekly Briefs`.
-4. The GTM Weekly page body contains the 4 sections: "What Shipped", "What It Means for Your Pipeline", "Deals to Contact This Week", "How to Use This Brief".
+3. A row with `Title = "GTM Weekly — 2026-W21"` and `Week Of = 2026-05-18` exists in the `GTM | Weekly Briefs` database (`NOTION_IDS.dbs.gtmWeeklyBriefs`).
+4. That row's page body contains the 4 sections: "What Shipped", "What It Means for Your Pipeline", "Deals to Contact This Week", "How to Use This Brief".
 5. `Key Releases` for Atlas squad mentions AuthShield (the shipped PRD in W21 fixture data).
-6. Running `pnpm generate-master` a second time updates the existing GTM Weekly page rather than creating a duplicate.
-7. If all squads have `Key Releases = "(no releases this week)"`, GTM Highlights = "No product releases this week." and the GTM Weekly page reflects this.
+6. Running `pnpm generate-master` a second time updates the existing W21 row (matched by `Week Of`) rather than creating a duplicate row.
+7. If all squads have `Key Releases = "(no releases this week)"`, GTM Highlights = "No product releases this week." and the W21 row's body reflects this.
 8. Existing master summary behavior is unchanged: Quorum gate still requires 100% approval, Citation Coverage % is still computed, conflict-resolution callout still present.
 
 ## Out of Scope
-- Populating the "Deals to Contact This Week" section of the GTM Weekly page — that is PRD-16 (Release Bridge) which appends to the GTM Daily Digest, not this page directly. PRD-17 leaves a placeholder.
-- Sending the GTM Weekly page to any external system (email, Slack) — output is Notion-only.
+- Populating the "Deals to Contact This Week" section of the GTM Weekly Briefs row — that is PRD-16 (Release Bridge) which appends to the GTM Daily Digest, not this row directly. PRD-17 leaves a placeholder (though the new `Flagged Deals` relation property on `GTM | Weekly Briefs` gives Release Bridge a structured place to land its links later — see PRD-13 Addendum).
+- Sending the GTM Weekly Briefs row to any external system (email, Slack) — output is Notion-only.
 - Changing the master summarizer's quorum logic or citation scoring.
 
 ## Open Questions
-- Should the GTM Weekly page be created under a dedicated "Revenue" section separate from the EPD databases, or alongside them? Recommendation: dedicated "Revenue" sub-page, to reinforce the cross-org visibility story during the demo (engineering data and revenue data are separate but connected). This is the implementing session's call if the recommendation needs adjustment.
+- ~~Should the GTM Weekly page be created under a dedicated "Revenue" section separate from the EPD databases, or alongside them?~~ **RESOLVED (2026-06-08):** moot — the artifact is now a database row (`GTM | Weekly Briefs`, created directly under `BASE_NOTION_PAGE` by the PRD-13 Addendum, in the same live layout as the other 5 GTM databases), not a page requiring a parent-section decision. See "Spec Update" at the top of this PRD.
+
+## Feature Request — Flagged for Opus Review
+
+> Surfaced during the PRD-17 build (2026-06-06). NOT built in this session — this is new scope. Opus should judge the right home for it and update PRD-18 (or any other PRD) directly if warranted.
+
+**Gap identified: the GTM pipeline only tells revenue teams what has *already* shipped — never what's *about to*.**
+
+Today, everything PRD-17 produces is retrospective and source-grounded: `Key Releases` extracts only items "fully shipped this week" from raw mirror signals (merged PRs, Done/Released tickets, deploy announcements, approved-and-handed-off designs). `GTM Highlights` and the `GTM Weekly` page synthesize from that same backward-looking material. None of it tells a sales rep or the CRO **when** something not yet shipped will land — which is exactly the kind of forward signal a rep needs to set expectations with a prospect ("the SSO migration lands in Q3 — worth mentioning now to keep this deal warm").
+
+**Proposed feature: an "Upcoming Releases" view — next month / next quarter — surfaced alongside the existing retrospective content.**
+
+The goal of this project's GTM bridge should be twofold, not singular:
+1. *(already covered by PRD-17)* Tell GTM what **has shipped** — retrospective, source-grounded, week-scoped.
+2. *(the gap)* Tell GTM **when things will ship** — forward-looking, roadmap-grounded, month/quarter-scoped.
+
+**Why this is out of PRD-17's natural scope (don't just bolt it on here):**
+Forward-looking content requires an entirely different data source and extraction logic — the Product Roadmap DB filtered to `Status = Planning / In Progress / Planned` and `Target Quarter`, not raw per-source "what shipped" signals. Building it inside PRD-17 would mean rewriting this PRD's Design, Outputs, and Acceptance Criteria sections — effectively a different PRD wearing this one's number.
+
+**Where the groundwork already exists — likely candidate for expansion: PRD-18.**
+PRD-18 (GTM Battle Card Updater, currently `waiting`) already specs a `read_product_roadmap(status?: 'in-progress' | 'shipped' | 'planned')` tool returning `{ targetQuarter, status, notes, ... }`, and its own design explicitly frames the Product Roadmap DB as being there "for 'what's coming' competitive context" (see `prds/18-gtm-battle-card-updater.md` lines ~32, 56-58, 85). The forward-looking roadmap-read plumbing is *already planned* — it's just funneled narrowly into Battle Cards' "Our Differentiators" messaging, never surfaced as a standalone digest section for reps.
+
+**Recommendation for Opus:**
+- Most likely a new follow-on PRD (e.g. PRD-21, mirroring how `prds/README.md`'s Deferred/Post-POC backlog captured the PRD-12 idea) that reuses/extends PRD-18's `read_product_roadmap(status)` tool rather than duplicating roadmap-read plumbing, and surfaces "what's landing next month / next quarter" as a forward-looking section in either the GTM Weekly page (this PRD's artifact) or the GTM Daily Digest (PRD-15's artifact).
+- Alternatively, Opus may judge that PRD-18's scope should simply expand to emit this directly, since it already reads the roadmap with status filtering.
+- Either way: **the framing must stay distinct from Key Releases** — "what to tease to a prospect" (forward, roadmap-confidence-qualified) vs. "what already shipped" (retrospective, source-confirmed). Conflating the two would undermine the trust story this whole pipeline is built on (an unshipped feature presented as shipped is worse than no signal at all).
 
 ## Verification
 ```bash
@@ -184,6 +259,68 @@ ntn api v1/databases/${NOTION_IDS.dbs.masterEpdWeekly}/query \
   | jq '.results[0].properties["GTM Highlights"].rich_text[0].plain_text | length'
 # Expected: >0 and <=150 words
 
-# Open Notion → Revenue > GTM Weekly Briefs → GTM Weekly — 2026-W21
-# Confirm page exists with 4 sections
+# Verify the W21 row exists in GTM | Weekly Briefs (queried by Week Of, not title-search)
+ntn api "v1/databases/${NOTION_IDS.dbs.gtmWeeklyBriefs}/query" \
+  --notion-version 2022-06-28 \
+  -d '{"filter":{"property":"Week Of","date":{"equals":"2026-05-18"}}}' \
+  | jq '.results[0] | {title: .properties.Title.title[0].plain_text, status: .properties.Status.select.name, weekOf: .properties["Week Of"].date.start}'
+# Expected: { title: "GTM Weekly — 2026-W21", status: "draft"|"published", weekOf: "2026-05-18" }
+
+# Open Notion → GTM | Weekly Briefs → "GTM Weekly — 2026-W21" row
+# Confirm the row's page body contains all 4 sections
 ```
+
+## Implementation Notes
+
+> Written post-build. Read this section before building any PRD that depends on this one.
+
+> ⚠️ **REWORK REQUIRED (2026-06-08) — read "Spec Update" at the top of this PRD first.**
+> The "What was actually built" section below describes the **original page-hierarchy
+> design** (Tool 6 `write_gtm_weekly_page`, `createOrUpdateGtmWeeklyPage`,
+> `REVENUE_PAGE_ID`). That design is being replaced with a database
+> (`GTM | Weekly Briefs`). Concretely, before this PRD can move to in-review:
+> - Rewrite Tool 6 / `createOrUpdateGtmWeeklyPage` per the new Step C spec (query by
+>   `Week Of`, `pages.create`/`pages.update` against `NOTION_IDS.dbs.gtmWeeklyBriefs`).
+> - Delete the `REVENUE_PAGE_ID` constant from both `workers/summarizer-master/src/index.ts`
+>   and `scripts/generate-master.ts` — it points at an archived page and the new design
+>   has no use for it.
+> - The live `GTM Weekly Briefs` page + `GTM Weekly — 2026-W21` sub-page
+>   (`377fc8f4-…8105` / `…812f`) are now superseded — their content should be
+>   ported into the first row of `GTM | Weekly Briefs` (Title = "GTM Weekly — 2026-W21",
+>   Week Of = 2026-05-18) on the next `pnpm generate-master` run; the old page can then
+>   be archived (with Dan's confirmation — do not archive without asking).
+> The notes below are kept as a historical record of the first build pass — useful
+> context for the gotchas (esp. #1–#3), but Step C / Tool 6 specifically need a rewrite,
+> not a patch.
+
+### What was actually built
+
+- **`workers/summarizer/src/index.ts`**: Added Tool 4 `write_key_releases(summaryPageId, keyReleasesText)`. PATCHes the `Key Releases` rich_text property on the Squad Weekly Summary row; truncates to 2000 chars (Notion per-element limit). The Key Releases text is generated by `generate-summaries.ts` via a Haiku call — the worker tool is pure data plumbing, no LLM.
+
+- **`workers/summarizer-master/src/index.ts`**: Added constants `SQUAD_WEEKLY_SUMMARY_DB` and `REVENUE_PAGE_ID` (hardcoded to match `notion-ids.ts`). Extended `read_approved_summaries` (Tool 1) to query Squad Weekly Summary rows per squad and aggregate `keyReleases` into each `ConsolidatedEntry`. Added Tool 5 `write_gtm_highlights` (PATCHes `GTM Highlights` on Master EPD row) and Tool 6 `write_gtm_weekly_page` (finds or creates the `Revenue > GTM Weekly Briefs` hierarchy, then creates/updates the week page). The GTM page writer handles the 100-block-per-append limit from the Notion API.
+
+- **`src/lib/notion-ids.ts`**: Added `revenue` to the `pages` interface and object (`377fc8f4-554c-811e-af04-ef340c18ec34`). Required because `write_gtm_weekly_page` needs a stable parent page ID as its traversal root.
+
+- **`agent-prompts/summarizer-{github,jira,slack,figma}.md`**: All four updated — added `write_key_releases` to the Required Tools table (now 4 tools each), and added a Step 3.E for Key Releases extraction with source-specific rules (GitHub: merged PRs only; Jira: Done/Released tickets; Slack: unambiguous deploy announcements only; Figma: approved/handed-off designs only).
+
+- **`agent-prompts/summarizer-master.md`**: Updated to 6 tools (`read_approved_summaries`, `write_master_summary`, `begin_master_summary`, `write_vp_feedback`, `write_gtm_highlights`, `write_gtm_weekly_page`). Updated `read_approved_summaries` return shape to include `keyReleases` per squad. Added Step 7 (GTM Output Pass, explicitly non-blocking): 7A synthesizes GTM Highlights using FEATURE RESONANCE framing from the AI-Native GTM Hub; 7B composes the 4-section GTM Weekly page.
+
+- **`scripts/generate-summaries.ts`**: Added `extractKeyReleases(source, squad, whatShipped)` (Haiku call, source-specific rules) and `writeKeyReleasesToNotion(notion, pageId, text)` called after each source summary in the main loop. Output header now shows `key-releases: ✓` per source.
+
+- **`scripts/generate-master.ts`**: Added `fixJsonStrings` + `safeParseJson` (same 3-stage pattern as `generate-summaries.ts`). Removed `Citation` interface entirely; changed `MasterOutput.citations: Citation[]` → `MasterOutput.citationCount: number` (see Gotcha #2 below). Added `REVENUE_PAGE_ID` constant and GTM helpers: `readSquadKeyReleases`, `synthesizeGtmHighlights`, `writeGtmHighlightsToNotion`, `createOrUpdateGtmWeeklyPage`. Main function runs GTM pass in a non-blocking `try/catch` after master write succeeds.
+
+### Gotchas for downstream sessions
+
+**1. Worker deploy command diverges from pnpm filter pattern**
+The pnpm script convention (`pnpm --filter <pkg> deploy`) does not work for `ntn workers` — it triggers `ERR_PNPM_INVALID_DEPLOY_TARGET`. Deploy workers by changing into the worker directory and running `ntn workers deploy` directly:
+```bash
+cd workers/summarizer && ntn workers deploy
+cd workers/summarizer-master && ntn workers deploy
+```
+This applies to any future worker added under `workers/`. The `package.json` `:deploy` alias is for documentation only.
+
+**2. `citations: Citation[]` removed from MasterOutput — replaced with `citationCount: number`**
+The original PRD spec envisioned the master script emitting a full `citations` array (verbatim claim strings + record IDs). This reliably broke JSON parsing: LLM-generated claim strings contain nested double-quotes (e.g., `"EU read replica lag issue"`) that survive neither `JSON.parse` nor the `fixJsonStrings` escaper when they appear inside a JSON string value. The fix was to remove the array entirely. The eval harness reads `Citation Coverage %` from the Notion `Master EPD Weekly` row directly — the script never needed to re-parse verbatim claims. Any future downstream PRD that expects a `citations[]` array from `generate-master.ts` should instead read coverage from the Notion row via `ntn api` or `read_approved_summaries`. The `citationCount` integer (sourced from the already-stored Notion property) is still emitted for logging.
+
+**3. FEATURE RESONANCE framing source**
+The GTM Highlights and GTM Weekly synthesis prompts borrow the `FEATURE RESONANCE` framing from `~/Develop/personal-website/lib/projects/notion-meeting-intelligence/prompts.ts` (the AI-Native GTM Hub). The key pattern: translate technical shipment names → customer-facing impact language, then connect to pipeline categories (e.g., "AuthShield token migration → security-sensitive enterprise deals"). Future sessions refining the GTM output quality should start there, not in the agent prompts directly.

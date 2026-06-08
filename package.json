@@ -24,7 +24,11 @@
     "approve-week":       "tsx --env-file=.env.local scripts/approve-week.ts",
     "generate-master":    "tsx --env-file=.env.local scripts/generate-master.ts",
     "eval": "tsx --env-file=.env.local evals/run.ts",
-    "eval:golden": "tsx --env-file=.env.local evals/golden-replay.ts"
+    "eval:golden": "tsx --env-file=.env.local evals/golden-replay.ts",
+    "patch-round2":        "tsx --env-file=.env.local scripts/patch-schema-round2.ts",
+    "seed-gtm-fixtures":   "tsx --env-file=.env.local scripts/seed-gtm-fixtures.ts",
+    "gtm-daily-digest":    "tsx --env-file=.env.local scripts/trigger-gtm-daily-digest.ts",
+    "gtm-meeting-summarizer:deploy": "pnpm --filter arcline-worker-gtm-meeting-summarizer deploy"
   },
   "engines": {
     "node": ">=20.0.0"

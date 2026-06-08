@@ -1,10 +1,10 @@
 # PRD-11 — `/interview-prep` Claude Skill
 
 <!-- status:
-state: in-review
-owner: sonnet-2026-06-01-F1
-updated: 2026-06-02T00:00:00Z
-notes: AC1/2/3/4 ✅ — 5 skill files: SKILL.md + instructions.md + question-bank.md (36q) + grading-rubric.md + session-log.md. Cross-session score tracking added post-initial-build. PRD-09 dep waived by Dan.
+state: completed
+owner: dan-2026-06-06
+updated: 2026-06-06T00:00:00Z
+notes: COMPLETED per Dan — Round 1 sign-off. AC1/2/3/4 ✅ — 5 skill files: SKILL.md + instructions.md + question-bank.md (36q) + grading-rubric.md + session-log.md. Cross-session score tracking added post-initial-build. PRD-09 dep waived by Dan.
 -->
 
 ## Goal

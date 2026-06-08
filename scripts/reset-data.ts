@@ -15,9 +15,11 @@
  * SAFETY GATE: you must pass --yes or --dry-run explicitly.
  *
  * Usage:
- *   pnpm reset-data --week=2026-W21 --yes      ← clear W21 rows only
- *   pnpm reset-data --week=2026-W21 --dry-run  ← safe preview
- *   pnpm reset-data --yes                      ← full data wipe (all weeks)
+ *   pnpm reset-data --week=2026-W21 --yes              ← clear W21 rows only
+ *   pnpm reset-data --week=2026-W21 --scope=gtm --yes  ← W21 GTM rows only
+ *   pnpm reset-data --week=2026-W21 --scope=eng --yes  ← W21 EPD rows only
+ *   pnpm reset-data --week=2026-W21 --dry-run          ← safe preview
+ *   pnpm reset-data --yes                              ← full data wipe (all weeks)
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -26,43 +28,57 @@ import { loadEnv } from "../src/lib/env";
 import { NOTION_IDS } from "../src/lib/notion-ids";
 import { weekOfToDate } from "../src/workers/hitl-review";
 
-const DRY_RUN = process.argv.includes("--dry-run");
-const YES     = process.argv.includes("--yes");
-const weekArg = process.argv.find((a) => a.startsWith("--week="))?.split("=")[1];
+const DRY_RUN  = process.argv.includes("--dry-run");
+const YES      = process.argv.includes("--yes");
+const weekArg  = process.argv.find((a) => a.startsWith("--week="))?.split("=")[1];
+const scopeArg = process.argv.find((a) => a.startsWith("--scope="))?.split("=")[1] as "eng" | "gtm" | undefined;
 
 // Notion's practical rate limit is ~3 req/s; 3 parallel archives is safe
 const ARCHIVE_CONCURRENCY = 3;
 
 // ── DB registry with filter strategies ───────────────────────────────────────
 //
-// Three strategies because different DBs use different date fields:
+// Four strategies because different DBs use different date fields:
 //   "week-of"         — "Week Of" date property (exact match on week's Monday)
 //   "notes-contains"  — "Notes" rich_text contains the weekOf string
 //                       (Agent Run Log lacks Week Of; the week appears in Notes)
 //   "last-updated"    — "Last Updated" date range covering the 7-day window
 //                       (Mirror DBs store the fixture's lastUpdated timestamp)
+//   "date-range"      — arbitrary date property in [weekStart, weekStart+6]
+//                       (GTM DBs use a plain "Date" field, not "Last Updated")
 
-type FilterStrategy = "week-of" | "notes-contains" | "last-updated";
+type FilterStrategy = "week-of" | "notes-contains" | "last-updated" | "date-range";
 
 type DbEntry = {
   id: string;
   label: string;
   strategy: FilterStrategy;
+  dateProperty?: string; // "date-range" strategy only — defaults to "Date"
 };
 
+// GTM DB IDs — used by --scope filtering to split EPD vs GTM resets
+const GTM_DB_IDS = new Set([
+  NOTION_IDS.dbs.gtmDailyDigest,
+  NOTION_IDS.dbs.gtmMeetingNotes,
+]);
+
 const DATA_DBS: DbEntry[] = [
-  // Week-keyed DBs — have an explicit "Week Of" date property
-  { id: NOTION_IDS.dbs.squadWeeklySummary, label: "Squad Weekly Summary", strategy: "week-of" },
-  { id: NOTION_IDS.dbs.masterEpdWeekly,   label: "Master EPD Weekly",    strategy: "week-of" },
-  { id: NOTION_IDS.dbs.hitlReviewSessions, label: "HITL Review Sessions", strategy: "week-of" },
-  { id: NOTION_IDS.dbs.deliveryPipeline,  label: "Delivery Pipeline",    strategy: "week-of" },
-  // Agent Run Log — no Week Of, but every row's Notes contains the week string
-  { id: NOTION_IDS.dbs.agentRunLog,       label: "Agent Run Log",        strategy: "notes-contains" },
-  // Mirror DBs — use Last Updated date range (reflects the fixture week, not run date)
-  { id: NOTION_IDS.dbs.mirrorGithub,      label: "GitHub | Mirror",      strategy: "last-updated" },
-  { id: NOTION_IDS.dbs.mirrorJira,        label: "Jira | Mirror",        strategy: "last-updated" },
-  { id: NOTION_IDS.dbs.mirrorSlack,       label: "Slack | Mirror",       strategy: "last-updated" },
-  { id: NOTION_IDS.dbs.mirrorFigma,       label: "Figma | Mirror",       strategy: "last-updated" },
+  // ── EPD pipeline (weekly cadence) ────────────────────────────────────────────
+  { id: NOTION_IDS.dbs.squadWeeklySummary,  label: "Squad Weekly Summary",  strategy: "week-of" },
+  { id: NOTION_IDS.dbs.masterEpdWeekly,     label: "Master EPD Weekly",     strategy: "week-of" },
+  { id: NOTION_IDS.dbs.hitlReviewSessions,  label: "HITL Review Sessions",  strategy: "week-of" },
+  { id: NOTION_IDS.dbs.deliveryPipeline,    label: "Delivery Pipeline",     strategy: "week-of" },
+  // Agent Run Log — no Week Of; every row's Notes contains the week string
+  { id: NOTION_IDS.dbs.agentRunLog,         label: "Agent Run Log",         strategy: "notes-contains" },
+  // Mirror DBs — Last Updated reflects fixture week, not run date
+  { id: NOTION_IDS.dbs.mirrorGithub,        label: "GitHub | Mirror",       strategy: "last-updated" },
+  { id: NOTION_IDS.dbs.mirrorJira,          label: "Jira | Mirror",         strategy: "last-updated" },
+  { id: NOTION_IDS.dbs.mirrorSlack,         label: "Slack | Mirror",        strategy: "last-updated" },
+  { id: NOTION_IDS.dbs.mirrorFigma,         label: "Figma | Mirror",        strategy: "last-updated" },
+  // ── GTM pipeline (daily cadence) ─────────────────────────────────────────────
+  // NOTE: Opportunities and Battle Cards are persistent records — do NOT reset them.
+  { id: NOTION_IDS.dbs.gtmDailyDigest,      label: "GTM Daily Digest",      strategy: "date-range", dateProperty: "Date" },
+  { id: NOTION_IDS.dbs.gtmMeetingNotes,     label: "GTM Meeting Notes",     strategy: "date-range", dateProperty: "Date" },
 ];
 
 // ── Filter builders ───────────────────────────────────────────────────────────
@@ -97,6 +113,19 @@ function buildFilter(entry: DbEntry, weekOf: string | undefined): NotionFilter |
         and: [
           { property: "Last Updated", date: { on_or_after: weekDate } },
           { property: "Last Updated", date: { on_or_before: weekEnd } },
+        ],
+      };
+    }
+
+    case "date-range": {
+      // GTM DBs store a plain "Date" (or override via dateProperty).
+      // Reset rows whose Date falls within the 7-day week window.
+      const prop    = entry.dateProperty ?? "Date";
+      const weekEnd = addDays(weekDate, 6);
+      return {
+        and: [
+          { property: prop, date: { on_or_after: weekDate } },
+          { property: prop, date: { on_or_before: weekEnd } },
         ],
       };
     }
@@ -158,10 +187,18 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // ── Scope filtering ────────────────────────────────────────────────────────
+  // --scope=eng → EPD pipeline only  --scope=gtm → GTM pipeline only  (default: both)
+  const activeDbs =
+    scopeArg === "eng" ? DATA_DBS.filter((d) => !GTM_DB_IDS.has(d.id)) :
+    scopeArg === "gtm" ? DATA_DBS.filter((d) =>  GTM_DB_IDS.has(d.id)) :
+    DATA_DBS;
+
   const scopeLabel = weekArg ? `week ${weekArg}` : "ALL WEEKS";
+  const pipeLabel  = scopeArg ? ` [${scopeArg.toUpperCase()} pipeline only]` : "";
   const modeLabel  = DRY_RUN ? " (DRY RUN)" : " (--yes confirmed)";
   console.log("─".repeat(60));
-  console.log(`Arcline Data Reset — ${scopeLabel}${modeLabel}`);
+  console.log(`Arcline Data Reset — ${scopeLabel}${pipeLabel}${modeLabel}`);
   console.log("─".repeat(60));
 
   if (!weekArg && !DRY_RUN) {
@@ -171,7 +208,7 @@ async function main(): Promise<void> {
   let grandTotal = 0;
   const errors: string[] = [];
 
-  for (const entry of DATA_DBS) {
+  for (const entry of activeDbs) {
     try {
       const filter = buildFilter(entry, weekArg);
       const count  = await clearDatabase(entry, filter);

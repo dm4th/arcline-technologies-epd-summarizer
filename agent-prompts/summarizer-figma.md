@@ -12,7 +12,7 @@ Before executing any steps, verify you have access to the following worker tools
 |------|---------|
 | `read_mirror_rows` | Reads activity rows from the Figma mirror database |
 | `begin_summary` | Marks the row as generating-review before composing content |
-| `write_squad_summary` | Writes the structured summary page, citations, and run log entry |
+| `write_squad_summary` | Writes the structured summary page (5 sections incl. Key Releases), citations, and run log entry |
 
 **If you cannot see all three tools in your tool list, stop immediately and output:**
 
@@ -58,7 +58,9 @@ If totalRows = 0 → call `write_squad_summary` with:
 
 - squad = "\<slug\>", source = "figma", weekOf = "\<weekOf\>"
 - whatShipped = "No activity this week."
-- inProgress = "", risks = "", notable = "", citations = []
+- inProgress = "", risks = "", notable = ""
+- keyReleases = "(no releases this week)"
+- citations = []
 
 That row auto-approves and skips HITL. Move to the next squad.
 
@@ -83,16 +85,24 @@ Each row returned contains:
 | status | File/comment status |
 | lastUpdated | Date of most recent comment |
 
-Figma data represents **design decisions, feedback, and spec changes** — not code deliverables. Write four sections for the page body:
+Figma data represents **design decisions, feedback, and spec changes** — not code deliverables. Write **five** sections for the page body, all in this same pass:
 
 - **What Shipped** — Design files where comments are fully resolved. Spec decisions confirmed and acknowledged by engineering in the excerpt. Past tense.
 - **In Progress** — Files with unresolved comments. Active design feedback loops where a response from engineering or design is still pending. Present tense.
 - **Risks & Blockers** — Comments reversing a previously agreed decision (look for "pivoting", "this reverses", "on hold pending"). Comments where engineering says implementation is blocked. Design specs that conflict with what engineering reports in GitHub or Jira. Comment threads with no resolution and high recency. **Name the file, the author, and the substance — not just that a reversal occurred.**
 - **Notable** — Design decisions with blast-radius implications (navigation architecture changes, design system updates affecting multiple components). Comments revealing a communication gap between design and engineering. Resolved design debates that represent meaningful decisions. New design system components shipped.
+- **Key Releases** — A bulleted, customer-facing translation of designs that were **finalized and handed off to engineering** this week (a strict subset of What Shipped — see rules below). This section is reviewed by the EM in the same HITL pass as the rest of the summary; it is not a separate side-channel output.
+
+  Rules for what counts as a Key Release:
+  - Include only designs explicitly marked "approved," "ready for dev," or handed off this week.
+  - Exclude works-in-progress, designs pending stakeholder review, or items in "draft" state.
+  - **No Figma file names or frame IDs** — describe what the feature does for the end user.
+  - Design handoffs count as "shipped" from a design perspective; include them even if engineering hasn't merged the implementation yet.
+  - If nothing was finalized for this squad this week, write exactly: `(no releases this week)`
 
 ### C. Citation Rules — ⚠️ Read Carefully
 
-Every sentence naming a specific Figma file, design author, comment content, or design decision **must have a citation entry**. The eval harness requires ≥90% factual sentence coverage — **below 90% fails quality checks.**
+Every sentence naming a specific Figma file, design author, comment content, or design decision **must have a citation entry** — this includes Key Releases sentences (cite the same underlying approved/handed-off-file mirror row you'd cite in What Shipped, even though the Key Releases sentence itself is phrased in customer-facing language). The eval harness requires ≥90% factual sentence coverage — **below 90% fails quality checks.**
 
 For each such sentence, add one entry to the citations array:
 
@@ -113,8 +123,10 @@ Once you've completed the citations array, call `write_squad_summary` with:
 - squad = \<slug\>
 - source = "figma"
 - weekOf = \<weekOf\>
-- All four sections (whatShipped, inProgress, risks, notable)
+- All five sections (whatShipped, inProgress, risks, notable, keyReleases)
 - Your full citations array
+
+This single call replaces what used to be two calls (`write_squad_summary` + `write_key_releases`). Key Releases now lives in the page body where the EM reviews it — not in a side-channel property.
 
 Repeat steps A–D for each remaining squad.
 

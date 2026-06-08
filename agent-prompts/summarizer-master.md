@@ -9,11 +9,13 @@ Before executing any steps, verify you have access to the following worker tools
 | Tool                       | Purpose                                                                                                |
 | -------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `read_prior_week_feedback` | Fetches VP comments from the previous week's Master EPD Weekly page                                   |
-| `read_approved_summaries`  | Returns all EPD Squad Weekly Readouts rows for the week, with consolidated content and approval status |
+| `read_approved_summaries`  | Returns all EPD Squad Weekly Readouts rows for the week, with consolidated content, approval status, and Key Releases per squad |
 | `begin_master_summary`     | Claims the Master EPD Weekly row by flipping Status `pending` → `generating-summary`                  |
 | `write_master_summary`     | Creates or updates the Master EPD Weekly row                                                           |
+| `write_gtm_highlights`     | PATCHes the GTM Highlights property on the Master EPD Weekly row (CRO-facing brief, ≤150 words)       |
+| `write_gtm_weekly_page`    | Creates or updates the standalone GTM Weekly page under Revenue > GTM Weekly Briefs                    |
 
-**If you cannot see all four tools, stop and output:**
+**If you cannot see all six tools, stop and output:**
 
 > ❌ Worker tools not connected. Please connect the `arcline-worker-summarizer-master` worker (ID: `019e765a-c368-7c64-a21e-3bec52b40b95`) in this agent's tool settings, then re-run.
 
@@ -45,9 +47,9 @@ The tool reads all EPD Squad Weekly Readouts rows for the week and returns:
 ```
 {
   squads: {
-    atlas: { notionPageId, status, content, citations },
-    lumen: { notionPageId, status, content, citations },
-    forge: { notionPageId, status, content, citations },
+    atlas: { notionPageId, status, content, citations, keyReleases },
+    lumen: { notionPageId, status, content, citations, keyReleases },
+    forge: { notionPageId, status, content, citations, keyReleases },
   },
   approvedSquadSlugs: ["atlas", "lumen", "forge"],  // squads with Status = "approved"
   approvedSessionIds: ["<atlas-id>", "<lumen-id>", "<forge-id>"],
@@ -56,6 +58,8 @@ The tool reads all EPD Squad Weekly Readouts rows for the week and returns:
   weekOf: "2026-W21"
 }
 ```
+
+`keyReleases` is read natively from the squad's approved HITL Review Session body — specifically its `## Key Releases` section (Section C of the consolidation). It is **not** aggregated from separate Squad Weekly Summary property values; the squad consolidation agent already rolled up and de-duplicated the 4 per-source `## Key Releases` sections (github/jira/slack/figma) into this single, EM-reviewed, customer-facing list (PRD-17 redesign — see `summarizer-squad-consolidation.md` Section C). Because `read_approved_summaries` generically parses every `heading_2` → `paragraph` pair into the `sections` map, this is a direct `sections["Key Releases"]` lookup — no extra DB query needed. You will use this in Step 7 to synthesize GTM Highlights.
 
 `squadApprovalRate` is a rollup on the Master EPD Weekly row, not a hardcoded squad count. Adding or removing a squad automatically adjusts the denominator.
 
@@ -189,6 +193,58 @@ The tool populates the `Squad Consolidations` relation on the master row, linkin
 
 Check the result:
 - `skipped: true` → below quorum at write time. Stop.
-- `skipped: false` → Master EPD Weekly row written with Status = `awaiting-VP`.
+- `skipped: false` → Master EPD Weekly row written with Status = `awaiting-VP`. Proceed to Step 7.
+
+## 🌐 Step 7 — GTM Output Pass (non-blocking)
+
+This step runs only when `write_master_summary` returned `skipped: false`. Both calls below are **non-blocking** — if either fails, log the error and continue. The master summary is already published and must not be retried.
+
+### 7A. Synthesize and write GTM Highlights
+
+Using the `keyReleases` from each squad (returned by `read_approved_summaries`), compose a ≤150-word GTM Highlights brief for the CRO.
+
+**Prompt guidance (FEATURE RESONANCE framing — borrowed from the AI-Native GTM Hub):**
+- Lead with the customer impact of what shipped, not the technical description
+- Frame releases around the three GTM questions: "What shipped / What it means for pipeline / What reps should know"
+- Draw on `resonated_features` thinking: what would a sales rep leading an AuthShield evaluation want to know?
+- Use `product_team_insight` thinking: which releases would a prospect in active evaluation care most about?
+
+**Rules:**
+- ≤150 words (hard limit)
+- No Jira ticket numbers, PR numbers, or internal identifiers
+- Customer-facing product names only (e.g. "AuthShield", "FieldKit" — not "ATLAS-112")
+- If all squads' `keyReleases` = `(no releases this week)`: write `"No product releases this week."`
+
+Then call `write_gtm_highlights` with:
+- `masterPageId` = the `pageId` returned by `write_master_summary`
+- `highlightsText` = your composed GTM Highlights
+
+### 7B. Create/update the GTM Weekly page
+
+Compose the CRO-facing GTM Weekly page body as a markdown string with these 4 required sections:
+
+```markdown
+# GTM Weekly — [weekOf]
+_Prepared by the Arcline AI Digest pipeline._
+
+## What Shipped This Week
+[Bullet list of Key Releases from all squads in plain language — combine keyReleases from all 3 squads, de-duplicate, remove "(no releases this week)" entries if any squad did ship]
+
+## What It Means for Your Pipeline
+[2-3 sentences connecting the week's releases to active deal categories. Use FEATURE RESONANCE framing — which buyer personas would care about what shipped?]
+
+## Deals to Contact This Week
+See Release Bridge for deal-specific outreach.
+
+## How to Use This Brief
+- Forward to your reps before Monday standup.
+- Flag any listed release to an active deal — the Release Bridge agent can generate a tailored outreach suggestion.
+```
+
+Then call `write_gtm_weekly_page` with:
+- `weekOf` = the current week identifier (e.g. `2026-W21`)
+- `body` = your composed markdown body
+
+The tool creates "GTM Weekly Briefs" under the Revenue page if it doesn't yet exist, then creates or updates the "GTM Weekly — {weekOf}" child page.
 
 # 🏁 Done
